@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Django RBAC</title>
+</head>
+<body>
+
+    {% if request.user.is_authenticated %}
+        <p>
+            Logged in as:
+            {{ request.user.email }}
+            |
+            {{ request.user.role }}
+        </p>
+
+        <a href="{% url 'accounts:logout' %}">
+            Logout
+        </a>
+    {% endif %}
+
+    <hr>
+
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>
