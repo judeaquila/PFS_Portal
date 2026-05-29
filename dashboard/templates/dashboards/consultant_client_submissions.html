@@ -1,0 +1,123 @@
+{% extends 'dashboards/base_consultant.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6" x-data="{ 
+    searchQuery: '',
+    statusFilter: 'all',
+    matchesSearch(biz, name, email) {
+        if (!this.searchQuery) return true;
+        let q = this.searchQuery.toLowerCase();
+        return biz.toLowerCase().includes(q) || name.toLowerCase().includes(q) || email.toLowerCase().includes(q);
+    },
+    matchesStatus(isComplete) {
+        if (this.statusFilter === 'all') return true;
+        if (this.statusFilter === 'complete') return isComplete === 'True';
+        if (this.statusFilter === 'pending') return isComplete === 'False';
+        return true;
+    }
+}">
+    
+    <div>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Active Client Portfolios</h1>
+        <p class="text-sm text-slate-500 mt-1">Review onboarding pipelines, audit documentation packages, and approve file structures for FDA submissions.</p>
+    </div>
+
+    <!-- Real-time Filter Toolbar -->
+    <div class="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex-1">
+            <input type="text" x-model="searchQuery" placeholder="Search by business name, representative, or email..." 
+                   class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-50 placeholder-slate-400 font-medium">
+        </div>
+        <div class="w-full sm:w-48">
+            <select x-model="statusFilter" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-50 font-medium text-slate-700">
+                <option value="all">All Statutory States</option>
+                <option value="complete">Ready for Audit</option>
+                <option value="pending">Awaiting Core Files</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Master Queue Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 class="font-bold text-slate-800 text-sm">Regulatory Document Queue</h3>
+            <span class="text-xs font-bold bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md">{{ clients_data|length }} Registered Accounts</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50/70 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="p-4 pl-6">Business / Representative</th>
+                        <th class="p-4">Contact Channels</th>
+                        <th class="p-4">Mandatory Progress</th>
+                        <th class="p-4">Statutory State</th>
+                        <th class="p-4 text-right pr-6">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm font-medium">
+                    {% for item in clients_data %}
+                    <tr class="hover:bg-slate-50/50 transition" 
+                        x-show="matchesSearch('{{ item.client.business_name|escapejs }}', '{{ item.client.first_name|escapejs }} {{ item.client.last_name|escapejs }}', '{{ item.client.email|escapejs }}') && matchesStatus('{{ item.is_complete }}')"
+                        x-transition.opacity>
+                        
+                        <td class="p-4 pl-6">
+                            <div class="font-bold text-slate-900 text-base">{{ item.client.business_name|default:"[No Business Name Entered]" }}</div>
+                            <div class="text-xs text-slate-400 font-normal mt-0.5">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+                        </td>
+
+                        <td class="p-4 font-normal space-y-0.5">
+                            <div class="text-slate-700 font-medium">{{ item.client.email }}</div>
+                            {% if item.client.whatsapp_number %}
+                                <div class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                    {{ item.client.whatsapp_number }}
+                                </div>
+                            {% else %}
+                                <div class="text-xs text-slate-400 italic">No phone logged</div>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 bg-slate-200 rounded-full h-2">
+                                    <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: {{ item.percentage }}%"></div>
+                                </div>
+                                <span class="text-xs font-mono font-bold text-slate-600">
+                                    {{ item.uploaded_count }}/{{ item.required_count }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td class="p-4">
+                            {% if item.is_complete %}
+                                <span class="inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    Ready for Audit
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                    Awaiting Core Files
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="p-4 text-right pr-6">
+                            <a href="{% url 'dashboard:review-client' client_id=item.client.id %}" class="inline-flex items-center text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition shadow-sm">
+                                Open Audit Desk &rarr;
+                            </a>
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-400 font-normal italic">
+                            No active client registrations currently tied into the PFS database tables.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

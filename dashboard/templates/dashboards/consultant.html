@@ -1,5 +1,387 @@
-{% extends 'base.html' %}
+{% extends 'dashboards/base_consultant.html' %}
+
+{% block title %}Consultant Workspace Overview | PFS{% endblock %}
 
 {% block content %}
-<h1>Consultant Dashboard</h1>
+<div x-data="{ openDrawer: false, searchFilter: '' }" class="max-w-6xl mx-auto space-y-8 relative">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200/80 pb-6">
+        <div>
+            <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Workspace Overview</h1>
+            <p class="text-xs text-zinc-500 mt-1">Operational status of assigned FDA compliance workflows and client package subactivities.</p>
+        </div>
+        <div class="flex items-center gap-2 text-[11px] font-medium text-zinc-500 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg shadow-2xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            System Synced
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white p-5 rounded-xl border border-zinc-200/80 shadow-2xs flex flex-col justify-between group">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Account Workload</span>
+                    <svg class="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                </div>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-3xl font-bold tracking-tight text-zinc-900">{{ metrics.total_clients }}</span>
+                    <span class="text-xs font-semibold text-zinc-400">/ {{ metrics.total_active_projects|default:"0" }} Active Packages</span>
+                </div>
+            </div>
+            <p class="text-[11px] text-zinc-500 mt-4 pt-3 border-t border-zinc-100">Assigned client groups tracking across the 10 package tiers.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-zinc-200/80 shadow-2xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Pipeline Progress</span>
+                    <svg class="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2" /></svg>
+                </div>
+                <div class="mt-4 flex items-baseline gap-1.5">
+                    <span class="text-3xl font-bold tracking-tight text-zinc-900">{{ metrics.active_onboarding }}</span>
+                    <span class="text-xs font-medium text-zinc-500">In Active Phase</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-[10px] text-zinc-400 font-medium">
+                <span>Facility Setup: <strong class="text-zinc-700">{{ metrics.facility_phase_count|default:"0" }}</strong></span>
+                <span>•</span>
+                <span>Label Reviews: <strong class="text-zinc-700">{{ metrics.label_phase_count|default:"0" }}</strong></span>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border {% if metrics.urgent_attention > 0 %}border-amber-200 bg-amber-50/10 ring-4 ring-amber-500/5{% else %}border-zinc-200/80{% endif %} shadow-2xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold {% if metrics.urgent_attention > 0 %}text-amber-700{% else %}text-zinc-400{% endif %} uppercase tracking-wider">Attention Queue</span>
+                    <svg class="h-4 w-4 {% if metrics.urgent_attention > 0 %}text-amber-600{% else %}text-zinc-400{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <div class="mt-4 flex items-baseline gap-1.5">
+                    <span class="text-3xl font-bold tracking-tight {% if metrics.urgent_attention > 0 %}text-amber-700{% else %}text-zinc-900{% endif %}">{{ metrics.urgent_attention }}</span>
+                    <span class="text-xs font-semibold {% if metrics.urgent_attention > 0 %}text-amber-600/90{% else %}text-zinc-500{% endif %}">Pending Actions</span>
+                </div>
+            </div>
+            <p class="text-[11px] {% if metrics.urgent_attention > 0 %}text-amber-700/80{% else %}text-zinc-500{% endif %} mt-4 pt-3 border-t {% if metrics.urgent_attention > 0 %}border-amber-200/50{% else %}border-zinc-100{% endif %}">Includes file reviews & unaddressed FDA query responses.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-zinc-200/80 shadow-2xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Archived Vaults</span>
+                    <svg class="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" /></svg>
+                </div>
+                <div class="mt-4 flex items-baseline gap-1.5">
+                    <span class="text-3xl font-bold tracking-tight text-zinc-900">{{ metrics.completed_vaults }}</span>
+                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded text-[10px]">100% Cleared</span>
+                </div>
+            </div>
+            <p class="text-[11px] text-zinc-500 mt-4 pt-3 border-t border-zinc-100">Fully validated submissions with issued certificates.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:col-span-2">
+            <div class="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm">Urgent Pending Upload Stream</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Documents recently submitted by users requiring compliance confirmation.</p>
+                </div>
+                <span class="w-2 h-2 bg-amber-500 rounded-full animate-ping"></span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {% for doc in recent_pending_uploads %}
+                    <div class="p-5 flex items-center justify-between hover:bg-slate-50/40 transition gap-4">
+                        <div class="space-y-1">
+                            <span class="text-[10px] uppercase font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                                {% if doc.document_type == 'SUPPLEMENTARY' %}Supplementary{% else %}Core Checklist{% endif %}
+                            </span>
+                            <h4 class="font-bold text-slate-800 text-sm mt-1">
+                                {% if doc.document_type == 'SUPPLEMENTARY' %}{{ doc.custom_title }}{% else %}{{ doc.get_document_type_display }}{% endif %}
+                            </h4>
+                            <p class="text-xs text-slate-500 font-medium">
+                                Client: <span class="text-slate-700 font-bold">{{ doc.client.business_name|default:doc.client.email }}</span>
+                            </p>
+                            <div class="text-[11px] text-slate-400 font-normal">
+                                Uploaded: {{ doc.updated_at|date:"M d, Y @ H:i" }}, <br>{{ doc.updated_at|timesince }} ago
+                            </div>
+                        </div>
+
+                        <div>
+                            <a href="{% url 'dashboard:review-client' client_id=doc.client.id %}" class="inline-flex items-center text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-2 rounded-lg transition shadow-sm whitespace-nowrap">
+                                Review File →
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="p-8 text-center text-slate-400 text-xs font-medium italic">
+                        Incredible job! There are no pending document files left in the auditing queue channel right now.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="space-y-4 lg:col-span-1">
+            
+            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl p-6 text-white shadow-md space-y-4">
+                <div>
+                    <h3 class="font-bold text-base tracking-tight">Global Roster Management</h3>
+                    <p class="text-xs text-indigo-200/80 mt-1">Access the master tracking table to review individual pipelines, send progress reminders, and browse complete historical company records.</p>
+                </div>
+                
+                <a href="{% url 'dashboard:client-submissions' %}" class="w-full text-center block bg-white text-indigo-900 hover:bg-slate-50 font-bold text-xs py-3 rounded-lg transition shadow-sm">
+                    Open Active Client Portfolios
+                </a>
+            </div>
+
+            <button type="button" @click="openDrawer = true" class="w-full text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-xs transition duration-150 ease-in-out shadow-sm space-y-3 group focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Client Package Playbook</span>
+                    <span class="text-indigo-600 font-bold tracking-wide group-hover:translate-x-0.5 transition-transform duration-150 block">View &rarr;</span>
+                </div>
+                <p class="text-slate-500 leading-relaxed">
+                    Review the operational requirements for all 10 client support categories—including subactivity protocols for registrations, renewals, and QMS configurations.
+                </p>
+                <div class="pt-2 border-t border-slate-100 flex items-center gap-4 text-[11px] font-medium text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> 10 Framework Tiers</span>
+                    <span>• Verified Rules</span>
+                </div>
+            </button>
+
+        </div>
+    </div>
+
+    <div x-show="openDrawer" 
+         class="fixed inset-0 z-50 overflow-hidden" 
+         aria-labelledby="slide-over-title" 
+         role="dialog" 
+         aria-modal="true"
+         style="display: none;">
+        
+        <div class="absolute inset-0 overflow-hidden">
+            <div x-show="openDrawer"
+                 x-transition:enter="ease-in-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="openDrawer = false"
+                 class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+                 aria-hidden="true"></div>
+
+            <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+                <div x-show="openDrawer"
+                     x-transition:enter="transform transition ease-in-out duration-300 sm:duration-400"
+                     x-transition:enter-start="translate-x-full"
+                     x-transition:enter-end="translate-x-0"
+                     x-transition:leave="transform transition ease-in-out duration-300 sm:duration-400"
+                     x-transition:leave-start="translate-x-0"
+                     x-transition:leave-end="translate-x-full"
+                     class="pointer-events-auto w-screen max-w-md border-l border-slate-200 bg-white shadow-2xl">
+                    
+                    <div class="flex h-full flex-col divide-y divide-slate-200 bg-white">
+                        
+                        <div class="p-6 bg-slate-900 text-white">
+                            <div class="flex items-start justify-between">
+                                <div class="space-y-1">
+                                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400" id="slide-over-title">Reference Matrix</h2>
+                                    <p class="text-base font-black tracking-tight text-white">Client Package Breakdown</p>
+                                </div>
+                                <button type="button" @click="openDrawer = false" class="rounded-md text-slate-400 hover:text-white focus:outline-none">
+                                    <span class="sr-only">Close panel</span>
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                            
+                            <div class="mt-4 relative rounded-md shadow-sm">
+                                <input type="text" 
+                                       x-model="searchFilter"
+                                       class="w-full bg-white/10 border border-white/10 rounded-lg py-2 pl-3 pr-10 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" 
+                                       placeholder="Filter categories or subactivities...">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel Scrollable Content Body with Alpine Filtering Matrix (Cleaned & Polished) -->
+                        <div class="relative flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50">
+                            
+                            <!-- Package Tier Item 1 -->
+                            <div x-show="!searchFilter || 'product registration support coaching online portal setup label review sample submission fda facility'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">01</span>
+                                    <h4 class="text-xs font-bold text-slate-900">Product Registration Support</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of their products only with the FDA, provided the facility has already been registered or an application for the facility has been submitted to the FDA.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Coaching</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Online Portal Setup &amp; Registration</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Label Review</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Sample Submission</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 2 -->
+                            <div x-show="!searchFilter || 'facility registration support forms sops drafting facility setup guidance online portal registration training documentation'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">02</span>
+                                    <h4 class="text-xs font-bold text-slate-900">Facility Registration Support</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of their facility only with the FDA, with no product registration support included.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Forms &amp; SOPs Drafting</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Facility Setup Guidance</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Online Portal Setup &amp; Registration</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Training on Documentation</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 3 -->
+                            <div x-show="!searchFilter || 'fda complete registration support facility product subactivities combination packages'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">03</span>
+                                    <h4 class="text-xs font-bold text-slate-900">FDA Complete Registration Support</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for a complete support package covering both their facility and product(s).</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Subactivities</span>
+                                    <p class="text-[11px] text-slate-500 italic font-medium">A combination of all subactivities from Package 1 & Package 2</p>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 4 -->
+                            <div x-show="!searchFilter || 'product development scratch formulation pilot production process laboratory testing label design packaging complete fda registration'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-100">04</span>
+                                    <h4 class="text-xs font-bold text-slate-900">Product Development</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who are starting from scratch and sign up for product development support, running through to FDA registration support.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Product Formulation</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Pilot Production</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Production Process Development</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Laboratory Testing</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Label Design</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Packaging</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">All activities in Package 3</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 5 -->
+                            <div x-show="!searchFilter || 'qms setup and training production operations product facility direct needs forms sops development'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">05</span>
+                                    <h4 class="text-xs font-bold text-slate-900">QMS Setup and Training</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for a Quality Management System (QMS) setup for their production operations, without any direct product or facility registration needs.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Forms &amp; SOPs Development</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Training</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 6 -->
+                            <div x-show="!searchFilter || 'fda query response support unresolved issues technical assistance concerns raised letter drafting capa follow ups query'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3 ring-1 ring-amber-500/10">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200">06</span>
+                                    <h4 class="text-xs font-bold text-slate-900">FDA Query Response Support</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients with unresolved issues with the FDA who need technical assistance in addressing concerns raised.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Response Letter Drafting</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Guidance on CAPA</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">FDA Follow-ups</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 7 -->
+                            <div x-show="!searchFilter || 'product registration renewal expired certificates support application matching activity'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">07</span>
+                                    <h4 class="text-xs font-bold text-slate-900">Product Registration Renewal</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients with expired product certificates who seek support for application renewal.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Subactivities</span>
+                                    <p class="text-[11px] text-slate-500 italic font-medium">Same subactivities as Package 1.</p>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 8 -->
+                            <div x-show="!searchFilter || 'facility registration renewal expired certificates support application matching activity'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">08</span>
+                                    <h4 class="text-xs font-bold text-slate-900">Facility Registration Renewal</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients with expired facility certificates who seek support for application renewal.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Subactivities</span>
+                                    <p class="text-[11px] text-slate-500 italic font-medium">Same subactivities as Package 2.</p>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 9 -->
+                            <div x-show="!searchFilter || 'ad registration support advertisements fda review ad application registration follow ups'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">09</span>
+                                    <h4 class="text-xs font-bold text-slate-900">Ad Registration Support</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of product advertisements with the FDA, provided the product has already been registered.</p>
+                                <div class="pt-2 border-t border-slate-100">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Review of Ad</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">Application for Registration</span>
+                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 font-medium rounded border border-slate-200">FDA Follow-ups</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Tier Item 10 -->
+                            <div x-show="!searchFilter || 'others unique concerns standard categories listed above custom'.includes(searchFilter.toLowerCase())"
+                                class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded border border-slate-200">10</span>
+                                    <h4 class="text-xs font-bold text-slate-500">Others</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who have unique concerns outside the standard categories listed above.</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
 {% endblock %}

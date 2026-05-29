@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PFS Service Operations Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-[#1e1f29] text-gray-100 min-h-screen font-sans antialiased" 
+      x-data="{ 
+          currentRole: 'consultant', 
+          activeDropdown: null,
+          clients: [
+              {
+                  id: 1,
+                  name: 'Alice Elite Nutrition',
+                  contact: 'Alice Sena Opoku - 0557815508',
+                  package: 'FDA Registration Support',
+                  category: 'Food',
+                  region: 'Greater Accra',
+                  startDate: '5th February, 2026',
+                  productName: 'Elite Cereal Mix and Elite Protein Chocolate Shake',
+                  paymentStatus: 'Paid',
+                  projectStatus: 'Ongoing',
+                  progress: 85,
+                  isExpanded: true,
+                  subitems: [
+                      { id: 101, task: 'Product Registration Coaching', notes: 'Complete, all final submissions done', person: 'AS', status: 'Completed' },
+                      { id: 102, task: 'Product Label Review', notes: 'Completed, final labels approved for applications', person: 'ER', status: 'Completed' },
+                      { id: 103, task: 'Submission Of Applications', notes: 'Awaiting response from FDA on 3 products', person: 'AS', status: 'Ongoing' }
+                  ]
+              },
+              {
+                  id: 2,
+                  name: 'Ambearance By Talata',
+                  contact: 'Madam Mansah - 0207960028',
+                  package: 'Complete Package',
+                  category: 'Cosmetics',
+                  region: 'Greater Accra',
+                  startDate: '21st July, 2025',
+                  productName: 'Authentic Radiance Whipped Shea butter',
+                  paymentStatus: 'Paid Part',
+                  projectStatus: 'Paused',
+                  progress: 50,
+                  isExpanded: false,
+                  subitems: [
+                      { id: 201, task: 'Facility Setup Support', notes: 'Pending online meeting for layout review', person: 'ER', status: 'Pending' },
+                      { id: 202, task: 'Drafting Of Forms And SOPs', notes: 'Forms drafting ongoing', person: 'ER', status: 'Ongoing' }
+                  ]
+              }
+          ]
+      }">
+
+    <header class="bg-[#14151f] border-b border-gray-800 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white">M</div>
+            <h1 class="text-lg font-semibold tracking-wide text-gray-200">PFS Service Operations System</h1>
+        </div>
+        
+        <div class="bg-[#1e1f29] p-1 rounded-lg border border-gray-800 flex space-x-2">
+            <button @click="currentRole = 'client'" 
+                    :class="currentRole === 'client' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition">
+                <i class="fa-solid fa-user-tie mr-1.5"></i> Client View
+            </button>
+            <button @click="currentRole = 'consultant'" 
+                    :class="currentRole === 'consultant' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition">
+                <i class="fa-solid fa-user-gear mr-1.5"></i> Consultant Admin
+            </button>
+        </div>
+    </header>
+
+    <main class="p-6 max-w-[1600px] mx-auto">
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-white flex items-center">
+                <i class="fa-solid fa-chevron-down mr-2 text-xs text-indigo-400"></i> FDA ACTIVE CLIENTS
+                <span class="ml-3 text-xs font-normal text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full" x-text="`${clients.length} Clients`"></span>
+            </h2>
+        </div>
+
+        <div class="bg-[#14151f] border border-gray-800 rounded-xl overflow-x-auto shadow-2xl">
+            <table class="w-full text-left border-collapse min-w-[1200px]">
+                <thead>
+                    <tr class="border-b border-gray-800 bg-[#191b26] text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                        <th class="py-3.5 px-4 w-12 text-center"></th>
+                        <th class="py-3.5 px-4 min-w-[220px]">Client</th>
+                        <th class="py-3.5 px-4 min-w-[180px]">Contact Person</th>
+                        <th class="py-3.5 px-4 min-w-[160px]">Client Package</th>
+                        <th class="py-3.5 px-4 min-w-[110px]">Category</th>
+                        <th class="py-3.5 px-4 min-w-[120px]">Region</th>
+                        <th class="py-3.5 px-4 min-w-[140px]">Project Start Date</th>
+                        <th class="py-3.5 px-4 min-w-[220px]">Product Name</th>
+                        <th class="py-3.5 px-4 text-center min-w-[130px]">Payment</th>
+                        <th class="py-3.5 px-4 text-center min-w-[130px]">Project Status</th>
+                        <th class="py-3.5 px-4 min-w-[140px]">Overall Progress</th>
+                    </tr>
+                </thead>
+                
+                <template x-for="(client, cIdx) in clients" :key="client.id">
+                    <tbody class="border-b border-gray-800">
+                        <tr class="hover:bg-[#191b26]/50 transition group text-sm align-top">
+                            <td class="py-4 px-4 text-center">
+                                <button @click="client.isExpanded = !client.isExpanded" class="text-gray-500 hover:text-indigo-400 transition transform duration-200" :class="client.isExpanded ? 'rotate-0' : '-rotate-90'">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </button>
+                            </td>
+                            
+                            <td class="py-4 px-4 font-medium text-white group-hover:text-indigo-400 transition" x-text="client.name"></td>
+                            
+                            <td class="py-4 px-4 text-gray-400 text-xs" x-text="client.contact"></td>
+                            <td class="py-4 px-4 text-gray-300 text-xs" x-text="client.package"></td>
+                            <td class="py-4 px-4 text-xs">
+                                <span class="px-2.5 py-1 rounded font-medium"
+                                      :class="{
+                                          'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20': client.category === 'Food',
+                                          'bg-amber-500/10 text-amber-400 border border-amber-500/20': client.category === 'Cosmetics'
+                                      }" x-text="client.category"></span>
+                            </td>
+                            <td class="py-4 px-4 text-gray-400 text-xs" x-text="client.region"></td>
+                            <td class="py-4 px-4 text-gray-400 text-xs" x-text="client.startDate"></td>
+                            <td class="py-4 px-4 text-gray-300 text-xs leading-relaxed" x-text="client.productName"></td>
+                            
+                            <td class="py-3 px-2 text-center relative">
+                                <template x-if="currentRole === 'client'">
+                                    <span class="w-full inline-block py-1.5 rounded text-xs font-semibold uppercase tracking-wider"
+                                          :class="client.paymentStatus === 'Paid' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'"
+                                          x-text="client.paymentStatus"></span>
+                                </template>
+                                <template x-if="currentRole === 'consultant'">
+                                    <button @click="activeDropdown = (activeDropdown === `pay-${client.id}`) ? null : `pay-${client.id}`"
+                                            class="w-full py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition cursor-pointer shadow-md text-white"
+                                            :class="client.paymentStatus === 'Paid' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-amber-500 hover:bg-amber-600'"
+                                            x-text="client.paymentStatus"></button>
+                                </template>
+                                <div x-show="activeDropdown === `pay-${client.id}`" @click.outside="activeDropdown = null"
+                                     class="absolute left-0 mt-1 w-40 bg-[#1c1d26] border border-gray-700 rounded-lg shadow-xl z-50 p-1" x-cloak>
+                                    <button @click="client.paymentStatus = 'Paid'; activeDropdown = null" class="w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-emerald-600 hover:text-white transition">Paid</button>
+                                    <button @click="client.paymentStatus = 'Paid Part'; activeDropdown = null" class="w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-amber-600 hover:text-white transition">Paid Part</button>
+                                    <button @click="client.paymentStatus = 'Awaiting Payment'; activeDropdown = null" class="w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-rose-600 hover:text-white transition">Awaiting Payment</button>
+                                </div>
+                            </td>
+
+                            <td class="py-3 px-2 text-center relative">
+                                <template x-if="currentRole === 'client'">
+                                    <span class="w-full inline-block py-1.5 rounded text-xs font-semibold uppercase tracking-wider"
+                                          :class="{
+                                              'bg-sky-500 text-white': client.projectStatus === 'Ongoing',
+                                              'bg-rose-500 text-white': client.projectStatus === 'Paused'
+                                          }" x-text="client.projectStatus"></span>
+                                </template>
+                                <template x-if="currentRole === 'consultant'">
+                                    <button @click="activeDropdown = (activeDropdown === `proj-${client.id}`) ? null : `proj-${client.id}`"
+                                            class="w-full py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition cursor-pointer text-white"
+                                            :class="{
+                                                'bg-sky-500 hover:bg-sky-600': client.projectStatus === 'Ongoing',
+                                                'bg-rose-500 hover:bg-rose-600': client.projectStatus === 'Paused'
+                                            }" x-text="client.projectStatus"></button>
+                                </template>
+                                <div x-show="activeDropdown === `proj-${client.id}`" @click.outside="activeDropdown = null"
+                                     class="absolute left-0 mt-1 w-40 bg-[#1c1d26] border border-gray-700 rounded-lg shadow-xl z-50 p-1" x-cloak>
+                                    <button @click="client.projectStatus = 'Ongoing'; activeDropdown = null" class="w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-sky-600 text-white transition">Ongoing</button>
+                                    <button @click="client.projectStatus = 'Paused'; activeDropdown = null" class="w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-rose-600 text-white transition">Paused</button>
+                                    <button @click="client.projectStatus = 'Completed'; activeDropdown = null" class="w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-emerald-600 text-white transition">Completed</button>
+                                </div>
+                            </td>
+
+                            <td class="py-4 px-4 vertical-align-middle">
+                                <div class="flex items-center space-x-2.5">
+                                    <div class="w-full bg-gray-800 rounded-full h-2">
+                                        <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" :style="`width: ${client.progress}%`"></div>
+                                    </div>
+                                    <span class="text-xs font-bold text-gray-300 w-8 text-right" x-text="`${client.progress}%`"></span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr x-show="client.isExpanded" x-transition class="bg-[#11121a]">
+                            <td colspan="11" class="p-4 border-t border-gray-800/50">
+                                <div class="pl-8 border-l-2 border-indigo-500/30">
+                                    <div class="flex items-center mb-3">
+                                        <i class="fa-solid fa-list-check text-xs text-indigo-400 mr-2"></i>
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Operational Subitems Checklist</h3>
+                                    </div>
+                                    
+                                    <div class="bg-[#151622] rounded-lg border border-gray-800/80 overflow-hidden">
+                                        <table class="w-full text-left text-xs border-collapse">
+                                            <thead>
+                                                <tr class="bg-[#1a1b29] text-gray-400 font-medium border-b border-gray-800">
+                                                    <th class="p-3 w-1/4">Subitem Milestone Task</th>
+                                                    <th class="p-3 w-1/2">Activity Operational Status Notes</th>
+                                                    <th class="p-3 text-center w-20">Owner</th>
+                                                    <th class="p-3 text-center w-36">Milestone Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="sub in client.subitems" :key="sub.id">
+                                                    <tr class="border-b border-gray-800/50 hover:bg-gray-800/20 transition group">
+                                                        <td class="p-3 font-medium text-gray-200" x-text="sub.task"></td>
+                                                        
+                                                        <td class="p-3">
+                                                            <template x-if="currentRole === 'client'">
+                                                                <span class="text-gray-400 italic" x-text="sub.notes || 'No operational notes cataloged.'"></span>
+                                                            </template>
+                                                            <template x-if="currentRole === 'consultant'">
+                                                                <div class="relative flex items-center">
+                                                                    <input type="text" x-model="sub.notes" 
+                                                                           class="w-full bg-[#1c1d26] border border-gray-700/60 rounded px-2.5 py-1 text-gray-200 focus:outline-none focus:border-indigo-500 transition text-xs" 
+                                                                           placeholder="Add operational update log...">
+                                                                    <i class="fa-solid fa-pen absolute right-2.5 text-[10px] text-gray-600 group-hover:text-gray-400 transition pointer-events-none"></i>
+                                                                </div>
+                                                            </template>
+                                                        </td>
+                                                        
+                                                        <td class="p-2 text-center">
+                                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-800 border border-gray-700 text-[10px] font-bold text-indigo-300" x-text="sub.person"></span>
+                                                        </td>
+                                                        
+                                                        <td class="p-2 text-center relative">
+                                                            <template x-if="currentRole === 'client'">
+                                                                <span class="w-full inline-block py-1 rounded text-[11px] font-medium tracking-wide text-center text-white"
+                                                                      :class="{
+                                                                          'bg-emerald-500': sub.status === 'Completed',
+                                                                          'bg-amber-500': sub.status === 'Ongoing',
+                                                                          'bg-purple-500': sub.status === 'Pending',
+                                                                          'bg-gray-600': sub.status === 'Not Started'
+                                                                      }" x-text="sub.status"></span>
+                                                            </template>
+                                                            <template x-if="currentRole === 'consultant'">
+                                                                <button @click="activeDropdown = (activeDropdown === `sub-${sub.id}`) ? null : `sub-${sub.id}`"
+                                                                        class="w-full py-1 rounded text-[11px] font-medium tracking-wide text-center transition cursor-pointer text-white"
+                                                                        :class="{
+                                                                            'bg-emerald-500 hover:bg-emerald-600': sub.status === 'Completed',
+                                                                            'bg-amber-500 hover:bg-amber-600': sub.status === 'Ongoing',
+                                                                            'bg-purple-500 hover:bg-purple-600': sub.status === 'Pending',
+                                                                            'bg-gray-600 hover:bg-gray-700': sub.status === 'Not Started'
+                                                                        }" x-text="sub.status"></button>
+                                                            </template>
+                                                            
+                                                            <div x-show="activeDropdown === `sub-${sub.id}`" @click.outside="activeDropdown = null"
+                                                                 class="absolute right-0 mt-1 w-36 bg-[#1c1d26] border border-gray-700 rounded-lg shadow-xl z-50 p-1" x-cloak>
+                                                                <button @click="sub.status = 'Not Started'; activeDropdown = null" class="w-full text-left px-2 py-1.5 text-[11px] rounded hover:bg-gray-700 text-white transition">Not Started</button>
+                                                                <button @click="sub.status = 'Ongoing'; activeDropdown = null" class="w-full text-left px-2 py-1.5 text-[11px] rounded hover:bg-amber-600 text-white transition">Ongoing</button>
+                                                                <button @click="sub.status = 'Pending'; activeDropdown = null" class="w-full text-left px-2 py-1.5 text-[11px] rounded hover:bg-purple-600 text-white transition">Pending</button>
+                                                                <button @click="sub.status = 'Completed'; activeDropdown = null" class="w-full text-left px-2 py-1.5 text-[11px] rounded hover:bg-emerald-600 text-white transition">Completed</button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </template>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

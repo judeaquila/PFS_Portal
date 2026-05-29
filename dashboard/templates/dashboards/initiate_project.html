@@ -1,0 +1,239 @@
+{% extends "dashboards/base_consultant.html" %}
+
+{% block title %}Initialize Project Board | PFS{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6" 
+     x-data="{ 
+    selectedPackage: '',
+    blueprints: {
+        'PRODUCT_REG': [
+            'Coaching', 
+            'Online Portal Setup & Registration', 
+            'Label Review', 
+            'Sample Submission'
+        ],
+        'FACILITY_REG': [
+            'Forms & SOPs Drafting', 
+            'Facility Setup Guidance', 
+            'Online Portal Setup & Registration', 
+            'Training on Documentation'
+        ],
+        'COMPLETE': [
+            'Coaching', 
+            'Online Portal Setup & Registration', 
+            'Label Review', 
+            'Sample Submission', 
+            'Forms & SOPs Drafting', 
+            'Facility Setup Guidance', 
+            'Training on Documentation'
+        ],
+        'PROD_DEV': [
+            'Product Formulation', 
+            'Pilot Production', 
+            'Production Process Development', 
+            'Laboratory Testing', 
+            'Label Design', 
+            'Packaging', 
+            'Coaching', 
+            'Online Portal Setup & Registration', 
+            'Label Review', 
+            'Sample Submission', 
+            'Forms & SOPs Drafting', 
+            'Facility Setup Guidance', 
+            'Training on Documentation'
+        ],
+        'QMS_TRAIN': [
+            'Forms & SOPs Development', 
+            'Training'
+        ],
+        'QUERY_RESP': [
+            'Response Letter Drafting', 
+            'Guidance on CAPA', 
+            'FDA Follow-ups'
+        ],
+        'PROD_RENEW': [
+            'Coaching', 
+            'Online Portal Setup & Registration', 
+            'Label Review', 
+            'Sample Submission'
+        ],
+        'FAC_RENEW': [
+            'Forms & SOPs Drafting', 
+            'Facility Setup Guidance', 
+            'Online Portal Setup & Registration', 
+            'Training on Documentation'
+        ],
+        'AD_REG': [
+            'Review of Ad', 
+            'Application for Registration', 
+            'FDA Follow-ups'
+        ],
+        'OTHERS': [
+            'Onboarding Meeting',
+            'Initial Consultation'
+        ]
+    }
+}">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <a href="{% url 'dashboard:review-client' client_id=target_client.id %}" class="text-xs font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition">
+                &larr; Return to Client Audit Desk
+            </a>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-2">Activate Service Operations Pipeline</h1>
+        </div>
+    </div>
+
+    <form method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {% csrf_token %}
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5 lg:col-span-1">
+            <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">Target Profile Context</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Business Name</span>
+                    <span class="text-base font-bold text-slate-800 mt-0.5 block">{{ target_client.business_name|default:"[No Business Name Provided]" }}</span>
+                </div>
+                
+                <div>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Representative Handler</span>
+                    <span class="text-sm font-medium text-slate-700 mt-0.5 block">{{ target_client.get_full_name|default:target_client.email }}</span>
+                </div>
+
+                <div>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Primary Email Identifier</span>
+                    <span class="text-sm text-slate-600 font-medium break-all mt-0.5 block">{{ target_client.email }}</span>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 space-y-3">
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Default Subitems Blueprint</span>
+                
+                <div x-show="!selectedPackage" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-500 leading-relaxed italic">
+                    Select a contracted client package track to preview the default process execution checklist.
+                </div>
+
+                <div x-show="selectedPackage" class="bg-slate-50/50 border border-slate-200 rounded-xl overflow-hidden" x-cloak>
+                    <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 flex justify-between items-center">
+                        <span class="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-wider">Auto-Generated Tasks</span>
+                        <span class="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded" x-text="blueprints[selectedPackage] ? blueprints[selectedPackage].length + ' Subitems' : '0 Subitems'"></span>
+                    </div>
+                    <ul class="divide-y divide-slate-200 max-h-60 overflow-y-auto text-xs text-slate-700 font-medium">
+                        <template x-for="(task, index) in blueprints[selectedPackage]" :key="index">
+                            <li class="px-3 py-2 flex items-center gap-2 bg-white">
+                                <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full flex-shrink-0"></span>
+                                <span x-text="task" class="truncate"></span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6 lg:col-span-2">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-3 border-b border-slate-100 bg-slate-50/60">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide">1. Pipeline Allocation & Parameters</h3>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="flex flex-col space-y-1.5">
+                        <label for="group" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pipeline Board Allocation</label>
+                        <select id="group" name="group" required class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition">
+                            <option value="" disabled selected>Select pipeline group...</option>
+                            {% for value, label in groups %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col space-y-1.5">
+                        <label for="client_package" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Contracted Client Package</label>
+                        <select id="client_package" name="client_package" x-model="selectedPackage" required class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition">
+                            <option value="" disabled selected>Select contract package...</option>
+                            {% for value, label in packages %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col space-y-1.5">
+                        <label for="category" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Regulatory Product Category</label>
+                        <select id="category" name="category" required class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition">
+                            <option value="" disabled selected>Select product group...</option>
+                            {% for value, label in categories %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col space-y-1.5">
+                        <label for="region" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Operational Regional Territory</label>
+                        <select id="region" name="region" required class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition">
+                            <option value="" disabled selected>Select target region...</option>
+                            {% for value, label in regions %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-3 border-b border-slate-100 bg-slate-50/60">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide">2. Scheduling & Resource Routing</h3>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="flex flex-col space-y-1.5">
+                        <label for="project_start_date" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Official Project Start Date</label>
+                        <input type="date" id="project_start_date" name="project_start_date" required class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition">
+                    </div>
+
+                    <div class="flex flex-col space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Workflow Assignment Routing</label>
+                        <div class="text-xs font-mono font-bold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2.5 flex items-center justify-between">
+                            <span>Lead Consultant Handler:</span>
+                            <span class="bg-slate-200 text-slate-800 px-2 py-0.5 rounded text-[11px]">Auto-Assigned (You)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-3 border-b border-slate-100 bg-slate-50/60">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide">3. Inventory Specifications & Operational Directives</h3>
+                </div>
+                
+                <div class="p-6 space-y-5">
+                    <div class="flex flex-col space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label for="product_names" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Product Registration Items</label>
+                            <span class="text-[10px] text-slate-400 font-medium">Comma separated catalog names</span>
+                        </div>
+                        <textarea id="product_names" name="product_names" rows="2" placeholder="e.g. Elite Cereal Mix, Premium Wheat Mix, Organic Porridge" class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-sm text-slate-800 font-medium"></textarea>
+                    </div>
+
+                    <div class="flex flex-col space-y-1.5">
+                        <label for="overall_project_notes" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Internal Portfolio Directives & Notes</label>
+                        <textarea id="overall_project_notes" name="overall_project_notes" rows="3" placeholder="Add specific initial onboarding metrics, milestone targets or client expectations..." class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-sm text-slate-800 font-medium"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{% url 'dashboard:review-client' client_id=target_client.id %}" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition uppercase font-mono tracking-wider">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm transition uppercase font-mono tracking-wider border border-slate-900">
+                    Generate Operations Tracking File
+                </button>
+            </div>
+
+        </div>
+    </form>
+</div>
+{% endblock %}

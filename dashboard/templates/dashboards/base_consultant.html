@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Consultant Console | PFS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans flex h-screen overflow-hidden" x-data="{ mobileSidebarOpen: false }">
+
+    <aside class="w-64 bg-slate-950 text-slate-200 flex flex-col fixed inset-y-0 left-0 z-50 md:static transform transition-transform duration-300 md:transform-none"
+           :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
+        
+        <div class="p-6 border-b border-slate-900 bg-slate-900/40 flex justify-between items-center">
+            <a href="{% url 'dashboard:consultant-dashboard' %}" class="text-xl font-black tracking-wider text-indigo-400">PFS CONSULTANT</a>
+            <button @click="mobileSidebarOpen = false" class="text-slate-400 hover:text-white md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-1 mt-6 overflow-y-auto">
+            {% with request.resolver_match.url_name as url_name %}
+            <a href="{% url 'dashboard:consultant-dashboard' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'consultant-dashboard' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Overview
+            </a>
+
+            <a href="{% url 'dashboard:companies-list' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'companies-list' or url_name == 'company-overview' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                Client Directory
+            </a>
+
+            <a href="{% url 'dashboard:client-submissions' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'client-submissions' or url_name == 'review-client' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Client Submissions
+            </a>
+
+            <a href="{% url 'dashboard:global-boards' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'global-boards' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+</svg>
+                Global Board
+            </a>
+            {% endwith %}
+        </nav>
+
+        <div class="p-4 border-t border-slate-900 bg-slate-900/20">
+            <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 text-slate-400 hover:text-white px-4 py-2 rounded-lg text-xs transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden w-full">
+        <header class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center z-30">
+            <div class="flex items-center gap-4">
+                <button @click="mobileSidebarOpen = true" class="text-slate-600 hover:text-indigo-600 md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider hidden sm:block">Internal Audit Desk</h2>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span class="bg-indigo-50 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100">
+                    Consultant: {{ user.first_name }}
+                </span>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 bg-slate-100">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+</body>
+</html>

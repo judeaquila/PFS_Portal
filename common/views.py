@@ -1,3 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
+# PURE HTML Page Test
+def monday_dashboard(request):
+    return render(request, 'common/index.html')

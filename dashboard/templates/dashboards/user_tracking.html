@@ -1,0 +1,103 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <div class="text-center max-w-xl mx-auto space-y-2 mt-4">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+        <h1 class="text-2xl font-bold text-slate-900">All Documentation Received!</h1>
+        <p class="text-slate-500 text-sm">Pneuma Food Scientifics consultants are actively processing your profile requirements. Portal tracking application structures initiate within 7 business days.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        
+        <div class="bg-white p-5 rounded-xl border-t-4 border-emerald-500 shadow-sm space-y-2">
+            <span class="text-xs font-bold text-emerald-600 uppercase">Step 1</span>
+            <h4 class="font-bold text-slate-800">Files Uploaded</h4>
+            <p class="text-xs text-slate-500">All structural credentials safely vaulted.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border-t-4 border-pink-600 shadow-sm space-y-2 relative overflow-hidden">
+            <span class="text-xs font-bold text-pink-600 uppercase">Step 2</span>
+            <h4 class="font-bold text-slate-800">Consultant Review</h4>
+            <p class="text-xs text-slate-500">Verifying layouts against official FDA standards.</p>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-pink-100 animate-pulse"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border-t-4 border-slate-200 shadow-sm space-y-2 opacity-60">
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 3</span>
+            <h4 class="font-bold text-slate-400">Lab Assays & Testing</h4>
+            <p class="text-xs text-slate-400">Sample evaluation processes parameters.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border-t-4 border-slate-200 shadow-sm space-y-2 opacity-60">
+            <span class="text-xs font-bold text-slate-400 uppercase">Step 4</span>
+            <h4 class="font-bold text-slate-400">FDA Portal Submission</h4>
+            <p class="text-xs text-slate-400">Final compilation assembly transmission.</p>
+        </div>
+
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h3 class="font-bold text-slate-800 mb-4 text-base">Your Safe Document Vault</h3>
+        <p class="text-xs text-slate-500 mb-4">To update or modify sub-files during active auditing, please use the direct sidebar Consultant Chat window.</p>
+        
+        <div class="space-y-2">
+            {% for type, doc in uploaded_dict.items %}
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
+                    <span class="font-medium text-slate-700">{{ doc.get_document_type_display }}</span>
+                    <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-xs">View Uploaded File ↗</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70 flex justify-between items-center">
+            <div>
+                <h3 class="font-bold text-slate-800 text-base">Account Activity History</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Real-time systemic auditing trails tracking your application milestones.</p>
+            </div>
+            <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-pink-600"></span>
+            </span>
+        </div>
+
+        <div class="p-6">
+            {% if recent_activities %}
+                <div class="relative border-l-2 border-slate-100 ml-3 space-y-6">
+                    {% for log in recent_activities %}
+                        <div class="relative pl-6">
+                            <span class="absolute -left-[11px] top-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm
+                                {% if log.category == 'PROFILE' %}bg-blue-500 text-white
+                                {% elif log.category == 'DOCUMENT' %}bg-pink-600 text-white
+                                {% elif log.category == 'PAYMENT' %}bg-emerald-500 text-white
+                                {% else %}bg-slate-400 text-white{% endif %}">
+                                {{ log.category|first }}
+                            </span>
+                            
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                        {{ log.get_category_display }}
+                                    </span>
+                                    <p class="text-sm text-slate-700 font-medium mt-0.5">{{ log.description }}</p>
+                                </div>
+                                <time class="text-xs text-slate-400 font-mono whitespace-nowrap pt-0.5">
+                                    {{ log.timestamp|date:"M d, Y @ H:i" }}
+                                </time>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-6 text-slate-400 text-sm">
+                    No verified workspace movements logged inside this profile profile session yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

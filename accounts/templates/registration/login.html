@@ -1,19 +1,89 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In | PFS Client Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row">
 
-{% block content %}
+    <div class="hidden md:flex md:w-5/12 bg-slate-900 text-white p-12 flex-col justify-between relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-pink-900/40 to-slate-900 z-0"></div>
+        
+        <div class="relative z-10">
+            <a href="/" class="text-2xl font-bold text-pink-500 mb-12 block">PFS Ghana</a>
+            <h1 class="text-4xl font-bold leading-tight mb-6">Welcome back.</h1>
+            <p class="text-slate-300 text-lg mb-8">Pick up exactly where you left off. Track your lab results, review your final labels, and communicate with our compliance team.</p>
+            
+            <div class="bg-white/10 p-6 rounded-xl border border-white/20 backdrop-blur-sm mt-12">
+                <p class="italic text-slate-200">"PFS made our FDA certification process incredibly smooth. Their dashboard kept us updated every step of the way."</p>
+                <p class="mt-4 font-bold text-pink-400">- Recent Client</p>
+            </div>
+        </div>
+        
+        <div class="relative z-10 text-sm text-slate-400">
+            &copy; 2026 Pneuma Food Scientifics
+        </div>
+    </div>
 
-<h1>Login</h1>
+    <div class="w-full md:w-7/12 flex items-center justify-center p-6 md:p-12">
+        <div class="max-w-md w-full">
+            
+            <div class="md:hidden mb-8 text-center">
+                <a href="/" class="text-3xl font-bold text-pink-700">PFS Ghana</a>
+            </div>
 
-<form method="POST">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Log in to your account</h2>
+            <p class="text-slate-600 mb-8">Enter your credentials to access your dashboard.</p>
 
-    {% csrf_token %}
+            <form method="POST" action="{% url 'accounts:login' %}" class="space-y-5">
+                {% csrf_token %}
+                
+                {% if error_message %}
+                    <div class="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-lg font-medium">
+                        {{ error_message }}
+                    </div>
+                {% endif %}
 
-    {{ form.as_p }}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                    {{ form.email }}
+                </div>
 
-    <button type="submit">
-        Login
-    </button>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    {{ form.password }}
+                </div>
 
-</form>
+                <div class="flex items-center justify-between mt-4">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="remember_me" class="w-4 h-4 text-pink-600 border-slate-300 rounded focus:ring-pink-600">
+                        <span class="ml-2 text-sm text-slate-600">Remember me</span>
+                    </label>
+                    <a href="#" class="text-sm font-medium text-pink-700 hover:underline">Forgot password?</a>
+                </div>
 
-{% endblock %}
+                <button type="submit" class="w-full bg-pink-700 text-white py-3 rounded-lg font-bold text-lg hover:bg-pink-800 transition mt-6 shadow-md">
+                    Sign In
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-slate-600 mt-8 border-t border-slate-200 pt-8">
+                Don't have an account? <a href="{% url 'accounts:register' %}" class="text-pink-700 font-bold hover:underline">Sign up here</a>
+            </p>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // In Django, this will authenticate the user and redirect.
+            alert('Logged in successfully! Redirecting to your Dashboard...');
+            // window.location.href = '/dashboard';
+        });
+    </script>
+
+</body>
+</html>

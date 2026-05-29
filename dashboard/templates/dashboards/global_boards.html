@@ -1,0 +1,89 @@
+{% extends 'dashboards/base_consultant.html' %}
+
+{% block title %}Global Operations Board | PFS{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6" x-data="{ openBoards: { 'FDA_ACTIVE': true, 'PROD_DEV': true, 'QMS_SETUP': true, 'INTERNAL': true } }">
+    
+    <div class="flex justify-between items-center pb-4 border-b border-slate-200">
+        <div>
+            <h1 class="text-xl font-black text-slate-900 tracking-tight">PFS Service Operations Desk</h1>
+            <p class="text-xs font-medium text-slate-500">Central workflow pipeline mapped across core category groups</p>
+        </div>
+        <div class="flex gap-2">
+            <button @click="openBoards = { 'FDA_ACTIVE': true, 'PROD_DEV': true, 'QMS_SETUP': true, 'INTERNAL': true }" class="text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold border border-slate-200 transition">Expand All</button>
+            <button @click="openBoards = { 'FDA_ACTIVE': false, 'PROD_DEV': false, 'QMS_SETUP': false, 'INTERNAL': false }" class="text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold border border-slate-200 transition">Collapse All</button>
+        </div>
+    </div>
+
+    {% for group_key, board_data in boards_matrix.items %}
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" x-cloak>
+        
+        <div @click="openBoards['{{ group_key }}'] = !openBoards['{{ group_key }}']" 
+             class="bg-slate-50/70 border-b border-slate-200 px-5 py-3.5 flex items-center justify-between cursor-pointer select-none hover:bg-slate-50 transition">
+            <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="openBoards['{{ group_key }}'] ? 'transform rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                <h2 class="text-xs font-black text-slate-800 uppercase tracking-wider font-mono">{{ board_data.label }}</h2>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono font-bold bg-slate-200/70 text-slate-600 px-2.5 py-0.5 rounded-full">
+                    {{ board_data.projects|length }} Client {{ board_data.projects|length|pluralize:"Project,Projects" }}
+                </span>
+                <span class="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-600 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                    {{ board_data.total_subitems_count }} Active Subitems
+                </span>
+            </div>
+        </div>
+
+        <div x-show="openBoards['{{ group_key }}']" x-collapse>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-mono text-[9px] font-black uppercase tracking-wider bg-slate-50/30">
+                            <th class="px-6 py-3">Client Workspace / Business Portfolio</th>
+                            <th class="px-4 py-3">Assigned Track</th>
+                            <th class="px-4 py-3">Focus Category</th>
+                            <th class="px-4 py-3">Region</th>
+                            <th class="px-4 py-3 w-40">Live Completion Progress</th>
+                            <th class="px-6 py-3 text-right">Workspace Desk</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                        {% for project in board_data.projects %}
+                        <tr class="hover:bg-slate-50/40 transition">
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-slate-900 text-sm">{{ project.client.business_name|default:"[No Business Identity Recorded]" }}</div>
+                                <div class="text-[10px] font-mono text-slate-400 mt-0.5">{{ project.client.get_full_name }} &bull; {{ project.client.email }}</div>
+                            </td>
+                            <td class="px-4 py-4"><span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-[11px] font-bold border border-slate-200/50">{{ project.get_client_package_display }}</span></td>
+                            <td class="px-4 py-4 font-semibold text-slate-600">{{ project.get_category_display }}</td>
+                            <td class="px-4 py-4 font-mono font-bold text-slate-500 text-[11px]">{{ project.get_region_display }}</td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-24 h-1.5 bg-slate-100 rounded-full border border-slate-200 overflow-hidden">
+                                        <div class="h-full bg-emerald-500 rounded-full" style="width: {{ project.automated_progress }}%"></div>
+                                    </div>
+                                    <span class="font-mono text-[10px] font-bold text-slate-800">{{ project.automated_progress }}%</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{% url 'dashboard:project-board' project.id %}" class="inline-flex items-center justify-center font-mono text-[10px] uppercase font-bold tracking-wider text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded shadow-sm transition">
+                                    Open Board
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-slate-400 italic font-mono text-xs bg-slate-50/20">
+                                No operational active tracking project lines registered under this board tier.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

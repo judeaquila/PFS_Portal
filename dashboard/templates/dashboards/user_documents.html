@@ -1,0 +1,290 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}Document Vault | PFS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Document Vault</h1>
+            <p class="text-sm text-slate-500 mt-1">Manage, upload, and review the status of all documentation required for your FDA Certification application.</p>
+        </div>
+        <div class="bg-slate-900 text-white px-4 py-2 rounded-xl text-center shadow-sm flex items-center gap-3 self-start md:self-center">
+            <span class="text-2xl font-bold text-pink-500">{{ total_uploaded }}</span>
+            <span class="text-xs text-slate-400 text-left leading-tight">Total Files<br><span class="font-semibold text-white">Vaulted</span></span>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="p-4 rounded-xl text-sm font-medium shadow-sm {% if message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-500{% else %}bg-emerald-50 text-emerald-800 border-l-4 border-emerald-500{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-documents' %}" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70">
+                <h3 class="font-bold text-slate-800 text-base">1. Baseline Corporate Documents</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Core company identification and physical asset frameworks.</p>
+            </div>
+            
+            <div class="divide-y divide-slate-100">
+                
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Business Registration Certificate</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Official incorporation documents issued by the Registrar General's Department.</p>
+                        {% if 'BUSINESS_CERT' in uploaded_dict %}
+                            {% with doc=uploaded_dict.BUSINESS_CERT %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% if doc.rejection_reason %}
+                                <p class="text-xs bg-red-50 text-red-700 p-2 rounded border border-red-100 mt-2 font-medium">Reason: {{ doc.rejection_reason }}</p>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.BUSINESS_CERT.status != 'APPROVED' %}
+                        <input type="file" name="BUSINESS_CERT" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Medical Fitness Certificates (Health Cards)</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Required health declaration metrics for handlers working within food or cosmetic boundaries.</p>
+                        {% if 'HEALTH_CARD' in uploaded_dict %}
+                            {% with doc=uploaded_dict.HEALTH_CARD %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% if doc.rejection_reason %}
+                                <p class="text-xs bg-red-50 text-red-700 p-2 rounded border border-red-100 mt-2 font-medium">Reason: {{ doc.rejection_reason }}</p>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.HEALTH_CARD.status != 'APPROVED' %}
+                        <input type="file" name="HEALTH_CARD" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Facility Floor Sketch Plan</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Scale layout drawing showing infrastructure flow, production partitions, entries, and exits.</p>
+                        {% if 'FACILITY_SKETCH' in uploaded_dict %}
+                            {% with doc=uploaded_dict.FACILITY_SKETCH %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% if doc.rejection_reason %}
+                                <p class="text-xs bg-red-50 text-red-700 p-2 rounded border border-red-100 mt-2 font-medium">Reason: {{ doc.rejection_reason }}</p>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.FACILITY_SKETCH.status != 'APPROVED' %}
+                        <input type="file" name="FACILITY_SKETCH" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70">
+                <h3 class="font-bold text-slate-800 text-base">2. Product Specifications & Facility Controls</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Technical compliance metrics, packaging labels, and sanitization declarations.</p>
+            </div>
+            
+            <div class="divide-y divide-slate-100">
+                
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Proposed Product Labels</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Graphic artwork file showing compliance metrics, ingredients, batch numbering positions, and net content metrics.</p>
+                        {% if 'PRODUCT_LABEL' in uploaded_dict %}
+                            {% with doc=uploaded_dict.PRODUCT_LABEL %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.PRODUCT_LABEL.status != 'APPROVED' %}
+                        <input type="file" name="PRODUCT_LABEL" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Water Analysis Laboratory Report</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Official physical, chemical, and microbiological water test parameters from an accredited laboratory.</p>
+                        {% if 'WATER_ANALYSIS' in uploaded_dict %}
+                            {% with doc=uploaded_dict.WATER_ANALYSIS %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.WATER_ANALYSIS.status != 'APPROVED' %}
+                        <input type="file" name="WATER_ANALYSIS" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Pest Control Contract/Certificate</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Active structural servicing log document with a certified environmental health fumigation contractor.</p>
+                        {% if 'PEST_CONTROL' in uploaded_dict %}
+                            {% with doc=uploaded_dict.PEST_CONTROL %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.PEST_CONTROL.status != 'APPROVED' %}
+                        <input type="file" name="PEST_CONTROL" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Standard Operating Procedures (SOPs) Manual</h4>
+                        <p class="text-xs text-slate-500 max-w-prose">Operational guidelines mapping out production sanity, clean-in-place configurations, and raw material batching parameters.</p>
+                        {% if 'SOP_MANUAL' in uploaded_dict %}
+                            {% with doc=uploaded_dict.SOP_MANUAL %}
+                            <div class="pt-1 flex items-center gap-2">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">View Document ↗</a>
+                            </div>
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    {% if uploaded_dict.SOP_MANUAL.status != 'APPROVED' %}
+                        <input type="file" name="SOP_MANUAL" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                    {% else %}
+                        <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">Verified Secure Asset ✓</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="w-full sm:w-auto bg-pink-700 text-white px-8 py-3 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
+                Commit & Upload New Versions
+            </button>
+        </div>
+    </form>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6 mt-8">
+        <div>
+            <h3 class="text-lg font-bold text-slate-900">3. Supplementary & External Request Assets</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Use this section to fulfill non-standard, ad-hoc documentation requirements requested by the FDA or case managers.</p>
+        </div>
+
+        <form method="POST" action="{% url 'dashboard:create-supplementary-slot' %}" class="flex flex-col sm:flex-row gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            {% csrf_token %}
+            <div class="flex-1">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Requested Document Reference / Title</label>
+                <input type="text" name="custom_title" required placeholder="e.g., FDA Deficiencies Report - Stability Testing Clause" 
+                    class="w-full text-sm p-2.5 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+            <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow-sm self-end transition h-[42px]">
+                + Add Requirement Slot
+            </button>
+        </form>
+
+        <div class="space-y-3">
+            {% for doc in supplementary_documents %}
+                <div class="space-y-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-slate-100 rounded-xl bg-white shadow-sm gap-4">
+                        <div class="space-y-1">
+                            <h4 class="text-sm font-bold text-slate-800">{{ doc.custom_title }}</h4>
+                            <div class="flex items-center gap-2 pt-0.5">
+                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border
+                                    {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-100
+                                    {% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-100
+                                    {% else %}bg-amber-50 text-amber-700 border-amber-100{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                
+                                {% if doc.file %}
+                                    <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline flex items-center gap-0.5">
+                                        View Document ↗
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            {% if doc.status != 'APPROVED' %}
+                                <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:upload-asset' doc_id=doc.id %}" class="flex items-center gap-2">
+                                    {% csrf_token %}
+                                    <input type="file" name="attached_file" required class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+                                        {% if doc.file %}Re-upload{% else %}Upload{% endif %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-xs text-emerald-600 font-bold flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm">
+                                    Verified Secure Asset ✓
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if doc.status == 'REJECTED' and doc.rejection_reason %}
+                        <div class="text-xs bg-red-50 text-red-700 px-4 py-2.5 rounded-xl border border-red-100 ml-2 font-medium">
+                            <strong>Reason for Deficit:</strong> {{ doc.rejection_reason }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-xs text-slate-400 italic text-center py-4">No additional supplemental requirements currently pinned to this workspace portfolio.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

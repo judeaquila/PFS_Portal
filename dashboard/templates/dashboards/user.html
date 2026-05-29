@@ -1,5 +1,134 @@
-{% extends 'base.html' %}
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}Upload Documents | PFS{% endblock %}
 
 {% block content %}
-<h1>User Dashboard</h1>
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg flex gap-4 shadow-sm">
+        <svg class="w-6 h-6 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+            <h3 class="font-bold text-blue-800">Next Step: Upload Required Documents</h3>
+            <p class="text-sm text-blue-600 mt-1">Please note that online portal applications will initiate exactly 7 days after sharing a complete set of documentation below.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="p-4 rounded-lg text-sm font-medium shadow-sm {% if message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-500{% else %}bg-emerald-50 text-emerald-800 border-l-4 border-emerald-500{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-dashboard' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        {% csrf_token %}
+        
+        <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70 flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-lg text-slate-900">Mandatory Initial Records</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Please provide clean, legible PDF scans or image documents.</p>
+            </div>
+            <span class="text-sm font-bold bg-pink-50 text-pink-700 px-3 py-1 rounded-full border border-pink-100">
+                {{ total_uploaded }} of {{ total_required }} Completed
+            </span>
+        </div>
+        
+        <div class="divide-y divide-slate-100">
+            
+            <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 transition">
+                <div class="flex items-start gap-4">
+                    {% if 'BUSINESS_CERT' in uploaded_dict %}
+                        <div class="mt-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
+                    {% else %}
+                        <div class="mt-1 w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
+                    {% endif %}
+                    <div>
+                        <h4 class="font-bold text-slate-800">Business Registration Certificate</h4>
+                        <p class="text-sm text-slate-500">Official incorporation documents issued by the Registrar General's Department.</p>
+                        
+                        {% if 'BUSINESS_CERT' in uploaded_dict %}
+                            <div class="mt-2 flex items-center gap-3">
+                                <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                    Status: {{ uploaded_dict.BUSINESS_CERT.get_status_display }}
+                                </span>
+                                <a href="{{ uploaded_dict.BUSINESS_CERT.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline">Review Scan ↗</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="self-start md:self-center">
+                    <input type="file" name="BUSINESS_CERT" id="BUSINESS_CERT"
+                           class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 file:cursor-pointer transition">
+                </div>
+            </div>
+
+            <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 transition">
+                <div class="flex items-start gap-4">
+                    {% if 'HEALTH_CARD' in uploaded_dict %}
+                        <div class="mt-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
+                    {% else %}
+                        <div class="mt-1 w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
+                    {% endif %}
+                    <div>
+                        <h4 class="font-bold text-slate-800">Medical Fitness Certificates (Health Cards)</h4>
+                        <p class="text-sm text-slate-500">Required health declaration metrics for local food manufacturing validation handlers.</p>
+                        
+                        {% if 'HEALTH_CARD' in uploaded_dict %}
+                            <div class="mt-2 flex items-center gap-3">
+                                <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                    Status: {{ uploaded_dict.HEALTH_CARD.get_status_display }}
+                                </span>
+                                <a href="{{ uploaded_dict.HEALTH_CARD.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline">Review Scan ↗</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="self-start md:self-center">
+                    <input type="file" name="HEALTH_CARD" id="HEALTH_CARD"
+                           class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 file:cursor-pointer transition">
+                </div>
+            </div>
+
+            <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 transition">
+                <div class="flex items-start gap-4">
+                    {% if 'FACILITY_SKETCH' in uploaded_dict %}
+                        <div class="mt-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
+                    {% else %}
+                        <div class="mt-1 w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
+                    {% endif %}
+                    <div>
+                        <h4 class="font-bold text-slate-800">Facility Floor Sketch Plan</h4>
+                        <p class="text-sm text-slate-500">A clear graphical drawing outlining processing layouts, entries, exits, and machinery configurations.</p>
+                        
+                        {% if 'FACILITY_SKETCH' in uploaded_dict %}
+                            <div class="mt-2 flex items-center gap-3">
+                                <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                    Status: {{ uploaded_dict.FACILITY_SKETCH.get_status_display }}
+                                </span>
+                                <a href="{{ uploaded_dict.FACILITY_SKETCH.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline">Review Scan ↗</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="self-start md:self-center">
+                    <input type="file" name="FACILITY_SKETCH" id="FACILITY_SKETCH"
+                           class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 file:cursor-pointer transition">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="submit" class="bg-pink-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
+                Upload and Save Documents
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'dashboards/base_consultant.html' %}
+
+{% block title %}Service Board: {{ project.client.business_name|default:project.client.email }} | PFS{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6" x-data="{ currentTab: 'activities' }">
+    
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <span>{{ project.get_group_display }}</span>
+                <span>&bull;</span>
+                <span>{{ project.get_region_display }}</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">
+                {{ project.client.business_name|default:"[No Business Name Provided]" }}
+            </h1>
+            <p class="text-xs font-medium text-slate-500 mt-1">
+                Lead Account Consultant: <span class="text-slate-800 font-bold">{{ project.assigned_consultant.get_full_name|default:project.assigned_consultant.email }}</span>
+            </p>
+        </div>
+
+        <div class="w-full md:w-64 space-y-2 self-stretch md:self-auto flex flex-col justify-center">
+            <div class="flex justify-between items-center text-xs font-mono font-bold tracking-tight">
+                <span class="text-slate-400 uppercase">Track: {{ project.get_client_package_display }}</span>
+                <span class="text-indigo-600">{{ completion_percentage }}% Complete</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+                <div class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: {{ completion_percentage }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex items-center border-b border-slate-200 gap-2">
+        <button @click="currentTab = 'activities'" 
+                :class="currentTab === 'activities' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+                class="px-4 py-2.5 border-b-2 text-xs uppercase tracking-wider transition focus:outline-none">
+            Service Activity Stream
+        </button>
+        <button @click="currentTab = 'meta'" 
+                :class="currentTab === 'meta' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'"
+                class="px-4 py-2.5 border-b-2 text-xs uppercase tracking-wider transition focus:outline-none">
+            Project Specifications
+        </button>
+    </div>
+
+    <div x-data="{ modalOpen: false }" class="mb-4">
+        <button @click="modalOpen = true" class="inline-flex items-center gap-1.5 text-xs font-bold font-mono uppercase bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-lg shadow-sm transition">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            Add Custom Task Subitem
+        </button>
+
+        <div x-show="modalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4" x-transition>
+            <div @click.away="modalOpen = false" class="bg-white border border-slate-200 rounded-xl w-full max-w-md p-6 shadow-xl space-y-4">
+                <div>
+                    <h3 class="text-base font-black text-slate-900 tracking-tight">Add Custom Action Subitem</h3>
+                    <p class="text-xs text-slate-500">Inject an ad-hoc process task into this client project's timeline.</p>
+                </div>
+                
+                <form method="POST" action="{% url 'dashboard:add-custom-subitem' project.id %}" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1">Subitem Process Name</label>
+                        <input type="text" name="activity_name" required placeholder="e.g., Extended Stability Testing Review" 
+                            class="w-full px-3 py-2 border border-slate-200 text-xs font-medium rounded-lg shadow-sm focus:outline-none focus:border-indigo-600 transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1">Target Due Date (Optional)</label>
+                        <input type="date" name="activity_deadline" 
+                            class="w-full px-3 py-2 border border-slate-200 text-xs font-medium rounded-lg shadow-sm focus:outline-none focus:border-indigo-600 transition">
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                        <button type="button" @click="modalOpen = false" class="px-3.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 font-mono uppercase transition">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm font-mono uppercase transition">Append Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="currentTab === 'activities'" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/70 border-b border-slate-200 text-slate-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                        <th class="px-6 py-3.5">Operational Activity Metric / Subitem</th>
+                        <th class="px-4 py-3.5 w-44">Payment Status</th>
+                        <th class="px-4 py-3.5 w-48">Activity Progress Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700 text-xs font-medium">
+                    {% for activity in project.activities.all %}
+                        <tr class="hover:bg-slate-50/50 transition">
+                            <td class="px-6 py-4 font-bold text-slate-800 text-sm">
+                                {{ activity.activity_name }}
+                            </td>
+                            
+                            <td class="px-4 py-4">
+                                <form method="POST" action="{% url 'dashboard:update-activity-status' activity.id %}" class="inline-block w-full">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update_type" value="PAYMENT">
+                                    <select name="status_value" onchange="this.form.submit()" 
+                                            class="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-bold shadow-sm focus:outline-none transition cursor-pointer
+                                            {% if activity.payment_status == 'PAID' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                            {% elif activity.payment_status == 'PARTIALLY_PAID' %}bg-blue-50 text-blue-700 border-blue-200
+                                            {% else %}bg-slate-50 text-slate-600 border-slate-200{% endif %}">
+                                        {% for value, label in payment_choices %}
+                                            <option value="{{ value }}" {% if activity.payment_status == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </td>
+
+                            <td class="px-4 py-4">
+                                <form method="POST" action="{% url 'dashboard:update-activity-status' activity.id %}" class="inline-block w-full">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update_type" value="ACTIVITY">
+                                    <select name="status_value" onchange="this.form.submit()"
+                                            class="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-bold shadow-sm focus:outline-none transition cursor-pointer
+                                            {% if activity.activity_status == 'COMPLETED' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                            {% elif activity.activity_status == 'IN_PROGRESS' %}bg-amber-50 text-amber-700 border-amber-200
+                                            {% else %}bg-slate-50 text-slate-600 border-slate-200{% endif %}">
+                                        {% for value, label in activity_choices %}
+                                            <option value="{{ value }}" {% if activity.activity_status == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-10 text-center text-slate-400 italic bg-slate-50/30">
+                                This blueprint contains zero active generated workflow subitems.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div x-show="currentTab === 'meta'" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start" style="display: none;">
+        <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-5 md:col-span-2">
+            <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">Technical Specifications</h3>
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Registered Items & Products</span>
+                <div class="text-sm font-medium text-slate-700 mt-1 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">{{ project.product_names|default:"No explicit catalog items listed." }}</div>
+            </div>
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Internal Directives & Onboarding Notes</span>
+                <div class="text-sm text-slate-600 mt-1 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">{{ project.overall_project_notes|default:"No active constraint directives saved." }}</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4 md:col-span-1">
+            <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">Timeline Details</h3>
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Project Commenced</span>
+                <span class="text-sm font-bold text-slate-800 mt-0.5 block">{{ project.project_start_date|date:"F d, Y" }}</span>
+            </div>
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Regulatory Focus Category</span>
+                <span class="text-sm font-semibold text-slate-700 mt-0.5 block">{{ project.get_category_display }}</span>
+            </div>
+            <div class="pt-2 border-t border-slate-100">
+                <a href="{% url 'dashboard:review-client' client_id=project.client.id %}" class="w-full text-center inline-block text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2.5 px-4 rounded-lg shadow-sm transition">
+                    Open Documentation Audit Desk
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
