@@ -1,0 +1,101 @@
+{% extends 'dashboards/base_superadmin.html' %}
+
+{% block title %}Ambassador Matrix Directory | PFS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Ambassador Directory Matrix</h1>
+            <p class="text-sm text-slate-500">Audit, approve, or temporarily freeze credentials for active and pending field operation accounts.</p>
+        </div>
+        <a href="{% url 'dashboard:super-admin-dashboard' %}" class="bg-white border border-slate-200 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-50 transition shadow-sm">
+            ← Return to Command Center
+        </a>
+    </div>
+
+    <!-- Main Registration Table Box -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <th class="p-4">Ambassador Info</th>
+                        <th class="p-4">Verification Status</th>
+                        <th class="p-4">Active Assignments</th>
+                        <th class="p-4">Bio Statements Summary</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                {% for account in ambassadors %}
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <!-- Info Cell -->
+                        <td class="p-4 flex items-center gap-3">
+                            <div class="w-9 h-9 bg-slate-100 border rounded-lg flex items-center justify-center font-bold text-slate-600 text-xs uppercase">
+                                {{ account.username|slice:":2"|default:account.first_name|slice:":2" }}
+                            </div>
+                            <div>
+                                <!-- Accessing base User directly -->
+                                <div class="font-bold text-slate-900">{{ account.get_full_name|default:account.email }}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">ID: #{{ account.id }} | {{ account.email }}</div>
+                            </div>
+                        </td>
+                        
+                        <!-- Verification Status Badges -->
+                        <td class="p-4">
+                            <!-- Checking relation flag status safely -->
+                            {% if account.ambassador_profile.is_active_field_agent %}
+                                <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wide border border-emerald-200">
+                                    ● Active / Verified
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wide border border-amber-200">
+                                    ◷ Awaiting Audit
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Metrics Count -->
+                        <td class="p-4 font-medium text-slate-600">
+                            {{ account.assignment_count }} client contracts
+                        </td>
+
+                        <!-- Statement Extract -->
+                        <td class="p-4 text-slate-500 max-w-xs truncate italic">
+                            "{{ account.ambassador_profile.bio|default:'No profile credentials created yet.' }}"
+                        </td>
+
+                        <!-- Dynamic Action Controls -->
+                        <td class="p-4 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <!-- If the OneToOne profile record doesn't exist yet, we can pass account.id to our verify link -->
+                                {% if not account.ambassador_profile.is_active_field_agent %}
+                                    <form method="POST" action="{% url 'dashboard:superadmin-process-verification' account.id 'verify' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-md transition shadow-xs text-[11px]">
+                                            Verify Account
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <form method="POST" action="{% url 'dashboard:superadmin-process-verification' account.id 'decline' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="bg-white border border-slate-200 text-red-600 hover:bg-red-50 font-medium px-2.5 py-1.5 rounded-md transition text-[11px]">
+                                            Decline / Freeze
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center p-8 text-slate-400 italic">No user accounts found matching the Ambassador role designation category.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

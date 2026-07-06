@@ -1,5 +1,100 @@
-{% extends 'base.html' %}
+{% extends 'dashboards/base_superadmin.html' %}
+
+{% block title %}Superadmin Dashboard Overview | PFS{% endblock %}
 
 {% block content %}
-<h1>Super Admin Dashboard</h1>
+<div class="max-w-7xl mx-auto space-y-8">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900">System Command Center</h1>
+        <p class="text-sm text-slate-500">Global overview monitoring cross-platform application matrices and field deployment queues.</p>
+    </div>
+
+    <!-- KPI Metric Summary Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Total Field Agents</span>
+            <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-3xl font-black text-slate-900">{{ metrics.total_ambassadors }}</span>
+                <span class="text-xs font-semibold text-slate-500">registered</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Pending Applications</span>
+            <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-3xl font-black {% if metrics.pending_verifications > 0 %}text-amber-600{% else %}text-slate-900{% endif %}">
+                    {{ metrics.pending_verifications }}
+                </span>
+                <span class="text-xs font-semibold text-slate-500">needs verification</span>
+            </div>
+            {% if metrics.pending_verifications > 0 %}
+                <span class="absolute right-0 top-0 h-2 w-2 bg-amber-500 animate-ping rounded-full m-4"></span>
+            {% endif %}
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Active Client Matches</span>
+            <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-3xl font-black text-slate-900">{{ metrics.active_assignments }}</span>
+                <span class="text-xs font-semibold text-emerald-600">live pipelines</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Open Client Claims</span>
+            <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-3xl font-black text-slate-900">{{ metrics.unclaimed_projects }}</span>
+                <span class="text-xs font-semibold text-slate-500">unassigned</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Priority Tasks Hub -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <!-- Quick Verification Queue Widget -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-sm">Urgent Verification Queue</h3>
+                <a href="{% url 'dashboard:superadmin-ambassadors' %}" class="text-xs font-bold text-pink-700 hover:text-pink-800 transition">View Registry Matrix →</a>
+            </div>
+            
+            <div class="divide-y divide-slate-100">
+                {% for profile in recent_signups %}
+                    <div class="p-4 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center font-bold text-slate-500 text-sm">
+                                {{ profile.user.username|slice:":2"|upper }}
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900">{{ profile.user.get_full_name|default:profile.user.username }}</h4>
+                                <p class="text-[11px] text-slate-400">{{ profile.user.email }}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <form method="POST" action="{% url 'dashboard:superadmin-process-verification' profile.id 'verify' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="text-[11px] bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1.5 rounded-md hover:bg-emerald-100 transition">Approve</button>
+                            </form>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-8 text-xs text-slate-400">All signups are currently verified and clear.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- System Navigation Access Pad -->
+        <div class="bg-slate-900 text-white p-6 rounded-xl space-y-4 shadow-md">
+            <h3 class="font-bold text-sm tracking-wide text-slate-400 uppercase">Management Shortcuts</h3>
+            <div class="space-y-2">
+                <a href="{% url 'dashboard:superadmin-ambassadors' %}" class="block p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium transition text-left">
+                    👥 Browse Ambassador Directory
+                </a>
+                <a href="/admin/" target="_blank" class="block p-3 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-medium text-slate-400 transition text-left">
+                    🔧 Open Core Django Admin Engine
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

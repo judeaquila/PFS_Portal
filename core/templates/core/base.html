@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>
+        {% block title %}
+            PFS Online Portal
+        {% endblock %}
+    </title>
+
+    <meta name="description"
+          content="{% block meta_description %}The PFS Online Portal simplifies FDA compliance, client onboarding, document management and regulatory guidance for food businesses.{% endblock %}">
+
+    <meta name="author" content="Pneuma Food Scientifics">
+
+    <link rel="icon"
+          href="{% static 'images/favicon.ico' %}">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- Tailwind Theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        primary: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+    <!-- Navigation -->
+    {% include "includes/navbar.html" %}
+
+    <!-- Django Messages -->
+    {% include "includes/messages.html" %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+    <!-- Footer -->
+    {% include "includes/footer.html" %}
+
+    {% block modals %}
+    {% endblock %}
+
+    {% block extra_js %}
+    {% endblock %}
+
+</body>
+
+</html>

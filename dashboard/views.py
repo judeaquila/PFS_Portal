@@ -5,12 +5,12 @@ from accounts.models import UserRole
 from common.decorators import role_required, mandatory_docs_required
 from .forms import ClientProfileForm
 from django.contrib import messages
-from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup
-from accounts.models import UserRole
+from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Count, Max, F
+from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db import transaction, models
+from django.db import transaction
 from .signals import get_activities_for_package
 
 
@@ -49,7 +49,72 @@ def redirect_dashboard(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def super_admin_dashboard(request):
-    return render(request, "dashboards/super_admin.html")
+    return render(request, "dashboards/superadmin_verify_ambassadors.html")
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def superadmin_dashboard(request):
+    """Provides a bird's-eye view of platform metrics and urgent administrative actions."""
+    metrics = {
+        'total_ambassadors': AmbassadorProfile.objects.count(),
+        'pending_verifications': AmbassadorProfile.objects.filter(is_active_field_agent=False).count(),
+        'active_assignments': AmbassadorAssignment.objects.filter(status='ASSIGNED').count(),
+        'unclaimed_projects': ClientProject.objects.exclude(
+            id__in=AmbassadorAssignment.objects.filter(status='ASSIGNED').values_list('project_id', flat=True)
+        ).count(),
+    }
+    
+    # Grab the 5 oldest unverified applications for a quick-action widget
+    recent_signups = AmbassadorProfile.objects.filter(is_active_field_agent=False).select_related('user').order_by('id')[:5]
+
+    context = {
+        'metrics': metrics,
+        'recent_signups': recent_signups,
+    }
+
+    return render(request, 'dashboards/super_admin.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def superadmin_ambassadors(request):
+    """
+    Renders a comprehensive directory table managing all platform ambassador profiles.
+    Queries the User base filtered by role to guarantee unprofiled accounts are caught.
+    """
+    ambassadors_users = User.objects.filter(role=UserRole.AMBASSADOR).select_related(
+        'ambassador_profile'
+    ).annotate(
+        assignment_count=Count('ambassador_profile__assignments')
+    ).order_by('-id')
+
+    return render(request, 'dashboards/superadmin_ambassadors.html', {
+        'ambassadors': ambassadors_users
+    })
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def superadmin_process_verification(request, profile_id, action):
+    """Processes approval metrics using the core User model ID key map."""
+    if request.method == 'POST':
+        # Look up the targeted user account 
+        target_user = get_object_or_404(User, id=profile_id)
+        
+        # Get or initialize the profile table structure seamlessly
+        profile, created = AmbassadorProfile.objects.get_or_create(user=target_user)
+        
+        if action == 'verify':
+            profile.is_active_field_agent = True
+            profile.save()
+            messages.success(request, f"Successfully verified account credentials for {target_user.email}.")
+        elif action == 'decline':
+            profile.is_active_field_agent = False
+            profile.save()
+            messages.warning(request, f"Declined credentials tracking for {target_user.email}.")
+            
+    return redirect('dashboard:superadmin-ambassadors')
 
 
 # SUPERVISOR Dashboard
@@ -405,7 +470,7 @@ def consultant_company_overview(request, client_id):
 
 
 @login_required
-@role_required(['CONSULTANT'])
+@role_required([UserRole.CONSULTANT])
 def initiate_client_project(request, client_id):
     """
     Audits and validates target account mandatory asset statuses, establishes the master 
@@ -413,7 +478,7 @@ def initiate_client_project(request, client_id):
     """
     client_user = get_object_or_404(User, id=client_id, role='USER')
     
-    # 1. GATEKEEPER VALIDATION: Confirm mandatory onboarding compliance assets are approved
+    # Confirm mandatory onboarding compliance assets are approved
     required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
     approved_core_count = client_user.documents.filter(
         document_type__in=required_types,
@@ -427,12 +492,12 @@ def initiate_client_project(request, client_id):
         )
         return redirect("dashboard:review-client", client_id=client_user.id)
     
-    # 2. BOUNDARY VALIDATION: Prevent duplicate active projects on a single user profile
+    # Prevent duplicate active projects on a single user profile
     if hasattr(client_user, 'project_file'):
         messages.warning(request, "An active operational workflow file already exists for this portfolio.")
         return redirect("dashboard:project-board", project_id=client_user.project_file.id)
 
-    # 3. FORM OPERATIONS HANDLER (POST)
+    # FORM OPERATIONS HANDLER
     if request.method == "POST":
         group = request.POST.get("group")
         client_package = request.POST.get("client_package")
@@ -464,8 +529,7 @@ def initiate_client_project(request, client_id):
             messages.error(request, f"Operational submission failure: {str(e)}")
             return redirect("dashboard:initiate-client-project", client_id=client_user.id)
 
-    # 4. DATA PRESENTATION PROCESSING (GET)
-    # Dynamically extract lists directly out of the helper for your template's Alpine preview engine
+    # DATA PRESENTATION PROCESSING
     frontend_blueprints = {
         choice_key: get_activities_for_package(choice_key)
         for choice_key, _ in PackageChoices.choices
@@ -486,17 +550,60 @@ def initiate_client_project(request, client_id):
 @role_required([UserRole.CONSULTANT])
 def project_service_board(request, project_id):
     """
-    Renders the unified operational tracking workspace interface.
+    Renders the dedicated consultant workflow control engine for a single client project file.
     """
-    project = get_object_or_404(ClientProject.objects.prefetch_related('activities'), id=project_id)
+    project = get_object_or_404(
+        ClientProject.objects.select_related('client', 'assigned_consultant').prefetch_related('activities'),
+        id=project_id
+    )
+
+    if request.method == "POST":
+        action = request.POST.get('action')
+
+        # Add new subitem
+        if action == "add_subitem":
+            name = request.POST.get('activity_name')
+            if name:
+                ProjectActivity.objects.create(
+                    project=project,
+                    activity_name=name
+                )
+        
+        # Add a note
+        elif action == "add_note":
+            activity_id = request.POST.get('activity_id')
+            text = request.POST.get('note_text')
+            if activity_id and text:
+                activity = ProjectActivity.objects.get(id=activity_id, project=project)
+                ActivityNote.objects.create(activity=activity, note_text=text)
+
+        # Update Payment Status
+        elif action == "update_payment":
+            activity_id = request.POST.get('activity_id')
+            val = request.POST.get('status_value')
+            if activity_id and val:
+                act = ProjectActivity.objects.get(id=activity_id, project=project)
+                act.payment_status = val
+                act.save()
+
+        # Update Activity Status
+        elif action == "update_activity_status":
+            activity_id = request.POST.get('activity_id')
+            val = request.POST.get('status_value')
+            if activity_id and val:
+                act = ProjectActivity.objects.get(id=activity_id, project=project)
+                act.activity_status = val
+                act.save()
+
+        return redirect('dashboard:project-board', project_id=project.id)
     
     context = {
-        "project": project,
-        "completion_percentage": project.automated_progress,
-        "payment_choices": PaymentStatus.choices,
-        "activity_choices": ActivityStatus.choices,
+        'project': project,
+        'payment_choices': PaymentStatus.choices,
+        'activity_choices': ActivityStatus.choices,
     }
-    return render(request, "dashboards/project_board.html", context)
+    
+    return render(request, 'dashboards/project_board.html', context)
 
 
 @login_required
@@ -558,42 +665,263 @@ def global_operations_boards(request):
     return render(request, "dashboards/global_boards.html", context)
 
 
-# ADD PROJECT SUB-ITEMS
-@login_required
-def add_custom_project_subitem(request, project_id):
-    """
-    POST-only action endpoint allowing account consultants to instantly append 
-    ad-hoc project subitems to an active operational roadmap.
-    """
-    if request.method == "POST":
-        project = get_object_or_404(ClientProject, id=project_id)
-        activity_name = request.POST.get("activity_name", "").strip()
-        activity_deadline = request.POST.get("activity_deadline")
+# # ADD PROJECT SUB-ITEMS
+# @login_required
+# def add_custom_project_subitem(request, project_id):
+#     """
+#     POST-only action endpoint allowing account consultants to instantly append 
+#     ad-hoc project subitems to an active operational roadmap.
+#     """
+#     if request.method == "POST":
+#         project = get_object_or_404(ClientProject, id=project_id)
+#         activity_name = request.POST.get("activity_name", "").strip()
+#         activity_deadline = request.POST.get("activity_deadline")
         
-        if not activity_name:
-            messages.error(request, "Operational subitem addition aborted. A valid task execution title must be provided.")
-            return redirect("dashboard:project-board", project_id=project.id)
+#         if not activity_name:
+#             messages.error(request, "Operational subitem addition aborted. A valid task execution title must be provided.")
+#             return redirect("dashboard:project-board", project_id=project.id)
             
-        ProjectActivity.objects.create(
-            project=project,
-            activity_name=activity_name,
-            activity_deadline=activity_deadline if activity_deadline else None,
-            payment_status=PaymentStatus.NOT_PAID,
-            activity_status=ActivityStatus.NOT_STARTED
-        )
+#         ProjectActivity.objects.create(
+#             project=project,
+#             activity_name=activity_name,
+#             activity_deadline=activity_deadline if activity_deadline else None,
+#             payment_status=PaymentStatus.NOT_PAID,
+#             activity_status=ActivityStatus.NOT_STARTED
+#         )
         
-        messages.success(request, f"Successfully appended custom task subitem: '{activity_name}'.")
-        return redirect("dashboard:project-board", project_id=project.id)
+#         messages.success(request, f"Successfully appended custom task subitem: '{activity_name}'.")
+#         return redirect("dashboard:project-board", project_id=project.id)
         
-    return redirect("dashboard:global-boards")
+#     return redirect("dashboard:global-boards")
 
 
 
-# AMBASSADOR Dashboard
+#********************************************************** AMBASSADOR DASHBOARD **************************************************#
+#******************************************************************************************************************************#
+# AMBASSADOR Dashboard Overview
 @login_required
 @role_required([UserRole.AMBASSADOR])
 def ambassador_dashboard(request):
-    return render(request, "dashboards/ambassador.html")
+    """
+    Renders the operational hub for platform Ambassadors.
+    Swaps presentation layers dynamically based on backend verification flags.
+    """
+    # 1. Safely evaluate profile instantiation states
+    try:
+        profile = request.user.ambassador_profile
+        is_verified = profile.is_active_field_agent
+    except AmbassadorProfile.DoesNotExist:
+        profile = None
+        is_verified = False
+
+    # 2. Define standard fallback metrics variables
+    active_assignments = []
+    available_clients = []
+    completed_payouts_total = "0.00"
+
+    # 3. If verified, populate the operational datasets
+    if is_verified:
+        # Fetch client tracks currently managed by this ambassador agent
+        active_assignments = AmbassadorAssignment.objects.filter(
+            ambassador=profile, 
+            status='ASSIGNED'
+        ).select_related('client')
+
+        # Calculate settled payouts ledger summary metrics
+        payout_count = AmbassadorAssignment.objects.filter(
+            ambassador=profile,
+            status='COMPLETED',
+            payout_processed=True
+        ).count()
+        completed_payouts_total = f"{payout_count * 150.00:.2f}"
+
+        # Define documents that constitute a "Complete Profile Submission"
+        required_types = [
+            DocumentType.BUSINESS_CERT, 
+            DocumentType.HEALTH_CARD, 
+            DocumentType.FACILITY_SKETCH
+        ]
+        
+        # 1. Gather all client IDs that are currently claimed by an active ambassador
+        claimed_client_ids = AmbassadorAssignment.objects.filter(
+            status='ASSIGNED'
+        ).values_list('client_id', flat=True)
+
+        # 2. Grab all users who are regular clients and NOT currently claimed
+        open_clients = User.objects.filter(
+            role=UserRole.USER
+        ).exclude(
+            id__in=claimed_client_ids
+        ).order_by('-id')
+
+        available_clients = []
+        required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
+
+        # 3. Process each client explicitly
+        for client in open_clients:
+            # Querying the ClientDocument directly using the client object avoids the relationship property naming issue completely
+            client_docs = ClientDocument.objects.filter(client=client)
+            uploaded_types = list(client_docs.values_list('document_type', flat=True))
+            
+            total_uploaded = sum(1 for t in uploaded_types if t in required_types)
+            total_required = len(required_types)
+
+            # If their uploads are incomplete, push them straight into the Ambassador pool
+            if total_uploaded < total_required:
+                # Safely capture their project record
+                project = ClientProject.objects.filter(client=client).first()
+
+                available_clients.append({
+                    'client': client,
+                    'project': project,
+                    'total_uploaded': total_uploaded,
+                    'total_required': total_required,
+                    'has_business_cert': DocumentType.BUSINESS_CERT in uploaded_types,
+                    'has_health_card': DocumentType.HEALTH_CARD in uploaded_types,
+                    'has_facility_sketch': DocumentType.FACILITY_SKETCH in uploaded_types,
+                })
+
+    context = {
+        'profile': profile,
+        'is_verified': is_verified,
+        'active_assignments': active_assignments,
+        'available_clients': available_clients,
+        'completed_payouts_total': completed_payouts_total,
+    }
+    return render(request, 'dashboards/ambassador.html', context)
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+def ambassador_claim_client(request):
+    """Claims an incomplete customer project file from the operations request pool."""
+    if request.method == 'POST':
+        project_id = request.POST.get('project_id')
+        modality = request.POST.get('modality', 'REMOTE')
+        project = get_object_or_404(ClientProject, id=project_id)
+        ambassador_prof = request.user.ambassador_profile
+
+        # Ensure protection against overlapping structural duplicate assignments
+        exists = AmbassadorAssignment.objects.filter(client=project.user, status='ASSIGNED').exists()
+        if not exists:
+            AmbassadorAssignment.objects.create(
+                ambassador=ambassador_prof,
+                client=project.user,
+                project=project,
+                modality=modality,
+                status='ASSIGNED'
+            )
+            messages.success(request, f"Assignment linked. Temporary system proxy write permissions granted.")
+        else:
+            messages.error(request, "This assignment track has already been claimed by another field agent.")
+            
+    return redirect('dashboard:ambassador-dashboard')
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+@login_required
+def ambassador_claim_client(request):
+    """Processes the claim request, creating an operational assignment block."""
+    if request.method == 'POST':
+        client_id = request.POST.get('client_id')
+        modality = request.POST.get('modality', 'REMOTE')
+        
+        # 1. Grab or fail the target client user account
+        target_client = get_object_or_404(User, id=client_id, role=UserRole.USER)
+        
+        # 2. Safety check: Ensure the ambassador has a verified active profile state
+        profile = get_object_or_404(AmbassadorProfile, user=request.user)
+        if not profile.is_active_field_agent:
+            messages.error(request, "Access Denied. Your agent credentials are unverified.")
+            return redirect('dashboard:ambassador-dashboard')
+            
+        # 3. Double-claim preventative safety lock check
+        already_claimed = AmbassadorAssignment.objects.filter(client=target_client, status='ASSIGNED').exists()
+        if already_claimed:
+            messages.warning(request, "This client project has already been claimed by another field agent.")
+            return redirect('dashboard:ambassador-dashboard')
+            
+        # 4. Initialize assignment pipeline structure records
+        project = ClientProject.objects.filter(client=target_client).first()
+        
+        AmbassadorAssignment.objects.create(
+            ambassador=profile,
+            client=target_client,
+            project=project,
+            modality=modality,
+            status='ASSIGNED'
+        )
+        
+        messages.success(request, f"Successfully registered track management over {target_client.email}.")
+        return redirect('dashboard:ambassador-client-workbench', client_id=target_client.id)
+        
+    return redirect('dashboard:ambassador-dashboard')
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+@login_required
+def ambassador_client_workbench(request, client_id):
+    """Operational management workspace layout for a specific active assignment tracking node."""
+    client_user = get_object_or_404(User, id=client_id)
+    profile = get_object_or_404(AmbassadorProfile, user=request.user)
+    
+    # Secure validation check: Verify this assignment belongs to the active agent session
+    assignment = get_object_or_404(
+        AmbassadorAssignment, 
+        ambassador=profile, 
+        client=client_user, 
+        status='ASSIGNED'
+    )
+    
+    # Handle proxy document uploads on behalf of the client
+    if request.method == 'POST':
+        doc_type = request.POST.get('document_type')
+        uploaded_file = request.FILES.get('document_file')
+        
+        if doc_type and uploaded_file:
+            ClientDocument.objects.create(
+                client=client_user,
+                uploaded_by=request.user,
+                document_type=doc_type,
+                file=uploaded_file
+            )
+            messages.success(request, f"Proxy document ({doc_type}) successfully processed.")
+            return redirect('dashboard:ambassador-client-workbench', client_id=client_user.id)
+
+    # Document state compilation for the workbench checklist UI
+    client_docs = ClientDocument.objects.filter(client=client_user)
+    uploaded_types = list(client_docs.values_list('document_type', flat=True))
+    required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
+    
+    context = {
+        'assignment': assignment,
+        'client_user': client_user,
+        'client_docs': client_docs,
+        'required_types': required_types,
+        'has_business_cert': DocumentType.BUSINESS_CERT in uploaded_types,
+        'has_health_card': DocumentType.HEALTH_CARD in uploaded_types,
+        'has_facility_sketch': DocumentType.FACILITY_SKETCH in uploaded_types,
+    }
+    return render(request, 'dashboards/ambassador_client_workbench.html', context)
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+def ambassador_toggle_complete(request, assignment_id):
+    """Toggles Ambassador sign-off status and checks if the payout can be executed."""
+    assignment = get_object_or_404(AmbassadorAssignment, id=assignment_id, ambassador=request.user.ambassador_profile)
+    
+    assignment.ambassador_marked_complete = not assignment.ambassador_marked_complete
+    assignment.ambassador_completed_at = timezone.now() if assignment.ambassador_marked_complete else None
+    assignment.save()
+
+    # Trigger dual-signoff gate evaluation engine execution rules
+    assignment.check_and_finalize_payout()
+    
+    messages.success(request, "Verification status successfully synced with the payout engine ledger.")
+    return redirect('dashboard:ambassador-dashboard')
 
 
 
@@ -616,24 +944,20 @@ def user_dashboard(request):
         DocumentType.FACILITY_SKETCH
     ]
 
-    # --- HTTP POST: PROCESS INCOMING FILE UPLOADS ---
+    # --- PROCESS INCOMING FILE UPLOADS ---
     if request.method == 'POST':
         files_saved = 0
         
-        # Iterate over every possible file slot we expect from the template form
         for doc_key in required_types:
             if doc_key in request.FILES:
                 uploaded_file = request.FILES[doc_key]
                 
-                # update_or_create overrides an existing row or provisions a new one.
-                # It prevents database IntegrityErrors due to the unique_together constraint.
-                
-                document, created = ClientDocument.objects.update_or_create(
+                Document, created = ClientDocument.objects.update_or_create(
                     client=request.user,
                     document_type=doc_key,
                     defaults={
                         'file': uploaded_file,
-                        'status': DocumentStatus.PENDING  # Reset status back to pending upon re-upload
+                        'status': DocumentStatus.PENDING
                     }
                 )
                 files_saved += 1
@@ -645,20 +969,23 @@ def user_dashboard(request):
             
         return redirect('dashboard:user-dashboard')
 
-    # --- HTTP GET: EVALUATE & RENDER CURRENT VIEW STATE ---
+    # --- EVALUATE & RENDER CURRENT VIEW STATE ---
     client_docs = request.user.documents.all()
     
-    # Generate an easy context map lookup: { 'BUSINESS_CERT': DocumentObject, ... }
+    # Generate an easy context map lookup
     uploaded_dict = {doc.document_type: doc for doc in client_docs}
     
-    # Count how many of our *required keys* exist in the client's asset pool
     total_required = len(required_types)
     total_uploaded = client_docs.filter(document_type__in=required_types).count()
     
+    # Safely query active tracking projects for summary presentation dashboards
+    active_projects = request.user.projects.all()
+
     context = {
         'uploaded_dict': uploaded_dict,
         'total_uploaded': total_uploaded,
         'total_required': total_required,
+        'active_projects': active_projects,
     }
 
     # If the user has fulfilled all baseline uploads, dynamically swap out the UI view template
@@ -666,12 +993,13 @@ def user_dashboard(request):
         recent_activities = request.user.activities.all()[:5]
 
         context = {
+            "uploaded_dict": uploaded_dict,
             "recent_activities": recent_activities,
+            "active_projects": active_projects,
         }
 
         return render(request, "dashboards/user_tracking.html", context)
         
-    # Default State: Still missing some baseline elements
     return render(request, "dashboards/user.html", context)
 
 
@@ -813,6 +1141,25 @@ def upload_document_asset(request, doc_id):
         messages.success(request, f"Document binary successfully uploaded for '{display_name}'.")
         
     return redirect('dashboard:user-documents')
+
+
+@login_required
+@role_required([UserRole.USER])
+def client_project_dashboard(request, project_id):
+    """
+    Renders the read-only tracking and milestone overview matrix for the logged-in client.
+    """
+    # Enforce clear account level constraints by matching client=request.user
+    project = get_object_or_404(
+        ClientProject.objects.select_related('assigned_consultant')
+        .prefetch_related('activities__notes_stream'),
+        id=project_id,
+        client=request.user
+    )
+    
+    return render(request, 'dashboards/user_project_view.html', {
+        'project': project
+    })
 
 
 # CLIENT Profile

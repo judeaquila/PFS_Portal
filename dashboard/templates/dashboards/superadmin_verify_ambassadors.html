@@ -1,0 +1,40 @@
+{% extends 'dashboards/base_user.html' %} {% block title %}SuperAdmin: Verification Console{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900">Ambassador Verification Pipeline</h1>
+        <p class="text-sm text-slate-500">Authorize pending field operations accounts to activate queue eligibility status.</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+        {% for profile in pending_ambassadors %}
+            <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" class="w-14 h-14 rounded-xl object-cover border border-slate-200" alt="Identity Preview">
+                    {% else %}
+                        <div class="w-14 h-14 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 font-bold text-lg">?</div>
+                    {% endif %}
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">{{ profile.user.get_full_name|default:profile.user.username }}</h3>
+                        <p class="text-xs font-mono text-slate-400">UID: #{{ profile.user.id }} | Email: {{ profile.user.email }}</p>
+                        <p class="text-xs text-slate-600 mt-1 italic">"{{ profile.bio|default:'No profile statement provided.' }}"</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'dashboard:admin-approve-ambassador' profile.id %}" class="shrink-0">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition">
+                        Approve Activation
+                    </button>
+                </form>
+            </div>
+        {% empty %}
+            <div class="text-center py-12 text-slate-400 text-sm">
+                No ambassador profiles are currently awaiting structural platform verification.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

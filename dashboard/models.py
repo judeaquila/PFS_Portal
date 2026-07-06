@@ -40,6 +40,19 @@ class ClientDocument(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='documents_uploaded_by_me',
+        help_text="Tracks the explicit actor (Client vs. Ambassador proxy)."
+    )
+
+    @property
+    def is_uploaded_by_proxy(self):
+        """Returns True if someone other than the file owner committed the upload."""
+        return self.uploaded_by != self.user
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -60,7 +73,8 @@ class ClientDocument(models.Model):
         return self.get_document_type_display()
 
     def __str__(self):
-        return f"{self.client.business_name or self.client.email} - {self.get_display_name()}"    
+        return f"{self.client.business_name or self.client.email} - {self.get_display_name()}"
+    
 
 
 class LogCategory(models.TextChoices):
@@ -233,3 +247,65 @@ class ProjectActivity(models.Model):
 
     def __str__(self):
         return f"{self.project.client.business_name or self.project.client.email} - {self.activity_name}"
+    
+
+class ActivityNote(models.Model):
+    activity = models.ForeignKey(
+        ProjectActivity, 
+        on_delete=models.CASCADE, 
+        related_name="notes_stream"
+    )
+    note_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+
+class AmbassadorProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ambassador_profile')
+    avatar = models.ImageField(upload_to='ambassadors/avatars/', help_text="Critical for in-person visual client verification.")
+    bio = models.TextField(blank=True)
+    is_active_field_agent = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Ambassador: {self.user.get_full_name() or self.user.username}"
+
+
+class AmbassadorAssignment(models.Model):
+    ASSISTANCE_MODALITY = [
+        ('REMOTE', 'Remote Assistance'),
+        ('IN_PERSON', 'In-Person Field Visit'),
+    ]
+    
+    TASK_STATUS = [
+        ('ASSIGNED', 'Assigned / In Progress'),
+        ('COMPLETED', 'Fully Resolved'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+
+    ambassador = models.ForeignKey(AmbassadorProfile, on_delete=models.CASCADE, related_name='assignments')
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_ambassadors')
+    project = models.ForeignKey(ClientProject, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    modality = models.CharField(max_length=10, choices=ASSISTANCE_MODALITY, default='REMOTE')
+    status = models.CharField(max_length=15, choices=TASK_STATUS, default='ASSIGNED')
+    
+    # Dual Sign-off Closures
+    client_marked_complete = models.BooleanField(default=False)
+    client_completed_at = models.DateTimeField(null=True, blank=True)
+    
+    ambassador_marked_complete = models.BooleanField(default=False)
+    ambassador_completed_at = models.DateTimeField(null=True, blank=True)
+    
+    payout_processed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def check_and_finalize_payout(self):
+        """Triggers the payout engine if both entities clear the completion gate."""
+        if self.client_marked_complete and self.ambassador_marked_complete and not self.payout_processed:
+            self.status = 'COMPLETED'
+            # Execute logic linking to your accounting ledger/stripe batching here
+            self.payout_processed = True
+            self.save()

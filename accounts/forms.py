@@ -102,8 +102,6 @@ class RegistrationForm(forms.ModelForm):
         """Overriding save to ensure CustomUserManager hashes the password correctly."""
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password"])
-        # Force default public registrants to be the USER role
-        # user.role = User.UserRole.USER 
         
         if commit:
             user.save()
