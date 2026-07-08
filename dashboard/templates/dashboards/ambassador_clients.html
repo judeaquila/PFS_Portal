@@ -1,0 +1,85 @@
+{% extends 'dashboards/base_ambassador.html' %}
+
+{% block title %}My Clients | PFS Ambassador Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">My Clients</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Manage and view the registration progress of clients assigned to you.</p>
+        </div>
+        <div class="bg-pink-50 border border-pink-100 text-pink-700 rounded-xl px-4 py-2.5 text-sm font-medium shrink-0 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+            Active Assignments: <span class="font-bold font-mono text-base ml-1">{{ clients|length }}</span>
+        </div>
+    </div>
+
+    {% if not is_verified %}
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-6 text-sm">
+        <h3 class="font-bold text-base mb-1">Account Verification Pending</h3>
+        <p>Your ambassador profile must be verified before you can be assigned clients to assist. Please reach out to system admins if this is an error.</p>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {% if is_verified and clients %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/70 border-b border-slate-200 text-slate-400 font-bold text-xs uppercase tracking-wider">
+                            <th class="px-6 py-4">Business Name</th>
+                            {% comment %} <th class="px-6 py-4">Primary Contact</th> {% endcomment %}
+                            <th class="px-6 py-4">WhatsApp / Phone</th>
+                            <th class="px-6 py-4">Joined Date</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                        {% for client in clients %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-slate-900">
+                                        {{ client.business_name|default:"Unnamed Business" }}
+                                    </div>
+                                    <div class="text-xs text-slate-400 font-normal">
+                                        {{ client.email }}
+                                    </div>
+                                </td>
+                                {% comment %} <td class="px-6 py-4 text-slate-600">
+                                    {{ client.first_name|default:"Not Provided" }}
+                                </td> {% endcomment %}
+                                <td class="px-6 py-4 text-slate-600 font-mono text-xs">
+                                    <a href="https://wa.me/{{ client.whatsapp_number }}" target="_blank" class="font-bold text-emerald-600 hover:underline">
+                                        {{ client.whatsapp_number }} ↗
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 text-slate-400 text-xs font-normal">
+                                    {{ client.created_at|date:"M d, Y" }}
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="{% url 'dashboard:ambassador-client-workbench' client.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 border border-pink-200 text-pink-700 rounded-lg text-xs font-bold hover:bg-pink-700 hover:text-white hover:border-pink-700 transition-all">
+                                        Open Case
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-20 px-6">
+                <div class="w-16 h-16 bg-slate-50 border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-base font-semibold text-slate-700">No Clients Paired Yet</p>
+                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">When businesses are assigned to your tracking profile, they will appear right here for your operational management.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

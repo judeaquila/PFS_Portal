@@ -1,0 +1,225 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+PFS | About Our Mission & Innovation Hub
+{% endblock %}
+
+{% block content %}
+
+<!-- ===================================== -->
+<!-- Hero Header Section -->
+<!-- ===================================== -->
+<section class="bg-slate-950 text-white py-20 relative overflow-hidden">
+    <!-- Subtle architectural background glow -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-pink-900/20 via-transparent to-transparent"></div>
+    
+    <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+        <span class="text-xs font-bold uppercase tracking-widest text-pink-500 bg-pink-500/10 px-4 py-1.5 rounded-full">
+            Transforming Ideas Into Reality
+        </span>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mt-4">
+            Ghana's Leading Product Innovation Hub
+        </h1>
+        <p class="mt-6 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Established in 2018, Pneuma Food Scientifics (PFS) bridges the gap between brilliant concepts and market-ready products for startups and SMEs across the food, cosmetics, and herbal sectors.
+        </p>
+    </div>
+</section>
+
+<!-- ===================================== -->
+<!-- Vision & Mission Framework -->
+<!-- ===================================== -->
+<section class="py-24 bg-slate-50 border-b border-slate-100">
+    <div class="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-stretch">
+        
+        <!-- Mission Card -->
+        <div class="bg-white p-8 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-xl mb-6">🎯</div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-4">Our Mission</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    To provide scientifically grounded solutions, regulatory systems, and sustainable production support that transform Ghanaian ideas into marketable and impactful products. We strive to build lasting partnerships, foster innovation, and maintain the highest standards of integrity in everything we do.
+                </p>
+            </div>
+        </div>
+
+        <!-- Vision Card -->
+        <div class="bg-white p-8 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-xl mb-6">✨</div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-4">Our Vision</h3>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    To become West Africa’s leading product development and compliance hub for food, cosmetics, wellness, and herbal enterprises, driving sustainable economic growth and regional industry excellence.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ===================================== -->
+<!-- Founder's Story / Narrative -->
+<!-- ===================================== -->
+<section class="py-24 bg-white">
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="grid md:grid-cols-3 gap-12 items-start">
+            
+            <!-- Left: Callout / Quote -->
+            <div class="md:col-span-1 border-l-4 border-pink-700 pl-6 py-2">
+                <p class="text-lg font-medium italic text-slate-900">
+                    "This is what sustains me, what brings me joy, and what defines my legacy. I am proud of the work I do."
+                </p>
+                <span class="block mt-4 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    — Zeenatu Suglo Adams
+                </span>
+            </div>
+
+            <!-- Right: The Narrative -->
+            <div class="md:col-span-2 space-y-6">
+                <span class="text-xs font-bold uppercase tracking-widest text-pink-600 block">
+                    A Story of Passion & Impact
+                </span>
+                <h2 class="text-3xl font-bold text-slate-900 tracking-tight">
+                    Driven by Purpose, Rooted in Science
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    After years of witnessing passionate entrepreneurs struggle with complex product development, rigid regulatory barriers, and a lack of quality infrastructural support, food scientist <strong>Zeenatu Suglo Adams</strong> resolved to build a holistic framework designed specifically for African SMEs.
+                </p>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Founded on the bedrock of persistence and scientific authority, Zeenatu today leads a multidisciplinary team that supports hundreds of businesses. PFS stands as a living testament to empowering local entrepreneurs, fostering commercial innovation, and managing absolute compliance safely within the marketplace.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===================================== -->
+<!-- Core Pillars / Why Choose Us -->
+<!-- ===================================== -->
+<section class="py-24 bg-slate-50 border-t border-b border-slate-100">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-slate-900">Why Agribusinesses Choose PFS</h2>
+            <p class="text-slate-500 mt-2">The operational advantages that guarantee commercial viability.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Pillar 1 -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+                <div class="text-xl mb-4">🛡️</div>
+                <h4 class="font-bold text-slate-900 mb-2">Food Safety Expertise</h4>
+                <p class="text-xs text-slate-500 leading-relaxed mb-4">Decades of combined scientific knowledge ensure your products comfortably meet absolute standards of quality and commercial safety.</p>
+                <a href="{% url 'core:pricing' %}" class="text-xs font-bold text-pink-700 hover:text-pink-800 transition inline-flex items-center gap-1">Learn More &rarr;</a>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+                <div class="text-xl mb-4">🌱</div>
+                <h4 class="font-bold text-slate-900 mb-2">Sustainable Innovation</h4>
+                <p class="text-xs text-slate-500 leading-relaxed mb-4">We inject cutting-edge food science alongside clean, environmentally responsible operations to build scalable business assets.</p>
+                <a href="{% url 'core:pricing' %}" class="text-xs font-bold text-pink-700 hover:text-pink-800 transition inline-flex items-center gap-1">Explore Solutions &rarr;</a>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+                <div class="text-xl mb-4">🤝</div>
+                <h4 class="font-bold text-slate-900 mb-2">Trusted in Compliance</h4>
+                <p class="text-xs text-slate-500 leading-relaxed mb-4">From complex application reviews to process adjustments, we safely guide your team around classic, high-risk operational traps.</p>
+                <a href="{% url 'core:pricing' %}" class="text-xs font-bold text-pink-700 hover:text-pink-800 transition inline-flex items-center gap-1">Partner With Us &rarr;</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================================== -->
+<!-- Core Corporate Values -->
+<!-- ===================================== -->
+<section class="py-24 bg-white">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-bold text-slate-900">Our Core Values</h2>
+            <p class="text-slate-500 mt-2">The clear operational principles that guide our choices, advisory sessions, and partnerships.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Value 1 -->
+            <div class="flex gap-4">
+                <div class="text-pink-600 text-lg font-bold">01</div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Scientific Integrity</h5>
+                    <p class="text-xs text-slate-500 leading-relaxed">Executing frameworks honestly, transparently, and via verified analytical standards above all else.</p>
+                </div>
+            </div>
+
+            <!-- Value 2 -->
+            <div class="flex gap-4">
+                <div class="text-pink-600 text-lg font-bold">02</div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Impact-Oriented Innovation</h5>
+                    <p class="text-xs text-slate-500 leading-relaxed">Embracing functional creativity and strategic optimization to advance past fast-moving industry shifts.</p>
+                </div>
+            </div>
+
+            <!-- Value 3 -->
+            <div class="flex gap-4">
+                <div class="text-pink-600 text-lg font-bold">03</div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Regulatory Excellence</h5>
+                    <p class="text-xs text-slate-500 leading-relaxed">Committing to rigorous documentation alignment to outpace traditional benchmark parameters.</p>
+                </div>
+            </div>
+
+            <!-- Value 4 -->
+            <div class="flex gap-4">
+                <div class="text-pink-600 text-lg font-bold">04</div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Active Collaboration</h5>
+                    <p class="text-xs text-slate-500 leading-relaxed">Investing heavily in clear communication channels, authentic teamwork, and strong structural alliances.</p>
+                </div>
+            </div>
+
+            <!-- Value 5 -->
+            <div class="flex gap-4">
+                <div class="text-pink-600 text-lg font-bold">05</div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Long-term Sustainability</h5>
+                    <p class="text-xs text-slate-500 leading-relaxed">Prioritizing sound environmental health alongside long-term, positive societal advancement across the region.</p>
+                </div>
+            </div>
+
+            <!-- Value 6 -->
+            <div class="flex gap-4">
+                <div class="text-pink-600 text-lg font-bold">06</div>
+                <div>
+                    <h5 class="font-bold text-slate-900 mb-1">Uncompromising Customer Focus</h5>
+                    <p class="text-xs text-slate-500 leading-relaxed">Placing our founders directly at the center of development, ensuring your market milestone is our shared victory.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===================================== -->
+<!-- Call to Action Section -->
+<!-- ===================================== -->
+<section class="py-20 bg-gradient-to-br from-pink-50 via-white to-slate-100 text-center border-t border-slate-200/60">
+    <div class="max-w-3xl mx-auto px-6">
+        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Ready to Accelerate Your Journey?
+        </h2>
+        <p class="mt-4 text-slate-600 max-w-xl mx-auto leading-relaxed">
+            Let’s take your enterprise from an unstructured conceptual design straight into a compliant, market-ready brand asset. 
+        </p>
+        <div class="mt-8">
+            <a href="{% url 'core:pricing' %}" 
+               class="inline-block px-8 py-4 rounded-xl bg-pink-700 hover:bg-pink-800 text-white font-semibold shadow-lg transition">
+                Secure Your Strategic Assessment
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

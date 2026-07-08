@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log In | PFS Online Portal</title>
+    <title>Ambassador Access | PFS Online Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row">
@@ -12,13 +12,13 @@
         <div class="absolute inset-0 bg-gradient-to-br from-pink-900/40 to-slate-900 z-0"></div>
         
         <div class="relative z-10">
-            <a href="{% url 'core:home' %}" class="text-2xl font-bold text-pink-500 mb-12 block">PFS Online Portal</a>
-            <h1 class="text-4xl font-bold leading-tight mb-6">Welcome back.</h1>
-            <p class="text-slate-300 text-lg mb-8">Pick up exactly where you left off. Track your lab results, review your final labels, and communicate with our compliance team.</p>
+            <a href="{% url 'core:home' %}" class="text-2xl font-bold text-pink-500 mb-12 block">PFS Ambassador</a>
+            <h1 class="text-4xl font-bold leading-tight mb-6">Field Operations Hub.</h1>
+            <p class="text-slate-300 text-lg mb-8">Access your regional assignment tracking queue, update onboarding documentation flags, and manage your processed payout milestones.</p>
             
             <div class="bg-white/10 p-6 rounded-xl border border-white/20 backdrop-blur-sm mt-12">
-                <p class="italic text-slate-200">"PFS made our FDA certification process incredibly smooth. Their dashboard kept us updated every step of the way."</p>
-                <p class="mt-4 font-bold text-pink-400">- Recent Client</p>
+                <p class="italic text-slate-200">"Connecting regional businesses with compliance experts seamlessly. Your workspace runs cleanly everywhere."</p>
+                <p class="mt-4 font-bold text-pink-400">— Operation Ledger System</p>
             </div>
         </div>
         
@@ -31,13 +31,13 @@
         <div class="max-w-md w-full">
             
             <div class="md:hidden mb-8 text-center">
-                <a href="{% url 'core:home' %}" class="text-3xl font-bold text-pink-700">PFS Online Portal</a>
+                <a href="{% url 'core:home' %}" class="text-3xl font-bold text-pink-700">PFS Ambassador</a>
             </div>
 
-            <h2 class="text-3xl font-bold text-slate-900 mb-2">Log in to your account</h2>
-            <p class="text-slate-600 mb-8">Enter your credentials to access your dashboard.</p>
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Log in to your workspace</h2>
+            <p class="text-slate-600 mb-8">Enter your credentials to manage assigned client portfolios.</p>
 
-            <form method="POST" action="{% url 'accounts:login' %}" class="space-y-5">
+            <form method="POST" action="{% url 'accounts:ambassador-login' %}" class="space-y-5">
                 {% csrf_token %}
                 
                 {% if error_message %}
@@ -70,20 +70,11 @@
             </form>
 
             <p class="text-center text-sm text-slate-600 mt-8 border-t border-slate-200 pt-8">
-                Don't have an account? <a href="{% url 'accounts:register' %}" class="text-pink-700 font-bold hover:underline">Sign up here</a>
+                Need an assignment pipeline? <a href="{% url 'accounts:ambassador-register' %}" class="text-pink-700 font-bold hover:underline">Apply here</a>
             </p>
 
         </div>
     </div>
-
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // In Django, this will authenticate the user and redirect.
-            alert('Logged in successfully! Redirecting to your Dashboard...');
-            // window.location.href = '/dashboard';
-        });
-    </script>
 
 </body>
 </html>

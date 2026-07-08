@@ -8,8 +8,8 @@
     {% if is_verified %}
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 pb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900">Operations Hub</h1>
-                <p class="text-sm text-slate-500 mt-0.5">Claim client pipelines with missing items, execute proxy verification setups, and process field payouts.</p>
+                <h1 class="text-2xl font-bold text-slate-900">Assignments Hub</h1>
+                <p class="text-sm text-slate-500 mt-0.5">Review pending client files, assist with final document submissions, and track your earnings.</p>
             </div>
             <div class="flex flex-wrap items-center gap-4">
                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-center shadow-sm">
@@ -18,7 +18,7 @@
                 </div>
                 <div class="bg-pink-50 border border-pink-100 rounded-xl px-4 py-2 text-center shadow-sm">
                     <span class="block text-[10px] uppercase font-bold text-pink-600 tracking-wider">Active Assignments</span>
-                    <span class="text-lg font-extrabold text-slate-800">{{ active_assignments.count|default:0 }} Slots</span>
+                    <span class="text-lg font-extrabold text-slate-800">{{ active_assignments.count|default:0 }} Slot (s)</span>
                 </div>
             </div>
         </div>
@@ -28,8 +28,8 @@
             <div class="xl:col-span-2 space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Unclaimed Requests Pool</h2>
-                        <p class="text-xs text-slate-500">Profiles missing mandatory baseline system documents.</p>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Incomplete Registrations</h2>
+                        <p class="text-xs text-slate-500">Clients who still need to finish uploading their required onboarding documents.</p>
                     </div>
                     <span class="text-xs bg-slate-900 text-white px-2.5 py-1 rounded-full font-mono font-bold">
                         {{ available_clients|length }} Available
@@ -48,7 +48,7 @@
                                     </span>
                                 </div>
                                 <p class="text-xs text-slate-600 font-medium">
-                                    Tracking Core: <span class="text-slate-900 font-semibold">{{ item.project.get_client_package_display|default:"Project not yet assigned" }}</span>
+                                    Project Package: <span class="text-slate-900 font-semibold">{{ item.project.get_client_package_display|default:"Not yet assigned" }}</span>
                                 </p>
                                 
                                 <div class="flex flex-wrap gap-1.5 pt-1">
@@ -79,8 +79,8 @@
                         </div>
                     {% empty %}
                         <div class="text-center py-16 text-slate-500 p-6 bg-slate-50/50">
-                            <p class="text-sm font-semibold text-slate-700">Operational Pool Clear</p>
-                            <p class="text-xs text-slate-400 mt-0.5">No client files require document processing assistance right now.</p>
+                            <p class="text-sm font-semibold text-slate-700">All Caught Up!</p>
+                            <p class="text-xs text-slate-400 mt-0.5">There are no clients needing document assistance at the moment.</p>
                         </div>
                     {% endfor %}
                 </div>
@@ -88,8 +88,8 @@
 
             <div class="space-y-4">
                 <div>
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">My Active Assists</h2>
-                    <p class="text-xs text-slate-500">Dual sign-off gates tracking current workloads.</p>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Active Assignments</h2>
+                    <p class="text-xs text-slate-500">Track your completed tasks and those awaiting client verification.</p>
                 </div>
 
                 <div class="space-y-4">

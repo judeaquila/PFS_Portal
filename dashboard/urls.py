@@ -27,8 +27,10 @@ urlpatterns = [
     path("ambassador/", views.ambassador_dashboard, name="ambassador-dashboard"),
     path('ambassador/board/', views.ambassador_dashboard, name='ambassador-boards'),
     path('ambassador/claim/', views.ambassador_claim_client, name='ambassador-claim-client'),
-    path('ambassador/workbench/<int:client_id>/', views.ambassador_client_workbench, name='ambassador-client-workbench'),
+    path('ambassador/clients/', views.ambassador_clients, name='ambassador-clients'),
+    path('ambassador/clients/workbench/<int:client_id>/', views.ambassador_client_workbench, name='ambassador-client-workbench'),
     path('ambassador/toggle/<int:assignment_id>/', views.ambassador_toggle_complete, name='ambassador-toggle-complete'),
+    path('ambassador/profile/', views.ambassador_profile, name='ambassador-profile'),
 
     path("user/", views.user_dashboard, name="user-dashboard"),
     path("user/profile/", views.user_profile, name="user-profile"),

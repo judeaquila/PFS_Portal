@@ -1,0 +1,186 @@
+<footer class="bg-slate-950 text-slate-300">
+
+    <!-- Main Footer -->
+    <div class="max-w-7xl mx-auto px-6 py-16">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+
+            <!-- Company -->
+            <div class="lg:col-span-2">
+
+                <h2 class="text-3xl font-extrabold text-pink-600">
+                    PFS
+                </h2>
+
+                <p class="mt-4 text-slate-400 leading-7">
+                    Pneuma Food Scientifics is a digital FDA compliance
+                    platform helping businesses successfully register
+                    food, cosmetics, pharmaceutical and medical products
+                    with the Food and Drugs Authority.
+                </p>
+
+                <div class="mt-6 space-y-2 text-sm">
+
+                    <p>📞 024 104 3139 / 050 338 6203</p>
+
+                    <p>✉ info@pfsgh.com</p>
+
+                    <p>📍 Zibra Street, Pokuase, Accra</p>
+
+                </div>
+
+            </div>
+
+            {% comment %} <!-- Services -->
+            <div>
+
+                <h3 class="text-white font-semibold mb-5">
+                    Services
+                </h3>
+
+                <ul class="space-y-3 text-sm">
+
+                    <li>
+                        <a href="{% url 'core:services' %}"
+                           class="hover:text-pink-500 transition">
+                            Food Registration
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:services' %}"
+                           class="hover:text-pink-500 transition">
+                            Cosmetics Registration
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:services' %}"
+                           class="hover:text-pink-500 transition">
+                            Pharmaceutical Registration
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:services' %}"
+                           class="hover:text-pink-500 transition">
+                            Imported Products
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:pricing' %}"
+                           class="hover:text-pink-500 transition">
+                            Assessment Packages
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div> {% endcomment %}
+
+            <!-- Platform -->
+            <div>
+
+                <h3 class="text-white font-semibold mb-5">
+                    Platform
+                </h3>
+
+                <ul class="space-y-3 text-sm">
+
+                    <li>
+                        <a href="{% url 'accounts:login' %}"
+                           class="hover:text-pink-500">
+                            Client Portal
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:ambassadors' %}"
+                           class="hover:text-pink-500">
+                            Become an Ambassador
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:consultants' %}"
+                           class="hover:text-pink-500">
+                            Become a Consultant
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'core:journey' %}"
+                           class="hover:text-pink-500">
+                            FDA Journey
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <!-- Contact -->
+            <div>
+
+                <h3 class="text-white font-semibold mb-5">
+                    Get Started
+                </h3>
+
+                <p class="text-sm text-slate-400 mb-5">
+                    Ready to begin your FDA registration journey?
+                </p>
+
+                <a href="{% url 'core:pricing' %}"
+                   class="inline-flex justify-center items-center w-full py-3 rounded-xl bg-pink-700 hover:bg-pink-800 transition text-white font-semibold">
+
+                    Book an Assessment
+
+                </a>
+
+                <a href="{% url 'accounts:login' %}"
+                   class="inline-flex justify-center items-center w-full py-3 mt-3 rounded-xl border border-slate-700 hover:border-pink-600 transition">
+
+                    Login
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bottom Footer -->
+    <div class="border-t border-slate-800">
+
+        <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+
+            <p class="text-sm text-slate-500">
+
+                © {% now "Y" %} Pneuma Food Scientifics (PFS). All Rights Reserved.
+
+            </p>
+
+            <div class="flex items-center gap-6 text-sm">
+
+                <a href="#" class="hover:text-pink-500">
+                    Privacy Policy
+                </a>
+
+                <a href="#" class="hover:text-pink-500">
+                    Terms of Service
+                </a>
+
+                <a href="{% url 'core:contact' %}"
+                   class="hover:text-pink-500">
+                    Contact
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</footer>

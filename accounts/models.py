@@ -12,6 +12,27 @@ class UserRole(models.TextChoices):
     USER = "USER", "User"
 
 
+# User Region
+class ClientRegion(models.TextChoices):
+    AHAFO = "AHAFO", "Ahafo"
+    ASHANTI = "ASHANTI", "Ashanti"
+    BONO = "BONO", "Bono"
+    BONO_EAST = "BONO_EAST", "Bono East"
+    CENTRAL = "CENTRAL", "Central"
+    EASTERN = "EASTERN", "Eastern"
+    GREATER_ACCRA = "GREATER_ACCRA", "Greater Accra"
+    NORTH_EAST = "NORTH_EAST", "North East"
+    NORTHERN = "NORTHERN", "Northern"
+    OTI = "OTI", "Oti"
+    SAVANNAH = "SAVANNAH", "Savannah"
+    UPPER_EAST = "UPPER_EAST", "Upper East"
+    UPPER_WEST = "UPPER_WEST", "Upper West"
+    VOLTA = "VOLTA", "Volta"
+    WESTERN = "WESTERN", "Western"
+    WESTERN_NORTH = "WESTERN_NORTH", "Western North"
+    DIASPORA = "DIASPORA", "Diaspora"
+
+
 # Custom User Creation
 class CustomUserManager(BaseUserManager):
     # Create User
@@ -46,12 +67,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=100)
     
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True, help_text=_("Primary contact number for updates."))
+    alternative_number = models.CharField(max_length=20, blank=True, null=True, help_text=_("Secondary contact number for updates."))
     business_name = models.CharField(max_length=255, blank=True, null=True, help_text=_("Registered business name (Applicable to clients/users)."))
 
     role = models.CharField(
         max_length=20,
         choices=UserRole.choices,
         default=UserRole.USER
+    )
+
+    region = models.CharField(
+        max_length = 20,
+        choices=ClientRegion.choices,
+        default=ClientRegion.AHAFO
     )
 
     is_active = models.BooleanField(default=True)

@@ -1,378 +1,231 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PFS | FDA Compliance & Assessment</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font Family -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .faq-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
-        }
-        .faq-item.active .faq-content {
-            max-height: 200px; /* Adjust as needed */
-            padding-top: 12px;
-        }
-        .faq-item .faq-icon {
-            transition: transform 0.3s ease;
-        }
-        .faq-item.active .faq-icon {
-            transform: rotate(180deg);
-        }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+{% extends "core/base.html" %}
 
-    <!-- Top Info Bar -->
-    <div class="bg-slate-900 text-slate-400 text-xs py-2 px-6 flex justify-between items-center border-b border-slate-800">
-        <div class="flex items-center space-x-4">
-            <span>📞 024 104 3139 / 050 338 6203</span>
-            <span class="hidden md:inline">Official Portal of Pneuma Food Scientifics (PFS)</span>
-        </div>
-        <div>
-            <a href="{% url 'accounts:login' %}" class="hover:text-white transition font-medium flex items-center space-x-1">
-                <span>Client Login</span>
-            </a>
+{% block title %}
+PFS | FDA Compliance & Product Registration
+{% endblock %}
+
+{% block content %}
+
+<!-- ===================================== -->
+<!-- Hero Section -->
+<!-- ===================================== -->
+<section class="relative overflow-hidden bg-gradient-to-br from-pink-50 via-white to-slate-100">
+    <div class="max-w-7xl mx-auto px-6 py-20 lg:py-28">
+        <div class="grid lg:grid-cols-12 gap-12 items-center">
+
+            <!-- Left Column: Primary Copy (Takes 7/12 width for breathing room) -->
+            <div class="lg:col-span-7 space-y-6">
+                <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-pink-100 text-pink-700 text-xs font-semibold uppercase tracking-wider">
+                    Trusted FDA Registration Support
+                </span>
+
+                <h1 class="text-4xl lg:text-6xl font-extrabold text-slate-900 leading-tight tracking-tight">
+                    Navigate FDA Registration <br class="hidden lg:block"/>
+                    <span class="text-pink-700">With Confidence.</span>
+                </h1>
+
+                <p class="text-base lg:text-lg text-slate-600 max-w-xl leading-relaxed">
+                    Pneuma Food Scientifics (PFS) helps manufacturers, importers, and distributors successfully register food, cosmetics, pharmaceuticals, and medical devices through expert digital compliance management.
+                </p>
+
+                <div class="pt-2 flex flex-wrap gap-4">
+                    <a href="{% url 'core:pricing' %}"
+                       class="px-8 py-4 rounded-xl bg-pink-700 hover:bg-pink-800 text-white font-semibold shadow-md hover:shadow-lg transition">
+                        Book an Assessment
+                    </a>
+                    <a href="#journey"
+                       class="px-8 py-4 rounded-xl border border-slate-300 bg-white/50 hover:bg-white text-slate-700 font-semibold transition">
+                        Explore the FDA Journey
+                    </a>
+                </div>
+
+                <!-- Simplified Stats -->
+                <div class="grid grid-cols-3 gap-6 pt-8 border-t border-slate-200/60 max-w-md">
+                    <div>
+                        <p class="text-3xl font-extrabold text-pink-700">100%</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Digital Process</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-extrabold text-pink-700">3</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Expert Teams</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-extrabold text-pink-700">End-End</p>
+                        <p class="text-xs font-medium text-slate-500 mt-1">Client Guidance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Visual Summary Card (Takes 5/12 width) -->
+            <div class="lg:col-span-5">
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-200/60 p-8 space-y-6 relative">
+                    <div class="absolute -top-3 -right-3 w-24 h-24 bg-pink-200 rounded-full blur-2xl opacity-40 -z-10"></div>
+                    
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">Streamlined Compliance</h3>
+                        <p class="text-sm text-slate-500 mt-1">From initial assessment to official approval.</p>
+                    </div>
+
+                    <!-- Simplified, ultra-clean process snapshot -->
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <span class="w-8 h-8 rounded-lg bg-pink-100 text-pink-700 font-bold flex items-center justify-center text-sm">1</span>
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-800">Preparation & Testing</h4>
+                                <p class="text-xs text-slate-500">Weeks 1–7</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <span class="w-8 h-8 rounded-lg bg-pink-100 text-pink-700 font-bold flex items-center justify-center text-sm">2</span>
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-800">Digital Portal Submission</h4>
+                                <p class="text-xs text-slate-500">Weeks 8–9</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-3 rounded-xl bg-pink-50/50 border border-pink-100">
+                            <span class="w-8 h-8 rounded-lg bg-pink-700 text-white font-bold flex items-center justify-center text-sm">✓</span>
+                            <div>
+                                <h4 class="text-sm font-semibold text-pink-800">FDA Review & Response</h4>
+                                <p class="text-xs text-pink-600">Weeks 10–17</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'core:journey' %}" class="block text-center text-sm font-semibold text-pink-700 hover:text-pink-800 transition pt-2">
+                        View Detailed Timeline →
+                    </a>
+                </div>
+            </div>
+
         </div>
     </div>
+</section>
 
-    <!-- Navigation Header -->
-    <nav class="sticky top-0 bg-white/95 backdrop-blur-md z-50 border-b border-slate-100 px-6 py-4">
-        <div class="max-w-5xl mx-auto flex justify-between items-center relative">
-            <a href="{% url 'core:home' %}" class="flex items-center space-x-2">
-                <span class="text-2xl font-bold tracking-tight text-pink-700">PFS <span class="text-slate-800 font-normal">Online Portal</span></span>
-            </a>
-            
-            <!-- Mobile Menu Toggle Button -->
-            <button id="menu-btn" class="md:hidden text-slate-800 focus:outline-none p-2 rounded-lg hover:bg-slate-100 transition" aria-label="Toggle Menu">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-            </button>
-
-            <!-- Menu Links (Desktop and Mobile layout optimized) -->
-            <div id="menu" class="hidden absolute top-full left-0 right-0 mt-4 bg-white border border-slate-100 shadow-xl rounded-2xl p-4 flex flex-col space-y-3 z-50 md:relative md:top-auto md:left-auto md:right-auto md:mt-0 md:bg-transparent md:border-none md:shadow-none md:p-0 md:flex md:flex-row md:items-center md:space-y-0 md:space-x-8">
-                <a href="#packages" class="text-slate-600 hover:text-pink-600 hover:bg-pink-50 md:hover:bg-transparent px-3 py-2 rounded-xl transition text-sm font-medium text-left">Packages</a>
-                <a href="#journey" class="text-slate-600 hover:text-pink-600 hover:bg-pink-50 md:hover:bg-transparent px-3 py-2 rounded-xl transition text-sm font-medium text-left">Your Journey</a>
-                <a href="#faqs" class="text-slate-600 hover:text-pink-600 hover:bg-pink-50 md:hover:bg-transparent px-3 py-2 rounded-xl transition text-sm font-medium text-left">FAQs</a>
-                <a href="https://chat.whatsapp.com/233503386203" target="_blank" class="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2.5 rounded-xl shadow-md transition text-center text-sm font-medium block">
-                    Chat on WhatsApp
-                </a>
-            </div>
+<!-- ===================================== -->
+<!-- Detailed Journey Section (Moved out of Hero) -->
+<!-- ===================================== -->
+<section id="journey" class="py-20 bg-slate-50 border-t border-b border-slate-100">
+    <div class="max-w-3xl mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-slate-900">Your 17-Week Registration Journey</h2>
+            <p class="text-slate-500 mt-3">A transparent breakdown of what to expect step-by-step.</p>
         </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="py-20 md:py-28 px-6 text-center bg-gradient-to-b from-pink-50/50 via-white to-slate-50">
-        <div class="max-w-3xl mx-auto">
-            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 mb-4 uppercase tracking-wider">FDA Compliance Made Easy</span>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
-                Get Expert Guidance for Your <br><span class="text-pink-700">FDA Product Assessment</span>
-            </h1>
-            <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-                We help you navigate the entire FDA registration process with confidence. Avoid mistakes, save time, and get your products approved smoothly.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                <a href="#packages" class="w-full sm:w-auto bg-pink-700 hover:bg-pink-800 text-white px-8 py-4 rounded-xl font-bold transition shadow-lg text-center">View Packages</a>
-                <a href="#journey" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-8 py-4 rounded-xl font-medium transition text-center">See the Process Flow</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Packages Section -->
-    <section id="packages" class="py-20 px-6 max-w-5xl mx-auto">
-        <div class="text-center max-w-2xl mx-auto mb-16">
-            <h2 class="text-3xl font-bold text-slate-900 mb-4">Choose Your Assessment Package</h2>
-            <p class="text-slate-600">Select the plan that best fits your current business needs.</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <!-- Standard Package -->
-            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm flex flex-col hover:border-pink-200 transition">
-                <h3 class="font-bold text-xl text-slate-900 mb-1">Standard Package</h3>
-                <p class="text-2xl font-bold text-pink-700 mb-6">GHS 200</p>
-                <hr class="border-slate-100 mb-6">
-                <ul class="text-sm text-slate-600 mb-8 space-y-3 flex-grow">
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> One assessment meeting</li>
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Comprehensive business review</li>
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Clear FDA pathway identification</li>
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Identification of gaps in your current setup</li>
-                </ul>
-                <a href="https://calendar.app.google/BFkACETyJiREJnbq9" class="w-full text-center border-2 border-pink-700 text-pink-700 font-bold py-3 rounded-xl hover:bg-pink-700 hover:text-white transition" target="_blank">Book Now</a>
-            </div>
-
-            <!-- Technical & Budget Package -->
-            <div class="bg-white p-8 rounded-2xl border-2 border-pink-600 shadow-xl flex flex-col relative">
-                <span class="absolute -top-3 left-6 bg-pink-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Popular</span>
-                <h3 class="font-bold text-xl text-slate-900 mb-1">Technical & Budget</h3>
-                <p class="text-2xl font-bold text-pink-700 mb-6">GHS 500+</p>
-                <hr class="border-slate-100 mb-6">
-                <ul class="text-sm text-slate-600 mb-8 space-y-3 flex-grow">
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Detailed development & processing pathways</li>
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Product label compliance discussion</li>
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Estimated total project costs</li>
-                    <li class="flex items-center"><span class="text-pink-600 mr-2">✓</span> Assistance setting up your FDA portal</li>
-                </ul>
-                <button class="book-now-btn w-full text-center bg-pink-700 hover:bg-pink-800 text-white font-bold py-3 rounded-xl shadow-lg transition">Book Now</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Timeline Section -->
-    <section id="journey" class="py-20 px-6 bg-slate-900 text-white">
-        <div class="max-w-3xl mx-auto">
-            <div class="text-center max-w-2xl mx-auto mb-16">
-                <h2 class="text-3xl font-bold mb-4">Your FDA Certification Journey</h2>
-                <p class="text-slate-400">Here is the step-by-step timeline of what to expect during the registration process.</p>
-            </div>
-            
-            <div class="relative border-l-2 border-slate-700 ml-4 md:ml-32 space-y-10">
-                <!-- Steps -->
-                <div class="relative pl-8 md:pl-12">
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 bg-pink-600 rounded-full ring-4 ring-slate-900"></div>
-                    <span class="block md:absolute md:left-[-120px] md:top-1 font-semibold text-sm text-pink-500">Week 1</span>
-                    <h3 class="font-bold text-lg">Getting the Pathway Right</h3>
-                    <p class="text-slate-400 mt-1 text-sm">We identify your application pathway, complete your business assessment, and confirm all requirements.</p>
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-8 lg:p-12 space-y-8">
+            <!-- Step 1 -->
+            <div class="flex gap-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center font-bold text-pink-700 shrink-0">1</div>
+                    <div class="w-0.5 h-full bg-slate-200 mt-2"></div>
                 </div>
-
-                <div class="relative pl-8 md:pl-12">
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 bg-pink-600 rounded-full ring-4 ring-slate-900"></div>
-                    <span class="block md:absolute md:left-[-120px] md:top-1 font-semibold text-sm text-pink-500">Week 2</span>
-                    <h3 class="font-bold text-lg">Documentation Readiness</h3>
-                    <p class="text-slate-400 mt-1 text-sm">We compile your documents, thoroughly review your product labels, and prepare samples for testing.</p>
-                </div>
-
-                <div class="relative pl-8 md:pl-12">
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 bg-pink-600 rounded-full ring-4 ring-slate-900"></div>
-                    <span class="block md:absolute md:left-[-120px] md:top-1 font-semibold text-sm text-pink-500">Weeks 3-7</span>
-                    <h3 class="font-bold text-lg">Laboratory Testing</h3>
-                    <p class="text-slate-400 mt-1 text-sm">Your product samples are tested at an approved laboratory to confirm they are safe and compliant.</p>
-                </div>
-
-                <div class="relative pl-8 md:pl-12">
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 bg-pink-600 rounded-full ring-4 ring-slate-900"></div>
-                    <span class="block md:absolute md:left-[-120px] md:top-1 font-semibold text-sm text-pink-500">Weeks 8-9</span>
-                    <h3 class="font-bold text-lg">FDA Digital Submission</h3>
-                    <p class="text-slate-400 mt-1 text-sm">We submit your product details and facility registration through the official FDA digital portal.</p>
-                </div>
-
-                <div class="relative pl-8 md:pl-12">
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 bg-pink-600 rounded-full ring-4 ring-slate-900"></div>
-                    <span class="block md:absolute md:left-[-120px] md:top-1 font-semibold text-sm text-pink-500">Weeks 10-17</span>
-                    <h3 class="font-bold text-lg">FDA Review Period</h3>
-                    <p class="text-slate-400 mt-1 text-sm">The FDA reviews your submission. They may ask for clarifications or adjustments to meet their standards.</p>
-                </div>
-
-                <div class="relative pl-8 md:pl-12">
-                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 bg-pink-500 rounded-full ring-4 ring-slate-900"></div>
-                    <span class="block md:absolute md:left-[-120px] md:top-1 font-semibold text-sm text-pink-400">Final Stage</span>
-                    <h3 class="font-bold text-lg text-pink-400">FDA Response</h3>
-                    <p class="text-slate-400 mt-1 text-sm">Your final approval is issued, or they will give us feedback on any corrective actions needed to finish up.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Accordion Section -->
-    <section id="faqs" class="py-20 px-6 bg-slate-50 border-b border-slate-200">
-        <div class="max-w-3xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-slate-900">Frequently Asked Questions</h2>
-                <p class="text-slate-600 mt-2">Click on a question to find quick answers about document uploads and our Ambassador program.</p>
-            </div>
-
-            <div class="space-y-3">
-                <!-- FAQ Item 1 -->
-                <div class="faq-item bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:border-slate-300">
-                    <button class="w-full flex justify-between items-center text-left font-bold text-slate-900 focus:outline-none">
-                        <span>Can I upload documents myself?</span>
-                        <svg class="faq-icon w-5 h-5 text-slate-500 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    <div class="faq-content text-slate-600 text-sm leading-relaxed">
-                        Yes, you can. Once your account is set up, you can easily log in to your dashboard and upload all your required files yourself.
-                    </div>
-                </div>
-
-                <!-- FAQ Item 2 -->
-                <div class="faq-item bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:border-slate-300">
-                    <button class="w-full flex justify-between items-center text-left font-bold text-slate-900 focus:outline-none">
-                        <span>Who are PFS Ambassadors?</span>
-                        <svg class="faq-icon w-5 h-5 text-slate-500 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    <div class="faq-content text-slate-600 text-sm leading-relaxed">
-                        PFS Ambassadors are helpers assigned to you at your request. They assist you with collecting and uploading your required documents. They can help you either online or by coming directly to your home or office.
-                    </div>
-                </div>
-
-                <!-- FAQ Item 3 -->
-                <div class="faq-item bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:border-slate-300">
-                    <button class="w-full flex justify-between items-center text-left font-bold text-slate-900 focus:outline-none">
-                        <span>How do I confirm the identity of a PFS Ambassador?</span>
-                        <svg class="faq-icon w-5 h-5 text-slate-500 shrink-0 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    <div class="faq-content text-slate-600 text-sm leading-relaxed">
-                        Every real PFS Ambassador carries a physical PFS ID card. To keep you safe from scammers, we will also show you the photo and name of your assigned Ambassador inside your portal account before they reach out.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Payment Gateway Modal -->
-    <section id="payment-gateway" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] p-4 flex items-center justify-center">
-        <div class="max-w-md w-full bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2">Complete Your Payment</h2>
-            <p class="text-slate-500 text-sm mb-6">Please follow these simple steps to pay and activate your assessment plan.</p>
-            
-            <div class="bg-pink-50 p-4 rounded-xl border border-pink-100 mb-6">
-                <span class="text-xs text-slate-500 font-medium">Selected Plan:</span>
-                <h3 class="font-bold text-base text-slate-900">Technical & Budget Assessment</h3>
-                <p class="text-xl font-bold text-pink-700 mt-1">GHS 500</p>
-            </div>
-
-            <div class="space-y-4 mb-6">
-                <div class="flex gap-3 items-start">
-                    <div class="w-6 h-6 bg-pink-100 text-pink-700 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</div>
-                    <p class="text-slate-600 text-sm">Send your payment using mobile money to this phone number: <strong>05012345678</strong>.</p>
-                </div>
-                <div class="flex gap-3 items-start">
-                    <div class="w-6 h-6 bg-pink-100 text-pink-700 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</div>
-                    <p class="text-slate-600 text-sm">Once sent, click the button below to go to the page where you can create your client account.</p>
-                </div>
-                <div class="flex gap-3 items-start">
-                    <div class="w-6 h-6 bg-pink-100 text-pink-700 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</div>
-                    <p class="text-slate-600 text-sm">Log in, upload your business documents, and a team member will reach out to you within 24 to 48 hours.</p>
+                <div class="pb-6">
+                    <span class="text-xs font-bold text-pink-600 uppercase tracking-wider">Week 1</span>
+                    <h4 class="font-bold text-slate-900 text-lg mt-0.5">Getting the Pathway Right</h4>
+                    <p class="text-slate-600 mt-1">Identify pathway and confirm all regulatory requirements.</p>
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <button id="proceed-btn" class="w-full bg-pink-700 hover:bg-pink-800 text-white py-3 rounded-xl font-bold transition" data-url="{% url 'accounts:register' %}">
-                    I Have Completed Payment
-                </button> 
-                <button onclick="closeModal()" class="w-full py-2 text-sm text-slate-500 hover:text-slate-800 transition font-medium">Cancel</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-12 px-6">
-        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="text-center md:text-left">
-                <p class="text-white">&copy; 2026 <a href="https://pfsgh.com" target="_blank" class="hover:text-pink-500 transition font-medium">Pneuma Food Scientifics (PFS)</a>. All rights reserved.</p>
-            </div>
-            <div class="flex flex-col sm:flex-row items-center gap-4 text-sm">
-                <span>📞 024 104 3139 / 050 338 6203</span>
-                <a href="{% url 'accounts:login' %}" class="text-slate-300 hover:text-white underline">Log In</a>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Custom Alert Modal -->
-    <div id="custom-alert" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
-            <div class="flex items-start gap-3">
-                <div class="p-2 bg-slate-100 text-slate-900 rounded-lg shrink-0">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+            <!-- Step 2 -->
+            <div class="flex gap-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center font-bold text-pink-700 shrink-0">2</div>
+                    <div class="w-0.5 h-full bg-slate-200 mt-2"></div>
                 </div>
+                <div class="pb-6">
+                    <span class="text-xs font-bold text-pink-600 uppercase tracking-wider">Week 2</span>
+                    <h4 class="font-bold text-slate-900 text-lg mt-0.5">Documentation Readiness</h4>
+                    <p class="text-slate-600 mt-1">Compile technical files, review labels, and prepare physical product samples.</p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex gap-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center font-bold text-pink-700 shrink-0">3</div>
+                    <div class="w-0.5 h-full bg-slate-200 mt-2"></div>
+                </div>
+                <div class="pb-6">
+                    <span class="text-xs font-bold text-pink-600 uppercase tracking-wider">Weeks 3-7</span>
+                    <h4 class="font-bold text-slate-900 text-lg mt-0.5">Laboratory Testing</h4>
+                    <p class="text-slate-600 mt-1">Product testing at approved laboratory facilities for critical safety compliance.</p>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="flex gap-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center font-bold text-pink-700 shrink-0">4</div>
+                    <div class="w-0.5 h-full bg-slate-200 mt-2"></div>
+                </div>
+                <div class="pb-6">
+                    <span class="text-xs font-bold text-pink-600 uppercase tracking-wider">Weeks 8-9</span>
+                    <h4 class="font-bold text-slate-900 text-lg mt-0.5">FDA Digital Submission</h4>
+                    <p class="text-slate-600 mt-1">Submit meticulously compiled product details via the official digital portal.</p>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="flex gap-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center font-bold text-pink-700 shrink-0">5</div>
+                    <div class="w-0.5 h-full bg-slate-200 mt-2"></div>
+                </div>
+                <div class="pb-6">
+                    <span class="text-xs font-bold text-pink-600 uppercase tracking-wider">Weeks 10-17</span>
+                    <h4 class="font-bold text-slate-900 text-lg mt-0.5">FDA Review Period</h4>
+                    <p class="text-slate-600 mt-1">Official agency review while managing any necessary real-time feedback or adjustments.</p>
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="flex gap-6">
+                <div class="w-10 h-10 rounded-full bg-pink-700 text-white flex items-center justify-center font-bold shrink-0">✓</div>
                 <div>
-                    <h3 class="font-bold text-slate-900 text-sm">Account Creation Step</h3>
-                    <p class="text-xs text-slate-500 mt-1">
-                        We are now taking you to the Account Creation page to set up your profile!
-                    </p>
+                    <span class="text-xs font-bold text-pink-700 uppercase tracking-wider">Final Stage</span>
+                    <h4 class="font-bold text-pink-700 text-lg mt-0.5">FDA Response</h4>
+                    <p class="text-slate-600 mt-1">Receive final formal approval or complete required adjustment loops.</p>
                 </div>
-            </div>
-            <div class="mt-5 flex justify-end">
-                <button id="alert-confirm-btn" type="button" class="bg-slate-900 hover:bg-zinc-800 text-white font-medium text-xs px-4 py-2 rounded-lg transition">
-                    Continue →
-                </button>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Script logic -->
-    <script src="{% static 'core/js/script.js' %}"></script>
-    <script>
-        // Mobile menu drop down logic with icon mutation
-        const menuBtn = document.getElementById('menu-btn');
-        const menu = document.getElementById('menu');
-        const menuIcon = document.getElementById('menu-icon');
-        
-        if (menuBtn && menu) {
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                menu.classList.toggle('hidden');
-                
-                // Swap between burger menu icon and close X icon
-                if (menu.classList.contains('hidden')) {
-                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
-                } else {
-                    menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12');
-                }
-            });
+<!-- ===================================== -->
+<!-- Who We Help -->
+<!-- ===================================== -->
+<section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center max-w-2xl mx-auto">
+            <h2 class="text-4xl font-bold text-slate-900 tracking-tight">Who We Help</h2>
+            <p class="mt-4 text-slate-600 text-base lg:text-lg">
+                Whether you're launching a new brand or scaling operations globally, PFS provides regulatory support tailored specifically to your industry.
+            </p>
+        </div>
 
-            // Close mobile menu if clicked outside
-            document.addEventListener('click', (e) => {
-                if (!menu.contains(e.target) && !menuBtn.contains(e.target) && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
-                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
-                }
-            });
+        <!-- Clean, grid-aligned industry list -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-6 mt-16">
+            <div class="bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl p-6 text-center transition">
+                <span class="text-3xl block" role="img" aria-label="Food">🍞</span>
+                <h3 class="font-semibold text-slate-800 mt-4">Food Products</h3>
+            </div>
+            <div class="bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl p-6 text-center transition">
+                <span class="text-3xl block" role="img" aria-label="Cosmetics">💄</span>
+                <h3 class="font-semibold text-slate-800 mt-4">Cosmetics</h3>
+            </div>
+            <div class="bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl p-6 text-center transition">
+                <span class="text-3xl block" role="img" aria-label="Pharmaceuticals">💊</span>
+                <h3 class="font-semibold text-slate-800 mt-4">Pharmaceuticals</h3>
+            </div>
+            <div class="bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl p-6 text-center transition">
+                <span class="text-3xl block" role="img" aria-label="Medical Devices">🩺</span>
+                <h3 class="font-semibold text-slate-800 mt-4">Medical Devices</h3>
+            </div>
+            <div class="bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl p-6 text-center transition">
+                <span class="text-3xl block" role="img" aria-label="Imported">🚢</span>
+                <h3 class="font-semibold text-slate-800 mt-4">Imported Products</h3>
+            </div>
+        </div>
+    </div>
+</section>
 
-            // Close mobile menu when links inside are clicked
-            const menuLinks = menu.querySelectorAll('a');
-            menuLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth < 768) {
-                        menu.classList.add('hidden');
-                        menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
-                    }
-                });
-            });
-        }
-        
-        // Accordion functionality
-        const faqItems = document.querySelectorAll('.faq-item');
-        faqItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                
-                // Close all opened items first
-                faqItems.forEach(i => i.classList.remove('active'));
-                
-                // Open clicked item if it wasn't already active
-                if (!isActive) {
-                    item.classList.add('active');
-                }
-            });
-        });
-
-        // Booking modal logic
-        function closeModal() {
-            document.getElementById('payment-gateway').classList.add('hidden');
-        }
-        
-        const bookBtns = document.querySelectorAll('.book-now-btn');
-        bookBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.getElementById('payment-gateway').classList.remove('hidden');
-            });
-        });
-    </script>
-</body>
-</html>
+{% endblock %}

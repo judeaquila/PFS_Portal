@@ -4,25 +4,23 @@
 
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport"
-          content="width=device-width, initial-scale=1">
+          content="width=device-width, initial-scale=1.0">
 
     <title>
         {% block title %}
-            PFS Online Portal
+            PFS | FDA Compliance Platform
         {% endblock %}
     </title>
 
     <meta name="description"
-          content="{% block meta_description %}The PFS Online Portal simplifies FDA compliance, client onboarding, document management and regulatory guidance for food businesses.{% endblock %}">
+          content="{% block description %}Digital FDA compliance platform for food, cosmetics, pharmaceutical and medical device registration.{% endblock %}">
 
-    <meta name="author" content="Pneuma Food Scientifics">
+    <meta name="theme-color" content="#be185d">
 
     <link rel="icon"
           href="{% static 'images/favicon.ico' %}">
-
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
     <link rel="preconnect"
@@ -35,14 +33,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
           rel="stylesheet">
 
-    <!-- Tailwind Theme -->
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif']
+                        sans: ['Inter', 'sans-serif'],
                     },
+
                     colors: {
                         primary: {
                             50: '#fdf2f8',
@@ -54,42 +55,75 @@
                             600: '#db2777',
                             700: '#be185d',
                             800: '#9d174d',
-                            900: '#831843'
-                        }
+                            900: '#831843',
+                        },
+                    },
+
+                    boxShadow: {
+                        soft: '0 10px 40px rgba(15,23,42,.08)',
                     }
                 }
             }
         }
     </script>
 
-    {% block extra_css %}
-    {% endblock %}
+    <!-- Alpine.js -->
+    <script defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js">
+    </script>
+
+    <link rel="stylesheet"
+          href="{% static 'css/styles.css' %}">
+
+    {% block extra_css %}{% endblock %}
+    {% block head %}{% endblock %}
+
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased">
 
-    <!-- Navigation -->
-    {% include "includes/navbar.html" %}
+<div x-data="{ mobileMenu:false }"
+     class="min-h-screen flex flex-col">
 
-    <!-- Django Messages -->
-    {% include "includes/messages.html" %}
+    {% include "core/partials/navbar.html" %}
 
-    <!-- Main Content -->
-    <main class="min-h-screen">
+    {% if messages %}
+    <div class="max-w-7xl mx-auto w-full px-6 pt-6">
+
+        {% for message in messages %}
+
+            <div class="mb-3 rounded-xl border px-5 py-4
+
+                {% if message.tags == 'success' %}
+                    bg-green-50 border-green-200 text-green-800
+                {% elif message.tags == 'error' %}
+                    bg-red-50 border-red-200 text-red-800
+                {% else %}
+                    bg-slate-100 border-slate-200
+                {% endif %}">
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+    {% endif %}
+
+    <main class="flex-1">
 
         {% block content %}
+
         {% endblock %}
 
     </main>
 
-    <!-- Footer -->
-    {% include "includes/footer.html" %}
+    {% include "core/partials/footer.html" %}
 
-    {% block modals %}
-    {% endblock %}
+</div>
 
-    {% block extra_js %}
-    {% endblock %}
+{% block extra_js %}{% endblock %}
 
 </body>
 

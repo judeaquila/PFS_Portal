@@ -1,0 +1,90 @@
+{% extends 'dashboards/base_ambassador.html' %}
+
+{% block title %}Profile Settings | PFS Ambassador Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Heading Title -->
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900">Profile Settings</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Keep your primary contact info updated so payouts and operations clear smoothly.</p>
+    </div>
+
+    <!-- Notification Messages System -->
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-xl text-sm font-medium flex items-start gap-3 {% if message.tags == 'success' %}bg-emerald-50 border border-emerald-200 text-emerald-800{% else %}bg-amber-50 border border-amber-200 text-amber-800{% endif %}">
+                    {% if message.tags == 'success' %}
+                        <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    {% else %}
+                        <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    {% endif %}
+                    <div>{{ message }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Form Settings Panel Container -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 bg-slate-50/70 border-b border-slate-200">
+            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Personal Information</h2>
+        </div>
+        
+        <form method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- Errors Flag Holder -->
+            {% if form.non_field_errors %}
+                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- First Name Field -->
+                <div class="space-y-1.5">
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Last Name Field -->
+                <div class="space-y-1.5">
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- WhatsApp/Primary Phone Field -->
+                <div class="space-y-1.5">
+                    <label for="{{ form.whatsapp_number.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Primary WhatsApp Number</label>
+                    {{ form.whatsapp_number }}
+                    {% if form.whatsapp_number.help_text %}<p class="text-[11px] text-slate-400 font-normal mt-0.5">{{ form.whatsapp_number.help_text }}</p>{% endif %}
+                    {% if form.whatsapp_number.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.whatsapp_number.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Alternative Phone Field -->
+                <div class="space-y-1.5">
+                    <label for="{{ form.alternative_number.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Alternative Contact Number</label>
+                    {{ form.alternative_number }}
+                    {% if form.alternative_number.help_text %}<p class="text-[11px] text-slate-400 font-normal mt-0.5">{{ form.alternative_number.help_text }}</p>{% endif %}
+                    {% if form.alternative_number.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.alternative_number.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <hr class="border-slate-100 my-2">
+
+            <!-- Sticky Save Trigger Block -->
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="px-6 py-2.5 bg-pink-700 text-white font-medium rounded-xl hover:bg-pink-800 transition-all shadow-md shadow-pink-700/10 hover:shadow-lg focus:ring-4 focus:ring-pink-700/20 outline-none text-sm">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

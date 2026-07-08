@@ -6,11 +6,16 @@
 <div class="max-w-5xl mx-auto space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-            <span class="text-[10px] bg-pink-50 border border-pink-200 text-pink-700 font-bold tracking-wider uppercase px-2 py-0.5 rounded">Active Deployment Workbench</span>
-            <h1 class="text-2xl font-bold text-slate-900 mt-1">Case Tracking: {{ client_user.get_full_name|default:client_user.email }}</h1>
+            <span class="text-[10px] bg-pink-50 border border-pink-200 text-pink-700 font-bold tracking-wider uppercase px-2 py-0.5 rounded">Active Assignment</span>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">
+                {{ client_profile.business_name|default:"Unnamed Business" }}
+            </h1>
+            <p class="text-sm text-slate-500 mt-0.5">
+                Email: {{ client_user.get_full_name|default:client_user.email }} | Contact: {{ client_user.whatsapp_number }}
+            </p>
         </div>
         <a href="{% url 'dashboard:ambassador-dashboard' %}" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-50 shadow-sm transition">
-            ← Operational Dashboard
+            ← Back to Dashboard
         </a>
     </div>
 
@@ -19,15 +24,15 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-sm">Proxy Document Processing Upload</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Upload missing baseline files collected during client field engagements.</p>
+                    <h3 class="font-bold text-slate-800 text-sm">Documents  Upload</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Upload the missing files required to move this client's application forward.</p>
                 </div>
 
                 <form method="POST" enctype="multipart/form-data" class="space-y-4">
                     {% csrf_token %}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Document Designation Target</label>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Required Documentation</label>
                             <select name="document_type" required class="w-full text-xs rounded-lg border-slate-200 shadow-sm focus:border-pink-500 focus:ring-pink-500">
                                 {% if not has_business_cert %}
                                     <option value="BUSINESS_CERT">Business Registration Certificate</option>
@@ -41,13 +46,13 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select Document File</label>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select Document</label>
                             <input type="file" name="document_file" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition file:cursor-pointer" />
                         </div>
                     </div>
                     <div class="flex justify-end pt-2">
                         <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition">
-                            Process Document Upload
+                            Upload
                         </button>
                     </div>
                 </form>
@@ -55,7 +60,7 @@
 
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b border-slate-200">
-                    <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">File Registry Vault</h3>
+                    <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Uploaded Documents</h3>
                 </div>
                 <div class="divide-y divide-slate-100 text-xs">
                     {% for doc in client_docs %}
@@ -68,17 +73,19 @@
                                         {% if doc.uploaded_by == client_user %}
                                             {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }} (Client)
                                         {% else %}
-                                            {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }} (Ambassador Proxy)
+                                            {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }} (Ambassador)
                                         {% endif %}
                                     {% else %}
-                                        {{ client_user.get_full_name|default:client_user.email }}
+                                        {{ client_user.get_full_name|default:client_user.email }} (Client)
                                     {% endif %}
                                 </span>
                             </div>
                             <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 hover:text-pink-800 font-bold transition">View Document ↗</a>
                         </div>
                     {% empty %}
-                        <div class="p-8 text-center text-slate-400 italic">No files have been committed to this registry vault layout yet.</div>
+                        <div class="p-8 text-center text-slate-500 italic text-sm">
+                            No documents have been uploaded for this client yet.
+                        </div>
                     {% endfor %}
                 </div>
             </div>
@@ -90,15 +97,15 @@
                 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <span class="block text-[10px] text-slate-400 uppercase font-medium">Business Identity Structure</span>
-                        <span class="font-bold text-slate-800">{{ client_user.business_name|default:"Not Declared" }}</span>
+                        <span class="block text-[10px] text-slate-400 uppercase font-medium">Business Name</span>
+                        <span class="font-bold text-slate-800">{{ client_user.business_name|default:"Not Provided" }}</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-slate-400 uppercase font-medium">Primary Secure Email</span>
+                        <span class="block text-[10px] text-slate-400 uppercase font-medium">Business Email</span>
                         <a href="mailto:{{ client_user.email }}" class="font-semibold text-pink-700 underline">{{ client_user.email }}</a>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-slate-400 uppercase font-medium">WhatsApp Comm Channel</span>
+                        <span class="block text-[10px] text-slate-400 uppercase font-medium">WhatsApp Account</span>
                         {% if client_user.whatsapp_number %}
                             <a href="https://wa.me/{{ client_user.whatsapp_number }}" target="_blank" class="font-bold text-emerald-600 hover:underline">
                                 {{ client_user.whatsapp_number }} ↗

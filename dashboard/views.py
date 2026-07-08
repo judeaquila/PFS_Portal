@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from accounts.models import UserRole
 from common.decorators import role_required, mandatory_docs_required
-from .forms import ClientProfileForm
+from .forms import ClientProfileForm, AmbassadorProfileForm
 from django.contrib import messages
 from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment
 from django.contrib.auth import get_user_model
@@ -793,33 +793,6 @@ def ambassador_dashboard(request):
 
 @login_required
 @role_required([UserRole.AMBASSADOR])
-def ambassador_claim_client(request):
-    """Claims an incomplete customer project file from the operations request pool."""
-    if request.method == 'POST':
-        project_id = request.POST.get('project_id')
-        modality = request.POST.get('modality', 'REMOTE')
-        project = get_object_or_404(ClientProject, id=project_id)
-        ambassador_prof = request.user.ambassador_profile
-
-        # Ensure protection against overlapping structural duplicate assignments
-        exists = AmbassadorAssignment.objects.filter(client=project.user, status='ASSIGNED').exists()
-        if not exists:
-            AmbassadorAssignment.objects.create(
-                ambassador=ambassador_prof,
-                client=project.user,
-                project=project,
-                modality=modality,
-                status='ASSIGNED'
-            )
-            messages.success(request, f"Assignment linked. Temporary system proxy write permissions granted.")
-        else:
-            messages.error(request, "This assignment track has already been claimed by another field agent.")
-            
-    return redirect('dashboard:ambassador-dashboard')
-
-
-@login_required
-@role_required([UserRole.AMBASSADOR])
 @login_required
 def ambassador_claim_client(request):
     """Processes the claim request, creating an operational assignment block."""
@@ -859,6 +832,9 @@ def ambassador_claim_client(request):
     return redirect('dashboard:ambassador-dashboard')
 
 
+
+
+
 @login_required
 @role_required([UserRole.AMBASSADOR])
 @login_required
@@ -875,7 +851,7 @@ def ambassador_client_workbench(request, client_id):
         status='ASSIGNED'
     )
     
-    # Handle proxy document uploads on behalf of the client
+    # Handle document uploads on behalf of the client
     if request.method == 'POST':
         doc_type = request.POST.get('document_type')
         uploaded_file = request.FILES.get('document_file')
@@ -922,6 +898,97 @@ def ambassador_toggle_complete(request, assignment_id):
     
     messages.success(request, "Verification status successfully synced with the payout engine ledger.")
     return redirect('dashboard:ambassador-dashboard')
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+def ambassador_clients(request):
+    """
+    Renders a dedicated directory of clients actively paired with the logged-in Ambassador.
+    """
+    # Safely evaluate active agent validation
+    try:
+        profile = request.user.ambassador_profile
+        is_verified = profile.is_active_field_agent
+    except AmbassadorProfile.DoesNotExist:
+        profile = None
+        is_verified = False
+
+    clients = []
+
+    # Only fetch active paired clients if the agent profile is verified active
+    if is_verified:
+        assignments = AmbassadorAssignment.objects.filter(
+            ambassador=profile,
+            status='ASSIGNED'
+        ).select_related('client')
+        
+        # Extract the client User objects from the assignments
+        clients = [assignment.client for assignment in assignments]
+
+    context = {
+        'profile': profile,
+        'is_verified': is_verified,
+        'clients': clients,
+    }
+    return render(request, 'dashboards/ambassador_clients.html', context)
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+def ambassador_profile(request):
+    """
+    Displays and processes updates to the Ambassador's contact profile details.
+    """
+    if request.method == 'POST':
+        form = AmbassadorProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your workspace profile settings have been updated successfully.")
+            return redirect('dashboard:ambassador-profile')
+    else:
+        form = AmbassadorProfileForm(instance=request.user)
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'dashboards/ambassador_profile.html', context)
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+def ambassador_clients_view(request):
+    """
+    Renders the dashboard listing all active clients within the Ambassador's region/purview.
+    """
+    # Grab regular users from the same region (adjust query if you use direct FK assignments)
+    assigned_clients = User.objects.filter(role=UserRole.USER, region=request.user.region).order_by('-created_at')
+    
+    context = {
+        'clients': assigned_clients,
+    }
+    return render(request, 'dashboard/ambassador_clients.html', context)
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
+def ambassador_profile_view(request):
+    """
+    Displays and processes updates to the Ambassador's contact profile details.
+    """
+    if request.method == 'POST':
+        form = AmbassadorProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your workspace profile settings have been updated successfully.")
+            return redirect('dashboard:ambassador-profile')
+    else:
+        form = AmbassadorProfileForm(instance=request.user)
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'dashboard/ambassador_profile.html', context)
 
 
 
