@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Client Portal | PFS{% endblock %}</title>
+    <title>{% block title %}Client Portal | PFS Online Portal{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -136,7 +136,7 @@
             
             <div class="flex items-center gap-4">
                 <span class="hidden sm:inline-block bg-amber-50 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full border border-amber-200">
-                    Role: {{ user.get_role_display }}
+                    Client: {{ user.first_name }}
                 </span>
                 <div class="w-9 h-9 bg-pink-100 text-pink-700 rounded-full flex items-center justify-center font-bold border border-pink-200">
                     {{ user.first_name|first|upper }}

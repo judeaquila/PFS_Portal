@@ -12,14 +12,14 @@
         <div class="absolute inset-0 bg-gradient-to-br from-pink-900/40 to-slate-900 z-0"></div>
         
         <div class="relative z-10">
-            <a href="{% url 'core:home' %}" class="text-2xl font-bold text-pink-500 mb-12 block">PFS Ambassador</a>
-            <h1 class="text-4xl font-bold leading-tight mb-6">Drive regional business scaling.</h1>
-            <p class="text-slate-300 text-lg mb-8">Register as an official platform Ambassador to accept explicit business portfolios, monitor onboarding workflows, and secure operation payouts.</p>
+            <a href="{% url 'core:home' %}" class="text-2xl font-bold text-pink-500 mb-12 block">PFS Online Portal</a>
+            <h1 class="text-4xl font-bold leading-tight mb-6">Assist Business Onboarding.</h1>
+            <p class="text-slate-300 text-lg mb-8">Register as an official PFS Ambassador to accept business portfolios, assist the onboarding process, and secure timely payouts.</p>
             
             <ul class="space-y-4 text-slate-300">
                 <li class="flex items-center gap-3">
                     <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    Direct explicit assignments via our backend ledger.
+                    Direct assignments to clients via our secure portal.
                 </li>
                 <li class="flex items-center gap-3">
                     <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -27,7 +27,7 @@
                 </li>
                 <li class="flex items-center gap-3">
                     <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    Streamlined operational communication loops.
+                    Easy access to technical expertise.
                 </li>
             </ul>
         </div>
@@ -44,8 +44,8 @@
                 <a href="{% url 'core:home' %}" class="text-3xl font-bold text-pink-700">PFS Ambassador</a>
             </div>
 
-            <h2 class="text-3xl font-bold text-slate-900 mb-2">Create your workspace profile</h2>
-            <p class="text-slate-600 mb-8">Please provide your valid direct contact details below.</p>
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Create your Ambassador profile</h2>
+            <p class="text-slate-600 mb-8">Please provide your valid contact details below.</p>
 
             <form method="POST" action="{% url 'accounts:ambassador-register' %}" class="space-y-5">
                 {% csrf_token %}
@@ -89,6 +89,12 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Region <span class="text-pink-600">*</span></label>
+                    {{ form.region }}
+                    <p class="text-xs text-red-500 mt-1">{{ form.region.errors.as_text }}</p>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Password <span class="text-pink-600">*</span></label>
                     {{ form.password }}
                     {% if form.password.errors %}<p class="text-xs text-red-500 mt-1">{{ form.password.errors.as_text }}</p>{% endif %}
@@ -106,7 +112,7 @@
             </form>
 
             <p class="text-center text-sm text-slate-600 mt-6">
-                Already have an Ambassador profile? <a href="{% url 'accounts:ambassador-login' %}" class="text-pink-700 font-bold hover:underline">Log in here</a>
+                Already have an Ambassador profile? <a href="{% url 'accounts:login' %}" class="text-pink-700 font-bold hover:underline">Log in here</a>
             </p>
 
         </div>

@@ -9,6 +9,8 @@ urlpatterns = [
     path("super-admin/", views.superadmin_dashboard, name="super-admin-dashboard"),
     path('super-admin/ambassadors/', views.superadmin_ambassadors, name='superadmin-ambassadors'),
     path('super-admin/ambassadors/verify/<int:profile_id>/<str:action>/', views.superadmin_process_verification, name='superadmin-process-verification'),
+    path('super-admin/consultants/', views.superadmin_consultants, name="superadmin-consultants"),
+    path('super-admin/consultants/verify/<int:profile_id>/<str:action>/', views.superadmin_consultant_verification, name="superadmin-consultant-verification"),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),
 
@@ -23,6 +25,7 @@ urlpatterns = [
    # path("consultant/clients/project_board/add/<int:project_id>/", views.add_custom_project_subitem, name="add-custom-subitem"),
     path("consultant/clients/",views.consultant_companies_list, name='companies-list'),
     path("consultant/clients/<int:client_id>/overview/",views.consultant_company_overview, name='company-overview'),
+    path("consultant/profile", views.consultant_profile, name="consultant-profile"),
 
     path("ambassador/", views.ambassador_dashboard, name="ambassador-dashboard"),
     path('ambassador/board/', views.ambassador_dashboard, name='ambassador-boards'),
@@ -38,4 +41,5 @@ urlpatterns = [
     path("user/documents/supplementary/", views.create_supplementary_slot, name="create-supplementary-slot"),
     path("user/documents/supplementary/upload/<int:doc_id>/", views.upload_document_asset, name="upload-asset"),
     path('user/projects/<int:project_id>/', views.client_project_dashboard, name='user-project-dashboard'),
+    path('user/verify/confirm/', views.client_confirm_verification, name='user-confirm-verification'),
 ]

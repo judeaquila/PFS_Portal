@@ -2,6 +2,49 @@ from django.db import models
 from django.conf import settings
 
 
+class ConsultantProfile(models.Model):
+    class VerificationStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Review'
+        APPROVED = 'APPROVED', 'Approved'
+        DECLINED = 'DECLINED', 'Declined'
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='consultant_profile'
+    )
+    avatar = models.ImageField(
+        upload_to='consultants/avatars/', 
+        help_text="Needed for visual verification.",
+        blank=True
+    )
+    bio = models.TextField(blank=True)
+
+    cv = models.FileField(upload_to="consultant_docs/%Y/%m/",
+         help_text="Upload your CV."
+    )
+    
+    id_card = models.ImageField(
+        upload_to='consultants/ids/', 
+        help_text="Upload a valid Government Issued National ID Card, Passport, or Driver's License."
+    )
+    verification_selfie = models.ImageField(
+        upload_to='consultants/selfies/', 
+        help_text="Live clear selfie photo matching your ID Card profile snapshot."
+    )
+    
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VerificationStatus.choices,
+        default=VerificationStatus.PENDING
+    )
+    is_active_consultant = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Consultant: {self.user.get_full_name() or self.user.first_name} ({self.verification_status})"
+    
+
 class DocumentType(models.TextChoices):
     BUSINESS_CERT = "BUSINESS_CERT", "Business Registration Certificate"
     HEALTH_CARD = "HEALTH_CARD", "Medical Fitness Certificates (Health Cards)"
@@ -45,7 +88,7 @@ class ClientDocument(models.Model):
         on_delete=models.SET_NULL, 
         null=True, 
         related_name='documents_uploaded_by_me',
-        help_text="Tracks the explicit actor (Client vs. Ambassador proxy)."
+        help_text="Tracks the explicit actor (Client vs. Ambassador)."
     )
 
     @property
@@ -264,13 +307,42 @@ class ActivityNote(models.Model):
 
 
 class AmbassadorProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ambassador_profile')
-    avatar = models.ImageField(upload_to='ambassadors/avatars/', help_text="Critical for in-person visual client verification.")
+    class VerificationStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Review'
+        APPROVED = 'APPROVED', 'Approved'
+        DECLINED = 'DECLINED', 'Declined'
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='ambassador_profile'
+    )
+    avatar = models.ImageField(
+        upload_to='ambassadors/avatars/', 
+        help_text="Critical for in-person visual client verification.",
+        blank=True
+    )
     bio = models.TextField(blank=True)
+    
+    id_card = models.ImageField(
+        upload_to='ambassadors/ids/', 
+        help_text="Upload a valid Government Issued National ID Card, Passport, or Driver's License."
+    )
+    verification_selfie = models.ImageField(
+        upload_to='ambassadors/selfies/', 
+        help_text="Live clear selfie photo matching your ID Card profile snapshot."
+    )
+    
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VerificationStatus.choices,
+        default=VerificationStatus.PENDING
+    )
     is_active_field_agent = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Ambassador: {self.user.get_full_name() or self.user.username}"
+        return f"Ambassador: {self.user.get_full_name() or self.user.username} ({self.verification_status})"
 
 
 class AmbassadorAssignment(models.Model):

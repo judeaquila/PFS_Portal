@@ -110,44 +110,6 @@ class RegistrationForm(forms.ModelForm):
         return user
     
 
-# Ambassador Login Form
-class AmbassadorLoginForm(forms.Form):
-    email = forms.EmailField(
-        widget=forms.EmailInput(attrs={
-            'placeholder': 'ambassador@company.com',
-            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-600 focus:border-pink-600 outline-none transition'
-        })
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'placeholder': '••••••••',
-            'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-600 focus:border-pink-600 outline-none transition'
-        })
-    )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        email = cleaned_data.get("email")
-        password = cleaned_data.get("password")
-
-        if email and password:
-            user = authenticate(email=email, password=password)
-
-            if not user:
-                raise ValidationError("Invalid email or password.")
-            
-            if not user.is_active:
-                raise ValidationError("This account has been deactivated.")
-            
-            # Restrict login if they don't have the appropriate security role
-            if user.role != UserRole.AMBASSADOR:
-                raise ValidationError("Access denied. This portal is restricted to active Ambassadors.")
-            
-            cleaned_data["user"] = user
-
-        return cleaned_data
-
-
 # Ambassador Registration Form
 class AmbassadorRegistrationForm(forms.ModelForm):
     password = forms.CharField(
@@ -224,30 +186,6 @@ class TailwindFormMixin:
             if not isinstance(field.widget, (forms.CheckboxInput, forms.HiddenInput)):
                 existing_classes = field.widget.attrs.get('class', '')
                 field.widget.attrs['class'] = f"{base_classes} {existing_classes}".strip()
-
-
-class ConsultantLoginForm(TailwindFormMixin, forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder': 'expert@company.com'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': '••••••••'}))
-
-    def clean(self):
-        cleaned_data = super().clean()
-        email = cleaned_data.get("email")
-        password = cleaned_data.get("password")
-
-        if email and password:
-            user = authenticate(email=email, password=password)
-
-            if not user:
-                raise ValidationError("Invalid email or password.")
-            if not user.is_active:
-                raise ValidationError("This account has been deactivated.")
-            if user.role != UserRole.CONSULTANT:
-                raise ValidationError("Access denied. This portal is restricted to active Consultants.")
-            
-            cleaned_data["user"] = user
-
-        return cleaned_data
 
 
 class ConsultantRegistrationForm(TailwindFormMixin, forms.ModelForm):

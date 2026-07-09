@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
-from .forms import LoginForm, RegistrationForm, AmbassadorLoginForm, AmbassadorRegistrationForm, ConsultantRegistrationForm, ConsultantLoginForm
+from .forms import LoginForm, RegistrationForm, AmbassadorRegistrationForm, ConsultantRegistrationForm
 from .models import UserRole
 from django.contrib.auth.decorators import login_required
 

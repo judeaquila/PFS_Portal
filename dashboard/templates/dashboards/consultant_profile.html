@@ -1,6 +1,6 @@
-{% extends 'dashboards/base_ambassador.html' %}
+{% extends 'dashboards/base_consultant.html' %}
 
-{% block title %}Ambassador Profile Settings | PFS Online Portal{% endblock %}
+{% block title %}Consultant Profile Settings | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-6">
@@ -16,8 +16,8 @@
             <span class="underline uppercase tracking-wider font-bold">{{ profile.get_verification_status_display }}</span>
         </div>
         <div class="text-xs font-normal">
-            {% if profile.is_active_field_agent %}
-                ● Available for Active Assignments
+            {% if profile.is_active_consultant %}
+                ● Available for Active Duty
             {% else %}
                 ○ No Active Assignments Yet
             {% endif %}
@@ -100,6 +100,21 @@
                                 </div>
                             {% endif %}
                             {% if profile_form.verification_selfie.errors %}<p class="text-xs text-rose-600 mt-1">{{ profile_form.verification_selfie.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Curriculum Vitae <span class="text-pink-600">*</span></label>
+                            {{ profile_form.cv }}
+                            <p class="text-[10px] text-slate-400">{{ profile_form.cv.help_text }}</p>
+                            {% if profile.cv %}
+                                <div class="mt-2 pt-2 border-t border-slate-200">
+                                    <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Current Uploaded File:</span>
+                                    <a href="{{ profile.cv.url }}" target="_blank" class="text-xs font-medium text-pink-700 hover:underline inline-flex items-center gap-1">
+                                        View Uploaded CV →
+                                    </a>
+                                </div>
+                            {% endif %}
+                            {% if profile_form.id_card.errors %}<p class="text-xs text-rose-600 mt-1">{{ profile_form.id_card.errors.0 }}</p>{% endif %}
                         </div>
 
                     </div>

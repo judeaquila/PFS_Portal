@@ -1,13 +1,13 @@
 {% extends 'dashboards/base_superadmin.html' %}
 
-{% block title %}Ambassadors Directory | PFS Online Portal{% endblock %}
+{% block title %}Consultants Directory | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-200">Ambassadors Directory</h1>
-            <p class="text-sm text-slate-500">Audit submitted files, authorize Ambassadors, or suspend access credentials for approved accounts.</p>
+            <h1 class="text-2xl font-bold text-slate-200">Consultants Directory</h1>
+            <p class="text-sm text-slate-500">Audit submitted files, authorize Consultants, or suspend access credentials for approved accounts.</p>
         </div>
         <a href="{% url 'dashboard:super-admin-dashboard' %}" class="bg-slate-500 border border-slate-200 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-900 transition shadow-sm">
             &larr; Back to Dashboard
@@ -27,7 +27,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
-                {% for account in ambassadors %}
+                {% for account in consultants %}
                     <tr class="hover:bg-slate-50/50 transition align-top">
                         
                         <td class="p-4">
@@ -49,11 +49,11 @@
                         <td class="p-4">
                             <div class="space-y-1.5">
                                 <div>
-                                    {% if account.ambassador_profile.verification_status == 'APPROVED' %}
+                                    {% if account.consultant_profile.verification_status == 'APPROVED' %}
                                         <span class="inline-flex items-center bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-emerald-200">
                                             ● Verified
                                         </span>
-                                    {% elif account.ambassador_profile.verification_status == 'DECLINED' %}
+                                    {% elif account.consultant_profile.verification_status == 'DECLINED' %}
                                         <span class="inline-flex items-center bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-rose-200">
                                             ✕ Declined
                                         </span>
@@ -64,8 +64,8 @@
                                     {% endif %}
                                 </div>
                                 <div class="text-[10px] text-slate-400 font-medium pl-1">
-                                    {% if account.ambassador_profile.is_active_field_agent %}
-                                        Available for Active Assignments
+                                    {% if account.consultant_profile.is_active_consultant %}
+                                        Available for Active Duty
                                     {% else %}
                                         Account Suspended
                                     {% endif %}
@@ -78,23 +78,23 @@
                                 <div class="flex items-center gap-4">
                                     <div>
                                         <span class="block text-[9px] uppercase font-bold text-slate-400">ID Reference</span>
-                                        {% if account.ambassador_profile.id_card %}
-                                            <a href="{{ account.ambassador_profile.id_card.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-[11px]">View ID Card File &rarr;</a>
+                                        {% if account.consultant_profile.id_card %}
+                                            <a href="{{ account.consultant_profile.id_card.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-[11px]">View ID Card File &rarr;</a>
                                         {% else %}
                                             <span class="text-slate-400 italic text-[11px]">Not Provided</span>
                                         {% endif %}
                                     </div>
                                     <div>
                                         <span class="block text-[9px] uppercase font-bold text-slate-400">Selfie Snap</span>
-                                        {% if account.ambassador_profile.verification_selfie %}
-                                            <a href="{{ account.ambassador_profile.verification_selfie.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-[11px]">View Selfie &rarr;</a>
+                                        {% if account.consultant_profile.verification_selfie %}
+                                            <a href="{{ account.consultant_profile.verification_selfie.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-[11px]">View Selfie &rarr;</a>
                                         {% else %}
                                             <span class="text-slate-400 italic text-[11px]">Not Provided</span>
                                         {% endif %}
                                     </div>
                                 </div>
                                 <div class="text-slate-500 italic text-[11px] border-t border-slate-100 pt-1">
-                                    "{{ account.ambassador_profile.bio|default:'No statement bio uploaded.'|truncatechars:70 }}"
+                                    "{{ account.consultant_profile.bio|default:'No statement bio uploaded.'|truncatechars:70 }}"
                                 </div>
                             </div>
                         </td>
@@ -105,16 +105,16 @@
 
                         <td class="p-4 text-right">
                             <div class="flex flex-col items-end gap-2">
-                                {% if account.ambassador_profile.verification_status != 'APPROVED' %}
-                                    <form method="POST" action="{% url 'dashboard:superadmin-process-verification' account.id 'verify' %}">
+                                {% if account.consultant_profile.verification_status != 'APPROVED' %}
+                                    <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' account.id 'verify' %}">
                                         {% csrf_token %}
-                                        <button type="submit" {% if not account.ambassador_profile.id_card %}disabled class="bg-slate-100 text-slate-400 font-bold px-3 py-1.5 rounded-lg text-[11px] cursor-not-allowed"{% else %}class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-sm text-[11px]"{% endif %}>
+                                        <button type="submit" {% if not account.consultant_profile.id_card %}disabled class="bg-slate-100 text-slate-400 font-bold px-3 py-1.5 rounded-lg text-[11px] cursor-not-allowed"{% else %}class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-sm text-[11px]"{% endif %}>
                                             Approve Credentials
                                         </button>
                                     </form>
                                 {% endif %}
                                 
-                                {% if account.ambassador_profile.is_active_field_agent or account.ambassador_profile.verification_status == 'PENDING' %}
+                                {% if account.consultant_profile.is_active_consultant or account.consultant_profile.verification_status == 'PENDING' %}
                                     <form method="POST" action="{% url 'dashboard:superadmin-process-verification' account.id 'decline' %}">
                                         {% csrf_token %}
                                         <button type="submit" class="bg-white border border-slate-200 text-rose-600 hover:bg-rose-50 font-medium px-3 py-1.5 rounded-lg transition text-[11px]">
@@ -127,7 +127,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">No Ambassadors have signed up to the platform yet.</td>
+                        <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">No Consultants have signed up to the platform yet.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

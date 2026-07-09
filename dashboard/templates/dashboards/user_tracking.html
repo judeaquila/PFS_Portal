@@ -1,6 +1,6 @@
 {% extends 'dashboards/base_user.html' %}
 
-{% block title %}Client Workspace | PFS{% endblock %}
+{% block title %}Client Workspace | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-[1600px] mx-auto space-y-8">
@@ -10,10 +10,6 @@
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Welcome back, {{ request.user.first_name|default:request.user.email }}</h1>
             <p class="text-sm text-slate-500 mt-0.5">Select an active registration workspace track below to manage sub-milestones, lab assets, and tasks.</p>
-        </div>
-        <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            System Gateway Active
         </div>
     </div>
 
@@ -65,8 +61,8 @@
                     <svg class="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5a2 2 0 012-2h2a2 2 0 002-2V7a2 2 0 012-2h4a2 2 0 012 2v3a2 2 0 002 2h2a2 2 0 012 2z"></path>
                     </svg>
-                    <p class="text-sm font-medium">No tracking streams configured for this account.</p>
-                    <p class="text-xs text-slate-400 mt-0.5">Please contact your account supervisor to hook up operational pipelines.</p>
+                    <p class="text-sm font-medium">You have no active projects initiated.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Please wait for project initiation after a Consultant reviews your mandatory documents.</p>
                 </div>
             {% endfor %}
         </div>
@@ -101,7 +97,7 @@
             <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70 flex justify-between items-center">
                 <div>
                     <h3 class="font-bold text-slate-800 text-base">Account Activity History</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Real-time systemic auditing trails tracking user milestones.</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Recent actions performed within your dashboard.</p>
                 </div>
                 <span class="flex h-2 w-2 relative">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
@@ -138,7 +134,7 @@
                     </div>
                 {% else %}
                     <div class="text-center py-6 text-slate-400 text-sm">
-                        No verified workspace movements logged inside this profile session yet.
+                        No activities performed within this dashboard yet.
                     </div>
                 {% endif %}
             </div>

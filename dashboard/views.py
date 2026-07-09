@@ -3,9 +3,9 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from accounts.models import UserRole
 from common.decorators import role_required, mandatory_docs_required
-from .forms import ClientProfileForm, AmbassadorProfileForm
+from .forms import ClientProfileForm, AmbassadorProfileForm, AmbassadorBaseUserForm, AmbassadorVerificationForm, ConsultantBaseUserForm, ConsultantVerificationForm
 from django.contrib import messages
-from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment
+from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Count, Max, F
 from django.utils import timezone
@@ -48,12 +48,6 @@ def redirect_dashboard(request):
 # SUPER ADMIN Dashboard
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
-def super_admin_dashboard(request):
-    return render(request, "dashboards/superadmin_verify_ambassadors.html")
-
-
-@login_required
-@role_required([UserRole.SUPER_ADMIN])
 def superadmin_dashboard(request):
     """Provides a bird's-eye view of platform metrics and urgent administrative actions."""
     metrics = {
@@ -79,42 +73,93 @@ def superadmin_dashboard(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def superadmin_ambassadors(request):
-    """
-    Renders a comprehensive directory table managing all platform ambassador profiles.
-    Queries the User base filtered by role to guarantee unprofiled accounts are caught.
-    """
+    """Renders comprehensive directory table managing all platform ambassador profiles."""
     ambassadors_users = User.objects.filter(role=UserRole.AMBASSADOR).select_related(
         'ambassador_profile'
     ).annotate(
         assignment_count=Count('ambassador_profile__assignments')
     ).order_by('-id')
 
-    return render(request, 'dashboards/superadmin_ambassadors.html', {
+    context = {
         'ambassadors': ambassadors_users
-    })
+    }
+
+    return render(request, 'dashboards/superadmin_ambassadors.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def superadmin_consultants(request):
+    """Renders comprehensive directory table managing all platform consultant profiles."""
+    consultants = User.objects.filter(role=UserRole.CONSULTANT).select_related(
+        'ambassador_profile'
+    ).annotate(
+        assignment_count=Count('ambassador_profile__assignments')
+    ).order_by('-id')
+
+    context = {
+        'consultants': consultants
+    }
+
+    return render(request, 'dashboards/superadmin_consultants.html', context)
 
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def superadmin_process_verification(request, profile_id, action):
-    """Processes approval metrics using the core User model ID key map."""
+    """Processes verification assets against explicit design parameters."""
     if request.method == 'POST':
-        # Look up the targeted user account 
         target_user = get_object_or_404(User, id=profile_id)
+        profile = get_object_or_404(AmbassadorProfile, user=target_user)
         
-        # Get or initialize the profile table structure seamlessly
-        profile, created = AmbassadorProfile.objects.get_or_create(user=target_user)
-        
+        # Enforce that documents exist before letting action execute
+        if not profile.id_card or not profile.verification_selfie:
+            messages.error(request, f"Cannot process verification: Ambassador {target_user.email} hasn't uploaded all files.")
+            return redirect('dashboard:superadmin-ambassadors')
+            
         if action == 'verify':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.APPROVED
             profile.is_active_field_agent = True
             profile.save()
-            messages.success(request, f"Successfully verified account credentials for {target_user.email}.")
+            messages.success(request, f"Successfully verified account and authorized Ambassador {target_user.email}.")
+            
         elif action == 'decline':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.DECLINED
             profile.is_active_field_agent = False
             profile.save()
-            messages.warning(request, f"Declined credentials tracking for {target_user.email}.")
+            messages.warning(request, f"Declined verification credentials for {target_user.email}.")
             
     return redirect('dashboard:superadmin-ambassadors')
+
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def superadmin_consultant_verification(request, profile_id, action):
+    """Processes verification assets against explicit design parameters."""
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, id=profile_id)
+        profile = get_object_or_404(ConsultantProfile, user=target_user)
+        
+        # Enforce that documents exist before letting action execute
+        if not profile.id_card or not profile.verification_selfie:
+            messages.error(request, f"Cannot process verification: Consultant {target_user.email} hasn't uploaded all files.")
+            return redirect('dashboard:superadmin-consultants')
+            
+        if action == 'verify':
+            profile.verification_status = ConsultantProfile.VerificationStatus.APPROVED
+            profile.is_active_field_agent = True
+            profile.save()
+            messages.success(request, f"Successfully verified account and authorized Consultant {target_user.email}.")
+            
+        elif action == 'decline':
+            profile.verification_status = ConsultantProfile.VerificationStatus.DECLINED
+            profile.is_active_field_agent = False
+            profile.save()
+            messages.warning(request, f"Declined verification credentials for {target_user.email}.")
+            
+    return redirect('dashboard:superadmin-consultants')
+
 
 
 # SUPERVISOR Dashboard
@@ -340,9 +385,9 @@ def process_audit_action(request, doc_id):
             ActivityLog.objects.create(
                 user=document.client,
                 category=LogCategory.SYSTEM,
-                description=f"Compliance asset '{display_name}' was verified and approved."
+                description=f"Document '{display_name}' was verified and approved."
             )
-            messages.success(request, f"Approved compliance asset: '{display_name}'.")
+            messages.success(request, f"Approved document: '{display_name}'.")
 
         elif action_type == 'REJECT':
             reason = request.POST.get('rejection_reason', '').strip()
@@ -358,9 +403,9 @@ def process_audit_action(request, doc_id):
             ActivityLog.objects.create(
                 user=document.client,
                 category=LogCategory.SYSTEM,
-                description=f"Deficiency flagged on '{display_name}'. Revision requested."
+                description=f"Error flagged on '{display_name}'. Revision requested."
             )
-            messages.warning(request, f"Flagged deficiency feedback note for '{display_name}'.")
+            messages.warning(request, f"Uploaded document for '{display_name}' needs to be revised.")
 
         return redirect('dashboard:review-client', client_id=document.client.id)
         
@@ -488,13 +533,13 @@ def initiate_client_project(request, client_id):
     if approved_core_count < len(required_types):
         messages.error(
             request, 
-            f"Cannot initialize board. This client has only completed {approved_core_count}/{len(required_types)} mandatory document approvals."
+            f"Cannot initialize project board. This client has only completed {approved_core_count}/{len(required_types)} mandatory document approvals."
         )
         return redirect("dashboard:review-client", client_id=client_user.id)
     
     # Prevent duplicate active projects on a single user profile
     if hasattr(client_user, 'project_file'):
-        messages.warning(request, "An active operational workflow file already exists for this portfolio.")
+        messages.warning(request, "An active project workflow already exists for this client.")
         return redirect("dashboard:project-board", project_id=client_user.project_file.id)
 
     # FORM OPERATIONS HANDLER
@@ -522,11 +567,11 @@ def initiate_client_project(request, client_id):
                     assigned_consultant=request.user
                 )
 
-            messages.success(request, f"Operational workflow board activated successfully for {client_user.business_name or client_user.email}!")
+            messages.success(request, f"Project workflow board activated successfully for {client_user.business_name or client_user.email}!")
             return redirect("dashboard:project-board", project_id=project.id)
 
         except Exception as e:
-            messages.error(request, f"Operational submission failure: {str(e)}")
+            messages.error(request, f"Project initiation failure: {str(e)}")
             return redirect("dashboard:initiate-client-project", client_id=client_user.id)
 
     # DATA PRESENTATION PROCESSING
@@ -626,6 +671,73 @@ def update_activity_status(request, activity_id):
         return redirect("dashboard:project-board", project_id=activity.project.id)
         
     return redirect("dashboard:consultant-dashboard")
+
+
+@login_required
+@role_required([UserRole.CONSULTANT])
+def consultant_profile(request):
+    """Displays and processes updates to contact info and verification uploads."""
+    profile, created = ConsultantProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        user_form = ConsultantBaseUserForm(request.POST, instance=request.user)
+        profile_form = ConsultantVerificationForm(request.POST, request.FILES, instance=profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            
+            # Reset verification status back to PENDING if they re-upload files
+            profile_obj = profile_form.save(commit=False)
+            if 'id_card' in request.FILES or 'verification_selfie' in request.FILES:
+                profile_obj.verification_status = ConsultantProfile.VerificationStatus.PENDING
+                profile_obj.is_active_field_agent = False
+                
+            profile_obj.save()
+            messages.success(request, "Your profile fields and credentials have been updated successfully.")
+            return redirect('dashboard:consultant-profile')
+    else:
+        user_form = ConsultantBaseUserForm(instance=request.user)
+        profile_form = ConsultantVerificationForm(instance=profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'profile': profile,
+    }
+
+    return render(request, 'dashboards/consultant_profile.html', context)
+
+
+# @login_required
+# @role_required([UserRole.CONSULTANT])
+# def consultant_submit_verification(request):
+#     """Allows Consultants to upload required assets for verification."""
+#     profile, created = ConsultantProfile.objects.get_or_create(user=request.user)
+    
+#     if request.method == 'POST':
+#         user_form = ConsultantBaseUserForm(request.POST, instance=request.user)
+#         profile_form = ConsultantVerificationForm(request.POST, request.FILES, instance=profile)
+        
+#         if user_form.is_valid() and profile_form.is_valid():
+#             user_form.save()
+#             # Reset validation status back to pending upon resubmission
+#             profile_obj = profile_form.save(commit=False)
+#             profile_obj.verification_status = ConsultantProfile.VerificationStatus.PENDING
+#             profile_obj.save()
+            
+#             messages.success(request, "Verification documentation uploaded successfully for evaluation.")
+#             return redirect('accounts:consultant-dashboard')
+#     else:
+#         user_form = ConsultantBaseUserForm(instance=request.user)
+#         profile_form = ConsultantVerificationForm(instance=profile)
+
+#     context = {
+#         'user_form': user_form,
+#         'profile_form': profile_form,
+#         'profile': profile
+#     }
+        
+#     return render(request, 'dashboards/consultant_profile.html', context)
 
 
 
@@ -806,13 +918,13 @@ def ambassador_claim_client(request):
         # 2. Safety check: Ensure the ambassador has a verified active profile state
         profile = get_object_or_404(AmbassadorProfile, user=request.user)
         if not profile.is_active_field_agent:
-            messages.error(request, "Access Denied. Your agent credentials are unverified.")
+            messages.error(request, "Access Denied. Your ambassador credentials are unverified.")
             return redirect('dashboard:ambassador-dashboard')
             
         # 3. Double-claim preventative safety lock check
         already_claimed = AmbassadorAssignment.objects.filter(client=target_client, status='ASSIGNED').exists()
         if already_claimed:
-            messages.warning(request, "This client project has already been claimed by another field agent.")
+            messages.warning(request, "This client project has already been claimed by another Ambassador.")
             return redirect('dashboard:ambassador-dashboard')
             
         # 4. Initialize assignment pipeline structure records
@@ -826,12 +938,10 @@ def ambassador_claim_client(request):
             status='ASSIGNED'
         )
         
-        messages.success(request, f"Successfully registered track management over {target_client.email}.")
+        messages.success(request, f"Successfully paired with {target_client.email}.")
         return redirect('dashboard:ambassador-client-workbench', client_id=target_client.id)
         
     return redirect('dashboard:ambassador-dashboard')
-
-
 
 
 
@@ -863,7 +973,7 @@ def ambassador_client_workbench(request, client_id):
                 document_type=doc_type,
                 file=uploaded_file
             )
-            messages.success(request, f"Proxy document ({doc_type}) successfully processed.")
+            messages.success(request, f"Proxy document ({doc_type}) successfully uploaded.")
             return redirect('dashboard:ambassador-client-workbench', client_id=client_user.id)
 
     # Document state compilation for the workbench checklist UI
@@ -896,7 +1006,7 @@ def ambassador_toggle_complete(request, assignment_id):
     # Trigger dual-signoff gate evaluation engine execution rules
     assignment.check_and_finalize_payout()
     
-    messages.success(request, "Verification status successfully synced with the payout engine ledger.")
+    messages.success(request, "Verification status successfully updated.")
     return redirect('dashboard:ambassador-dashboard')
 
 
@@ -937,58 +1047,37 @@ def ambassador_clients(request):
 @login_required
 @role_required([UserRole.AMBASSADOR])
 def ambassador_profile(request):
-    """
-    Displays and processes updates to the Ambassador's contact profile details.
-    """
+    """Displays and processes updates to contact info and verification uploads."""
+    profile, created = AmbassadorProfile.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
-        form = AmbassadorProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your workspace profile settings have been updated successfully.")
+        user_form = AmbassadorBaseUserForm(request.POST, instance=request.user)
+        profile_form = AmbassadorVerificationForm(request.POST, request.FILES, instance=profile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            
+            # Reset verification status back to PENDING if they re-upload files
+            profile_obj = profile_form.save(commit=False)
+            if 'id_card' in request.FILES or 'verification_selfie' in request.FILES:
+                profile_obj.verification_status = AmbassadorProfile.VerificationStatus.PENDING
+                profile_obj.is_active_field_agent = False
+                
+            profile_obj.save()
+            messages.success(request, "Your profile fields and credentials have been updated successfully.")
             return redirect('dashboard:ambassador-profile')
     else:
-        form = AmbassadorProfileForm(instance=request.user)
+        user_form = AmbassadorBaseUserForm(instance=request.user)
+        profile_form = AmbassadorVerificationForm(instance=profile)
 
     context = {
-        'form': form,
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'profile': profile,
     }
+
     return render(request, 'dashboards/ambassador_profile.html', context)
 
-
-@login_required
-@role_required([UserRole.AMBASSADOR])
-def ambassador_clients_view(request):
-    """
-    Renders the dashboard listing all active clients within the Ambassador's region/purview.
-    """
-    # Grab regular users from the same region (adjust query if you use direct FK assignments)
-    assigned_clients = User.objects.filter(role=UserRole.USER, region=request.user.region).order_by('-created_at')
-    
-    context = {
-        'clients': assigned_clients,
-    }
-    return render(request, 'dashboard/ambassador_clients.html', context)
-
-
-@login_required
-@role_required([UserRole.AMBASSADOR])
-def ambassador_profile_view(request):
-    """
-    Displays and processes updates to the Ambassador's contact profile details.
-    """
-    if request.method == 'POST':
-        form = AmbassadorProfileForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your workspace profile settings have been updated successfully.")
-            return redirect('dashboard:ambassador-profile')
-    else:
-        form = AmbassadorProfileForm(instance=request.user)
-
-    context = {
-        'form': form,
-    }
-    return render(request, 'dashboard/ambassador_profile.html', context)
 
 
 
@@ -1123,7 +1212,7 @@ def user_documents_vault(request):
                 )
         
         if saved_count > 0:
-            messages.success(request, f"Successfully uploaded and cataloged {saved_count} core file(s) inside your vault.")
+            messages.success(request, f"Successfully uploaded and catalogued {saved_count} mandatory file(s) inside your portal.")
         return redirect('dashboard:user-documents')
 
     # Grab all custom requests in insertion order
@@ -1147,18 +1236,18 @@ def create_supplementary_slot(request):
         title = request.POST.get('custom_title', '').strip()
 
         if not title:
-            messages.error(request, "Asset tracking generation failed. You must provide a descriptive name.")
+            messages.error(request, "Creating Supplmentary Document slot failed. You must provide a descriptive name.")
             return redirect('dashboard:user-documents')
         
         # Defensive Check: Does this client already have this exact custom slot?
         existing_slot = ClientDocument.objects.filter(
             client=request.user,
             document_type='SUPPLEMENTARY',
-            custom_title__iexact=title # Case-insensitive match check
+            custom_title__iexact=title
         ).exists()
 
         if existing_slot:
-            messages.warning(request, f"A requirement slot named '{title}' already exists in your vault.")
+            messages.warning(request, f"A supplementary slot named '{title}' already exists in your portal.")
             return redirect('dashboard:user-documents')
         
         # If it passes the check, create it safely
@@ -1168,7 +1257,7 @@ def create_supplementary_slot(request):
             custom_title=title,
             status=DocumentStatus.PENDING
         )
-        messages.success(request, f"New dynamic slot created for '{title}'.")
+        messages.success(request, f"New supplementary slot created for '{title}'.")
 
     return redirect('dashboard:user-documents')
 
@@ -1188,7 +1277,7 @@ def upload_document_asset(request, doc_id):
         
         # Enforce validation locks on audited materials
         if document.status == DocumentStatus.APPROVED:
-            messages.error(request, "This tracking item is currently verified and locked.")
+            messages.error(request, "This document is currently verified and locked.")
             return redirect('dashboard:user-documents')
 
         # Attach multi-part binary payload stream directly
@@ -1202,10 +1291,10 @@ def upload_document_asset(request, doc_id):
         create_activity_log(
             user=request.user,
             category=LogCategory.DOCUMENT,
-            description=f"Attached file asset payload to supplementary slot: '{display_name}'."
+            description=f"Uploaded a document for: '{display_name}'."
         )
         
-        messages.success(request, f"Document binary successfully uploaded for '{display_name}'.")
+        messages.success(request, f"Document successfully uploaded for '{display_name}'.")
         
     return redirect('dashboard:user-documents')
 
@@ -1247,9 +1336,9 @@ def user_profile(request):
             create_activity_log(
                 user=request.user, 
                 category=LogCategory.PROFILE, 
-                description="Updated authorized representative details."
+                description="Updated profile details."
             )
-            messages.success(request, "Your contact metrics have been saved successfully!")
+            messages.success(request, "Your profile details have been saved successfully!")
             return redirect('dashboard:user-profile')
     else:
         form = ClientProfileForm(instance=request.user)
@@ -1259,3 +1348,42 @@ def user_profile(request):
     }
 
     return render(request, "dashboards/user_profile.html", context)
+
+
+@login_required
+def client_confirm_verification(request):
+    """Allows the client to sign off on the documents compiled for their file."""
+    if request.method == 'POST':
+        # Locate the active assignment for this specific logged-in client
+        assignment = get_object_or_404(
+            AmbassadorAssignment, 
+            client=request.user, 
+            status='ASSIGNED'
+        )
+        
+        # Operational Check: Ensure all required documents actually exist before letting them confirm
+        client_docs = ClientDocument.objects.filter(client=request.user)
+        uploaded_types = list(client_docs.values_list('document_type', flat=True))
+        required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
+        
+        all_uploaded = all(t in uploaded_types for t in required_types)
+        
+        if not all_uploaded:
+            messages.error(request, "Cannot verify portfolio. Mandatory documents are still missing from your profile.")
+            return redirect('dashboard:user-dashboard')
+            
+        # Flip the client confirmation switch
+        assignment.client_marked_complete = True
+        assignment.save()
+        
+        # Operational Trigger: If BOTH have signed off, shift the status to complete or notify systems
+        if assignment.ambassador_marked_complete:
+            # Optional: You can change the status here or leave it as ASSIGNED while both are True,
+            # depending on how your consultant query reads 'readiness'.
+            messages.success(request, "Dual Verification Achieved! Your profile has been forwarded to consultants to initiate project.")
+        else:
+            messages.success(request, "Your verification has been recorded. Awaiting final ambassador confirmation.")
+            
+        return redirect('dashboard:user-dashboard')
+
+    return redirect('dashboard:user-dashboard')
