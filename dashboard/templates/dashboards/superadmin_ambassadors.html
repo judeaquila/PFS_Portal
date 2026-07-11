@@ -1,13 +1,13 @@
 {% extends 'dashboards/base_superadmin.html' %}
 
-{% block title %}Ambassadors Directory | PFS Online Portal{% endblock %}
+{% block title %}Associates Directory | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-200">Ambassadors Directory</h1>
-            <p class="text-sm text-slate-500">Audit submitted files, authorize Ambassadors, or suspend access credentials for approved accounts.</p>
+            <h1 class="text-2xl font-bold text-slate-200">Associates Directory</h1>
+            <p class="text-sm text-slate-500">Audit submitted files, authorize Associates, or suspend access credentials for approved accounts.</p>
         </div>
         <a href="{% url 'dashboard:super-admin-dashboard' %}" class="bg-slate-500 border border-slate-200 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-900 transition shadow-sm">
             &larr; Back to Dashboard
@@ -127,7 +127,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">No Ambassadors have signed up to the platform yet.</td>
+                        <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">No Associates have signed up to the platform yet.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

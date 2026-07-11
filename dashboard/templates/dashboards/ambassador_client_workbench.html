@@ -1,6 +1,6 @@
 {% extends 'dashboards/base_ambassador.html' %}
 
-{% block title %}Client Case Workbench | PFS{% endblock %}
+{% block title %}Client Case Workbench | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-6">
@@ -73,7 +73,7 @@
                                         {% if doc.uploaded_by == client_user %}
                                             {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }} (Client)
                                         {% else %}
-                                            {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }} (Ambassador)
+                                            {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }} (Associate)
                                         {% endif %}
                                     {% else %}
                                         {{ client_user.get_full_name|default:client_user.email }} (Client)

@@ -6,13 +6,13 @@
 <div class="max-w-7xl mx-auto space-y-8">
     <div>
         <h1 class="text-2xl font-bold text-slate-100">Administrative Overview</h1>
-        <p class="text-sm text-slate-400">Monitor platform activity, manage ambassador records, and review pending client assignments.</p>
+        <p class="text-sm text-slate-400">Monitor platform activity, manage Associate records, and review pending client assignments.</p>
     </div>
 
     <!-- KPI Metric Summary Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-sm">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Total Ambassadors</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Total Associates</span>
             <div class="flex items-baseline gap-2 mt-2">
                 <span class="text-3xl font-black text-slate-100">{{ metrics.total_ambassadors }}</span>
                 <span class="text-xs font-semibold text-slate-500">registered</span>
@@ -84,7 +84,7 @@
             <h3 class="font-bold text-sm tracking-wide text-slate-400 uppercase">Shortcuts</h3>
             <div class="space-y-2">
                 <a href="{% url 'dashboard:superadmin-ambassadors' %}" class="block p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 text-xs font-medium transition text-left text-slate-200">
-                    👥 Browse Ambassador Directory
+                    👥 Browse Associate Directory
                 </a>
                 <a href="/admin/" target="_blank" class="block p-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-xs font-medium text-slate-400 transition text-left">
                     🔧 Open Main Database Console

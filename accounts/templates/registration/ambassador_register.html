@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ambassador Application | PFS Online Portal</title>
+    <title>Associate Application | PFS Online Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row">
@@ -14,7 +14,7 @@
         <div class="relative z-10">
             <a href="{% url 'core:home' %}" class="text-2xl font-bold text-pink-500 mb-12 block">PFS Online Portal</a>
             <h1 class="text-4xl font-bold leading-tight mb-6">Assist Business Onboarding.</h1>
-            <p class="text-slate-300 text-lg mb-8">Register as an official PFS Ambassador to accept business portfolios, assist the onboarding process, and secure timely payouts.</p>
+            <p class="text-slate-300 text-lg mb-8">Register as an official PFS Associate to accept business portfolios, assist the onboarding process, and secure timely payouts.</p>
             
             <ul class="space-y-4 text-slate-300">
                 <li class="flex items-center gap-3">
@@ -41,10 +41,10 @@
         <div class="max-w-md w-full">
             
             <div class="md:hidden mb-8 text-center">
-                <a href="{% url 'core:home' %}" class="text-3xl font-bold text-pink-700">PFS Ambassador</a>
+                <a href="{% url 'core:home' %}" class="text-3xl font-bold text-pink-700">PFS Associate</a>
             </div>
 
-            <h2 class="text-3xl font-bold text-slate-900 mb-2">Create your Ambassador profile</h2>
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Create your Associate profile</h2>
             <p class="text-slate-600 mb-8">Please provide your valid contact details below.</p>
 
             <form method="POST" action="{% url 'accounts:ambassador-register' %}" class="space-y-5">
@@ -112,7 +112,7 @@
             </form>
 
             <p class="text-center text-sm text-slate-600 mt-6">
-                Already have an Ambassador profile? <a href="{% url 'accounts:login' %}" class="text-pink-700 font-bold hover:underline">Log in here</a>
+                Already have an Associate profile? <a href="{% url 'accounts:login' %}" class="text-pink-700 font-bold hover:underline">Log in here</a>
             </p>
 
         </div>
