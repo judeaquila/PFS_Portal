@@ -115,7 +115,7 @@ def superadmin_process_verification(request, profile_id, action):
         
         # Enforce that documents exist before letting action execute
         if not profile.id_card or not profile.verification_selfie:
-            messages.error(request, f"Cannot process verification: Ambassador {target_user.email} hasn't uploaded all files.")
+            messages.error(request, f"Cannot process verification: Associate {target_user.email} hasn't uploaded all files.")
             return redirect('dashboard:superadmin-ambassadors')
             
         if action == 'verify':
@@ -149,13 +149,13 @@ def superadmin_consultant_verification(request, profile_id, action):
             
         if action == 'verify':
             profile.verification_status = ConsultantProfile.VerificationStatus.APPROVED
-            profile.is_active_field_agent = True
+            profile.is_active_consultant = True
             profile.save()
             messages.success(request, f"Successfully verified account and authorized Consultant {target_user.email}.")
             
         elif action == 'decline':
             profile.verification_status = ConsultantProfile.VerificationStatus.DECLINED
-            profile.is_active_field_agent = False
+            profile.is_active_consultant = False
             profile.save()
             messages.warning(request, f"Declined verification credentials for {target_user.email}.")
             
