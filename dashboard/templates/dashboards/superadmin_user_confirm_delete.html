@@ -1,0 +1,35 @@
+{% extends 'dashboards/base_superadmin.html' %}
+
+{% block title %}Confirm Deletion | SuperAdmin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto space-y-6 pt-12">
+    <div class="bg-slate-950/80 rounded-2xl border border-rose-900/50 p-6 shadow-2xl space-y-6 text-center">
+        
+        <div class="w-12 h-12 bg-rose-950/60 border border-rose-900 text-rose-400 rounded-2xl flex items-center justify-center mx-auto">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-bold text-white">Permanently Delete User?</h2>
+            <p class="text-xs text-slate-400 mt-2">
+                Are you sure you want to remove <span class="text-rose-400 font-semibold">{{ target_user.email }}</span>? 
+            </p>
+            <p class="text-[11px] text-slate-500 mt-2 bg-rose-950/20 border border-rose-900/30 p-2.5 rounded-xl">
+                Warning: Deleting this user will purge all associated verification profiles, uploaded ID cards, selfies, and field assignments.
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'dashboard:admin-user-delete' target_user.pk %}" class="flex gap-3">
+            {% csrf_token %}
+            <a href="{% url 'dashboard:admin-user-list' %}" class="w-1/2 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold py-2.5 rounded-xl border border-slate-800 transition">
+                Cancel
+            </a>
+            <button type="submit" class="w-1/2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow-lg shadow-rose-600/20">
+                Delete Account
+            </button>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from your_app.models import ClientPackage, BlueprintSubactivity
+from .models import ClientPackage, BlueprintSubactivity
 
 class Command(BaseCommand):
     help = "Populates the database with the core 10-tier service packages and subactivities."

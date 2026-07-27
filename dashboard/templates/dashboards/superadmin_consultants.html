@@ -1,133 +1,229 @@
 {% extends 'dashboards/base_superadmin.html' %}
+{% load static %}
 
 {% block title %}Consultants Directory | PFS Online Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-6 text-slate-200" x-data="{ editModalId: null, deleteModalId: null }">
+    <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-200">Consultants Directory</h1>
-            <p class="text-sm text-slate-500">Audit submitted files, authorize Consultants, or suspend access credentials for approved accounts.</p>
+            <h1 class="text-2xl font-bold text-slate-100">Consultants Directory</h1>
+            <p class="text-xs text-slate-400 mt-1">Audit submitted files, authorize Consultants, or manage active credentials for approved accounts.</p>
         </div>
-        <a href="{% url 'dashboard:super-admin-dashboard' %}" class="bg-slate-500 border border-slate-200 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-900 transition shadow-sm">
-            &larr; Back to Dashboard
-        </a>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                Total: {{ consultants|length }}
+            </span>
+            <a href="{% url 'dashboard:super-admin-dashboard' %}" class="bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-700 transition shadow-sm">
+                &larr; Back to Dashboard
+            </a>
+        </div>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Directory Table Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    <tr class="bg-slate-950/80 border-b border-slate-800 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                         <th class="p-4">Identity Info</th>
-                        <th class="p-4">Status & Authorization</th>
-                        <th class="p-4">Uploaded Verification Credentials</th>
-                        <th class="p-4">Active Assignments</th>
+                        <th class="p-4">Status & Availability</th>
+                        <th class="p-4">Verification Credentials</th>
+                        <th class="p-4">Assigned Clients</th>
                         <th class="p-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
+                <tbody class="divide-y divide-slate-800/60 text-xs">
                 {% for account in consultants %}
-                    <tr class="hover:bg-slate-50/50 transition align-top">
+                    <tr class="hover:bg-slate-800/40 transition align-top">
                         
+                        <!-- Identity Info -->
                         <td class="p-4">
                             <div class="flex items-start gap-3">
-                                <div class="w-9 h-9 bg-slate-100 border rounded-lg flex items-center justify-center font-bold text-slate-600 text-xs uppercase flex-shrink-0">
-                                    {{ account.username|slice:":2"|default:account.first_name|slice:":2" }}
+                                <div class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg flex items-center justify-center font-bold text-indigo-400 text-xs uppercase flex-shrink-0">
+                                    {{ account.first_name|slice:":1"|default:account.last_name|slice:":1" }}
                                 </div>
                                 <div>
-                                    <div class="font-bold text-slate-900 text-sm">{{ account.get_full_name|default:account.first_name }}</div>
-                                    <div class="text-[10px] text-slate-400 font-mono mt-0.5">ID: #{{ account.id }}</div>
-                                    <div class="text-slate-500 font-medium mt-1">{{ account.email }}</div>
+                                    <div class="font-bold text-slate-100 text-sm">
+                                        {{ account.get_full_name|default:account.email }}
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID: #{{ account.id }}</div>
+                                    <div class="text-slate-400 font-medium mt-1">{{ account.email }}</div>
                                     {% if account.whatsapp_number %}
-                                        <div class="text-[11px] text-slate-500 mt-0.5">WA: {{ account.whatsapp_number|default:"None provided" }}</div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">WA: {{ account.whatsapp_number }}</div>
                                     {% endif %}
                                 </div>
                             </div>
                         </td>
                         
+                        <!-- Status Column -->
                         <td class="p-4">
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 <div>
                                     {% if account.consultant_profile.verification_status == 'APPROVED' %}
-                                        <span class="inline-flex items-center bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-emerald-200">
+                                        <span class="inline-flex items-center bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-emerald-500/20">
                                             ● Verified
                                         </span>
                                     {% elif account.consultant_profile.verification_status == 'DECLINED' %}
-                                        <span class="inline-flex items-center bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-rose-200">
+                                        <span class="inline-flex items-center bg-rose-500/10 text-rose-400 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-rose-500/20">
                                             ✕ Declined
                                         </span>
                                     {% else %}
-                                        <span class="inline-flex items-center bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-amber-200">
+                                        <span class="inline-flex items-center bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded text-[10px] uppercase border border-amber-500/20">
                                             ◷ Pending Audit
                                         </span>
                                     {% endif %}
                                 </div>
-                                <div class="text-[10px] text-slate-400 font-medium pl-1">
+
+                                <div class="text-[10px] font-medium pl-0.5">
                                     {% if account.consultant_profile.is_active_consultant %}
-                                        Available for Active Duty
+                                        <span class="text-emerald-400/80">Active Consultant</span>
                                     {% else %}
-                                        Account Suspended
+                                        <span class="text-rose-400/80">Account Suspended</span>
                                     {% endif %}
                                 </div>
                             </div>
                         </td>
 
+                        <!-- Credentials Column -->
                         <td class="p-4">
                             <div class="space-y-2 max-w-xs">
                                 <div class="flex items-center gap-4">
                                     <div>
-                                        <span class="block text-[9px] uppercase font-bold text-slate-400">ID Reference</span>
+                                        <span class="block text-[9px] uppercase font-bold text-slate-500">ID Reference</span>
                                         {% if account.consultant_profile.id_card %}
-                                            <a href="{{ account.consultant_profile.id_card.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-[11px]">View ID Card File &rarr;</a>
+                                            <a href="{{ account.consultant_profile.id_card.url }}" target="_blank" class="text-indigo-400 font-bold hover:underline text-[11px]">View ID Card &rarr;</a>
                                         {% else %}
-                                            <span class="text-slate-400 italic text-[11px]">Not Provided</span>
+                                            <span class="text-slate-500 italic text-[11px]">Not Provided</span>
                                         {% endif %}
                                     </div>
                                     <div>
-                                        <span class="block text-[9px] uppercase font-bold text-slate-400">Selfie Snap</span>
+                                        <span class="block text-[9px] uppercase font-bold text-slate-500">Selfie/Pic</span>
                                         {% if account.consultant_profile.verification_selfie %}
-                                            <a href="{{ account.consultant_profile.verification_selfie.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-[11px]">View Selfie &rarr;</a>
+                                            <a href="{{ account.consultant_profile.verification_selfie.url }}" target="_blank" class="text-indigo-400 font-bold hover:underline text-[11px]">View Selfie &rarr;</a>
                                         {% else %}
-                                            <span class="text-slate-400 italic text-[11px]">Not Provided</span>
+                                            <span class="text-slate-500 italic text-[11px]">Not Provided</span>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="text-slate-500 italic text-[11px] border-t border-slate-100 pt-1">
-                                    "{{ account.consultant_profile.bio|default:'No statement bio uploaded.'|truncatechars:70 }}"
+                                <div class="text-slate-400 italic text-[11px] border-t border-slate-800 pt-1">
+                                    "{{ account.consultant_profile.bio|default:'No statement bio uploaded.'|truncatechars:100 }}"
                                 </div>
                             </div>
                         </td>
 
-                        <td class="p-4 font-bold text-slate-700">
-                            {{ account.assignment_count|default:"0" }} clients
+                        <!-- Assignments Column -->
+                        <td class="p-4 font-bold text-slate-300">
+                            {{ account.assignment_count|default:"0" }} <span class="text-slate-500 font-normal">clients</span>
                         </td>
 
-                        <td class="p-4 text-right">
-                            <div class="flex flex-col items-end gap-2">
-                                {% if account.consultant_profile.verification_status != 'APPROVED' %}
-                                    <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' account.id 'verify' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" {% if not account.consultant_profile.id_card %}disabled class="bg-slate-100 text-slate-400 font-bold px-3 py-1.5 rounded-lg text-[11px] cursor-not-allowed"{% else %}class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-sm text-[11px]"{% endif %}>
-                                            Approve Credentials
-                                        </button>
-                                    </form>
+                        <!-- Actions Column -->
+                        <td class="p-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-2">
+
+                                <!-- Quick Verification Actions -->
+                                {% if account.consultant_profile.id_card and account.consultant_profile.verification_selfie %}
+                                    {% if account.consultant_profile.verification_status != 'APPROVED' %}
+                                        <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' account.id 'verify' %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" title="Approve Credentials" class="p-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    {% if account.consultant_profile.verification_status != 'DECLINED' %}
+                                        <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' account.id 'decline' %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" title="Decline Credentials" class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </form>
+                                    {% endif %}
                                 {% endif %}
-                                
-                                {% if account.consultant_profile.is_active_consultant or account.consultant_profile.verification_status == 'PENDING' %}
-                                    <form method="POST" action="{% url 'dashboard:superadmin-process-verification' account.id 'decline' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="bg-white border border-slate-200 text-rose-600 hover:bg-rose-50 font-medium px-3 py-1.5 rounded-lg transition text-[11px]">
-                                            Decline & Freeze
-                                        </button>
-                                    </form>
-                                {% endif %}
+
+                                <!-- Detail Link -->
+                                <a href="{% url 'dashboard:admin-user-detail' account.id %}" title="View Details" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-700">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </a>
+
+                                <!-- Edit Modal Trigger -->
+                                <button @click="editModalId = {{ account.id }}" title="Edit Consultant" class="p-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-lg transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+
+                                <!-- Delete Modal Trigger -->
+                                <button @click="deleteModalId = {{ account.id }}" title="Delete Consultant" class="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
                             </div>
+
+                            <!-- Alpine Edit Modal -->
+                            <div x-show="editModalId === {{ account.id }}" 
+                                 x-cloak 
+                                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-left whitespace-normal"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0">
+                                <div @click.away="editModalId = null" class="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                                    <h3 class="text-lg font-bold text-slate-100 mb-4">Edit Consultant Profile</h3>
+                                    <form action="{% url 'dashboard:admin-user-update' account.id %}" method="POST" class="space-y-4">
+                                        {% csrf_token %}
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-400 mb-1">First Name</label>
+                                            <input type="text" name="first_name" value="{{ account.first_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-400 mb-1">Last Name</label>
+                                            <input type="text" name="last_name" value="{{ account.last_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-400 mb-1">Email Address</label>
+                                            <input type="email" name="email" value="{{ account.email }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                        </div>
+                                        <div class="flex justify-end gap-3 pt-2">
+                                            <button type="button" @click="editModalId = null" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition">Cancel</button>
+                                            <button type="submit" class="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Alpine Delete Modal -->
+                            <div x-show="deleteModalId === {{ account.id }}" 
+                                 x-cloak 
+                                 class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-left whitespace-normal"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0">
+                                <div @click.away="deleteModalId = null" class="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-sm shadow-2xl">
+                                    <div class="text-center">
+                                        <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-4">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        </div>
+                                        <h3 class="text-lg font-bold text-slate-100 mb-2">Delete User Account</h3>
+                                        <p class="text-xs text-slate-400 mb-6">Are you sure you want to delete <span class="text-slate-200 font-medium">{{ account.email }}</span>? This action cannot be undone.</p>
+                                    </div>
+                                    <form action="{% url 'dashboard:admin-user-delete' account.id %}" method="POST" class="flex items-center justify-center gap-3">
+                                        {% csrf_token %}
+                                        <button type="button" @click="deleteModalId = null" class="w-full py-2 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-lg transition">Cancel</button>
+                                        <button type="submit" class="w-full py-2 text-xs font-medium bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">No Consultants have signed up to the platform yet.</td>
+                        <td colspan="5" class="text-center p-12 text-slate-500 italic text-sm">No Consultants have signed up to the platform yet.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

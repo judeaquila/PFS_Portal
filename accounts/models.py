@@ -5,11 +5,11 @@ from django.utils.translation import gettext_lazy as _
 
 # User Roles
 class UserRole(models.TextChoices):
-    SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"
-    SUPERVISOR = "SUPERVISOR", "Supervisor"
-    CONSULTANT = "CONSULTANT", "Consultant"
-    AMBASSADOR = "AMBASSADOR", "Ambassador"
     USER = "USER", "User"
+    AMBASSADOR = "AMBASSADOR", "Associate"
+    CONSULTANT = "CONSULTANT", "Consultant"
+    SUPERVISOR = "SUPERVISOR", "Supervisor"
+    SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"    
 
 
 # User Region
@@ -92,6 +92,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    def get_full_name(self):
+        full_name = f"{self.first_name} {self.last_name}".strip()
+        return full_name
 
     def __str__(self):
         return f"{self.email} ({self.get_role_display()})"

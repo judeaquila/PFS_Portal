@@ -26,7 +26,7 @@
             {% with request.resolver_match.url_name as url_name %}
             
             <a href="{% url 'dashboard:super-admin-dashboard' %}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-dashboard' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-dashboard' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path>
                 </svg>
@@ -34,19 +34,27 @@
             </a>
 
             <a href="{% url 'dashboard:superadmin-ambassadors' %}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-ambassadors' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-ambassadors' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0-6a3 3 0 110-6m3.343 1.1a3.343 3.343 0 110 6.686M17.657 15a8.967 8.967 0 013.343 6v1h-3.343v-1a6.882 6.882 0 00-3.343-6z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-4 0h4m-6 7a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
                 </svg>
                 Manage Associates
             </a>
 
             <a href="{% url 'dashboard:superadmin-consultants' %}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-consultants' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-consultants' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Manage Consultants
+            </a>
+
+            <a href="{% url 'dashboard:admin-user-list' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if 'user' in url_name %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0-6a3 3 0 110-6m3.343 1.1a3.343 3.343 0 110 6.686M17.657 15a8.967 8.967 0 013.343 6v1h-3.343v-1a6.882 6.882 0 00-3.343-6z"></path>
                 </svg>
-                Manage Consultants
+                User Management
             </a>
             
             {% endwith %}

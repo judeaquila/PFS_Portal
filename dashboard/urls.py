@@ -7,10 +7,15 @@ urlpatterns = [
     path("redirect/", views.redirect_dashboard, name="redirect-dashboard"),
 
     path("super-admin/", views.superadmin_dashboard, name="super-admin-dashboard"),
-    path('super-admin/ambassadors/', views.superadmin_ambassadors, name='superadmin-ambassadors'),
-    path('super-admin/ambassadors/verify/<int:profile_id>/<str:action>/', views.superadmin_process_verification, name='superadmin-process-verification'),
+    path('super-admin/associates/', views.superadmin_ambassadors, name='superadmin-ambassadors'),
+    path('super-admin/associates/verify/<int:profile_id>/<str:action>/', views.superadmin_process_verification, name='superadmin-process-verification'),
     path('super-admin/consultants/', views.superadmin_consultants, name="superadmin-consultants"),
     path('super-admin/consultants/verify/<int:profile_id>/<str:action>/', views.superadmin_consultant_verification, name="superadmin-consultant-verification"),
+    path('super-admin/users/', views.admin_user_list, name='admin-user-list'),
+    path('super-admin/users/<int:pk>/', views.admin_user_detail, name='admin-user-detail'),
+    path('super-admin/users/<int:pk>/edit/', views.admin_user_update, name='admin-user-update'),
+    path('super-admin/users/<int:pk>/toggle-active/', views.admin_user_toggle_active, name='admin-user-toggle-active'),
+    path('super-admin/users/<int:pk>/delete/', views.admin_user_delete, name='admin-user-delete'),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),
 

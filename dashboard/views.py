@@ -1,9 +1,10 @@
 import json
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from accounts.models import UserRole
 from common.decorators import role_required, mandatory_docs_required
-from .forms import ClientProfileForm, AmbassadorProfileForm, AmbassadorBaseUserForm, AmbassadorVerificationForm, ConsultantBaseUserForm, ConsultantVerificationForm
+from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificationForm, ConsultantVerificationForm, AdminUserManagementForm
 from django.contrib import messages
 from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile
 from django.contrib.auth import get_user_model
@@ -121,7 +122,7 @@ def superadmin_process_verification(request, profile_id, action):
             profile.verification_status = AmbassadorProfile.VerificationStatus.APPROVED
             profile.is_active_field_agent = True
             profile.save()
-            messages.success(request, f"Successfully verified account and authorized Ambassador {target_user.email}.")
+            messages.success(request, f"Successfully verified account and authorized Associate {target_user.email}.")
             
         elif action == 'decline':
             profile.verification_status = AmbassadorProfile.VerificationStatus.DECLINED
@@ -159,6 +160,154 @@ def superadmin_consultant_verification(request, profile_id, action):
             messages.warning(request, f"Declined verification credentials for {target_user.email}.")
             
     return redirect('dashboard:superadmin-consultants')
+
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_user_list(request):
+    """Lists all users with search by name/email/phone and filter by role."""
+    query = request.GET.get('q', '').strip()
+    role_filter = request.GET.get('role', '').strip()
+
+    users = User.objects.all().order_by('-id')
+
+    if query:
+        users = users.filter(
+            Q(email__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(whatsapp_number__icontains=query)
+        )
+
+    if role_filter:
+        users = users.filter(role=role_filter)
+
+    context = {
+        'users': users,
+        'query': query,
+        'role_filter': role_filter,
+    }
+    return render(request, 'dashboards/superadmin_user_list.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_user_detail(request, pk):
+    """Shows full account profile including attached Consultant/Ambassador profiles."""
+    target_user = get_object_or_404(User, pk=pk)
+    
+    context = {
+        'target_user': target_user,
+        'ambassador_profile': getattr(target_user, 'ambassadorprofile', None),
+        'consultant_profile': getattr(target_user, 'consultantprofile', None),
+    }
+    return render(request, 'dashboards/superadmin_user_detail.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_user_update(request, pk):
+    """
+    Dynamically loads and saves both the User model form 
+    and the matching Role Profile form (Ambassador or Consultant).
+    """
+    target_user = get_object_or_404(User, pk=pk)
+    
+    user_form = AdminUserManagementForm(
+        request.POST or None, 
+        request.FILES or None, 
+        instance=target_user
+    )
+    
+    consultant_form = None
+    ambassador_form = None
+    profile_form = None
+
+    # Load matching verification form based on user role
+    if target_user.role == UserRole.AMBASSADOR:
+        profile_instance, _ = AmbassadorProfile.objects.get_or_create(user=target_user)
+        ambassador_form = AmbassadorVerificationForm(
+            request.POST or None, 
+            request.FILES or None, 
+            instance=profile_instance
+        )
+        profile_form = ambassador_form
+
+    elif target_user.role == UserRole.CONSULTANT:
+        profile_instance, _ = ConsultantProfile.objects.get_or_create(user=target_user)
+        consultant_form = ConsultantVerificationForm(
+            request.POST or None, 
+            request.FILES or None, 
+            instance=profile_instance
+        )
+        profile_form = consultant_form
+
+    if request.method == 'POST':
+        user_valid = user_form.is_valid()
+        profile_valid = profile_form.is_valid() if profile_form else True
+
+        if user_valid and profile_valid:
+            with transaction.atomic():
+                saved_user = user_form.save()
+                
+                # Check if the admin changed the role during update and create missing profile
+                if saved_user.role == UserRole.AMBASSADOR:
+                    AmbassadorProfile.objects.get_or_create(user=saved_user)
+                elif saved_user.role == UserRole.CONSULTANT:
+                    ConsultantProfile.objects.get_or_create(user=saved_user)
+
+                if profile_form:
+                    profile_form.save()
+
+            messages.success(request, f"Account details for {target_user.email} updated successfully.")
+            return redirect('dashboard:admin-user-detail', pk=target_user.pk)
+
+    context = {
+        'target_user': target_user,
+        'user_form': user_form,
+        'consultant_form': consultant_form,
+        'ambassador_form': ambassador_form,
+    }
+    return render(request, 'dashboards/superadmin_user_edit.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+@require_POST
+def admin_user_toggle_active(request, pk):
+    """Safely toggles active status to enable/disable user accounts without deleting records."""
+    target_user = get_object_or_404(User, pk=pk)
+    
+    if target_user == request.user:
+        messages.error(request, "You cannot deactivate your own administrative account.")
+        return redirect('dashboard:admin-user-list')
+
+    target_user.is_active = not target_user.is_active
+    target_user.save()
+
+    action = "activated" if target_user.is_active else "deactivated"
+    messages.info(request, f"Account for {target_user.email} has been {action}.")
+    return redirect('dashboard:admin-user-list')
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_user_delete(request, pk):
+    """Permanently deletes a user account and cascading profile media."""
+    target_user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        if target_user == request.user:
+            messages.error(request, "You cannot delete your own administrative account.")
+            return redirect('dashboard:admin-user-list')
+
+        email = target_user.email
+        target_user.delete()
+        messages.success(request, f"User '{email}' permanently removed from system.")
+        return redirect('dashboard:admin-user-list')
+
+    return render(request, 'dashboards/superadmin_user_confirm_delete.html', {'target_user': target_user})
 
 
 
@@ -676,27 +825,35 @@ def update_activity_status(request, activity_id):
 @login_required
 @role_required([UserRole.CONSULTANT])
 def consultant_profile(request):
-    """Displays and processes updates to contact info and verification uploads."""
-    profile, created = ConsultantProfile.objects.get_or_create(user=request.user)
-    
+    """Displays and processes updates to contact info and verification uploads for Consultants."""
+    profile, _ = ConsultantProfile.objects.get_or_create(user=request.user)
+
     if request.method == 'POST':
-        user_form = ConsultantBaseUserForm(request.POST, instance=request.user)
+        user_form = BaseUserProfileForm(request.POST, instance=request.user)
         profile_form = ConsultantVerificationForm(request.POST, request.FILES, instance=profile)
-        
+
         if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            
-            # Reset verification status back to PENDING if they re-upload files
-            profile_obj = profile_form.save(commit=False)
-            if 'id_card' in request.FILES or 'verification_selfie' in request.FILES:
-                profile_obj.verification_status = ConsultantProfile.VerificationStatus.PENDING
-                profile_obj.is_active_field_agent = False
+            with transaction.atomic():
+                user_form.save()
+
+                profile_obj = profile_form.save(commit=False)
                 
-            profile_obj.save()
-            messages.success(request, "Your profile fields and credentials have been updated successfully.")
+                # Reset verification status back to PENDING if CV, ID, or selfie is replaced
+                if any(k in request.FILES for k in ['cv', 'id_card', 'verification_selfie']):
+                    profile_obj.verification_status = ConsultantProfile.VerificationStatus.PENDING
+                    profile_obj.is_active_field_agent = False
+
+                profile_obj.save()
+
+            create_activity_log(
+                user=request.user,
+                category=LogCategory.PROFILE,
+                description="Updated consultant profile and verification documents."
+            )
+            messages.success(request, "Your profile details and credentials have been updated successfully.")
             return redirect('dashboard:consultant-profile')
     else:
-        user_form = ConsultantBaseUserForm(instance=request.user)
+        user_form = BaseUserProfileForm(instance=request.user)
         profile_form = ConsultantVerificationForm(instance=profile)
 
     context = {
@@ -704,7 +861,6 @@ def consultant_profile(request):
         'profile_form': profile_form,
         'profile': profile,
     }
-
     return render(request, 'dashboards/consultant_profile.html', context)
 
 
@@ -1047,27 +1203,35 @@ def ambassador_clients(request):
 @login_required
 @role_required([UserRole.AMBASSADOR])
 def ambassador_profile(request):
-    """Displays and processes updates to contact info and verification uploads."""
-    profile, created = AmbassadorProfile.objects.get_or_create(user=request.user)
-    
+    """Displays and processes updates to contact info and verification uploads for Ambassadors."""
+    profile, _ = AmbassadorProfile.objects.get_or_create(user=request.user)
+
     if request.method == 'POST':
-        user_form = AmbassadorBaseUserForm(request.POST, instance=request.user)
+        user_form = BaseUserProfileForm(request.POST, instance=request.user)
         profile_form = AmbassadorVerificationForm(request.POST, request.FILES, instance=profile)
-        
+
         if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            
-            # Reset verification status back to PENDING if they re-upload files
-            profile_obj = profile_form.save(commit=False)
-            if 'id_card' in request.FILES or 'verification_selfie' in request.FILES:
-                profile_obj.verification_status = AmbassadorProfile.VerificationStatus.PENDING
-                profile_obj.is_active_field_agent = False
+            with transaction.atomic():
+                user_form.save()
+
+                profile_obj = profile_form.save(commit=False)
                 
-            profile_obj.save()
-            messages.success(request, "Your profile fields and credentials have been updated successfully.")
+                # Reset verification status back to PENDING if any verification document is replaced
+                if any(k in request.FILES for k in ['id_card', 'verification_selfie']):
+                    profile_obj.verification_status = AmbassadorProfile.VerificationStatus.PENDING
+                    profile_obj.is_active_field_agent = False
+
+                profile_obj.save()
+
+            create_activity_log(
+                user=request.user,
+                category=LogCategory.PROFILE,
+                description="Updated ambassador profile and verification documents."
+            )
+            messages.success(request, "Your profile details and credentials have been updated successfully.")
             return redirect('dashboard:ambassador-profile')
     else:
-        user_form = AmbassadorBaseUserForm(instance=request.user)
+        user_form = BaseUserProfileForm(instance=request.user)
         profile_form = AmbassadorVerificationForm(instance=profile)
 
     context = {
@@ -1075,7 +1239,6 @@ def ambassador_profile(request):
         'profile_form': profile_form,
         'profile': profile,
     }
-
     return render(request, 'dashboards/ambassador_profile.html', context)
 
 
@@ -1322,17 +1485,15 @@ def client_project_dashboard(request, project_id):
 @login_required
 @role_required([UserRole.USER])
 def user_profile(request):
-    # Only let regular users see this view
-    if not request.user.is_regular_user:
-         return redirect('dashboard:redirect-dashboard')
-         
+    """Handles personal details update for regular client users."""
+    if not getattr(request.user, 'is_regular_user', True):
+        return redirect('dashboard:redirect-dashboard')
+
     if request.method == 'POST':
-        # Pass instance=request.user to target the active logged-in user directly
         form = ClientProfileForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
 
-            # Log Activity
             create_activity_log(
                 user=request.user, 
                 category=LogCategory.PROFILE, 
@@ -1346,7 +1507,6 @@ def user_profile(request):
     context = {
         "form": form,
     }
-
     return render(request, "dashboards/user_profile.html", context)
 
 

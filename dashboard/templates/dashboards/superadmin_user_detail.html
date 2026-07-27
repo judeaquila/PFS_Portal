@@ -1,0 +1,257 @@
+{% extends 'dashboards/base_superadmin.html' %}
+
+{% block title %}User Detail - {{ target_user.get_full_name|default:target_user.email }} | SuperAdmin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header / Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard:admin-user-list' %}" class="p-2.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-black text-white tracking-tight">
+                    {{ target_user.get_full_name|default:"Unnamed Account" }}
+                </h1>
+                <p class="text-xs text-slate-400 mt-0.5">ID: <span class="font-mono text-slate-300">#{{ target_user.pk }}</span> • Created on {{ target_user.created_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'dashboard:admin-user-update' target_user.pk %}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold rounded-xl transition">
+                Edit User
+            </a>
+            <a href="{% url 'dashboard:admin-user-delete' target_user.pk %}" class="px-4 py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/60 text-xs font-semibold rounded-xl transition">
+                Delete Account
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Primary User Card & Quick Actions -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 text-center space-y-4 backdrop-blur-sm">
+                <!-- Avatar -->
+                <div class="relative inline-block">
+                    {% if target_user.role == 'CONSULTANT' and target_user.consultant_profile.avatar %}
+                        <img src="{{ target_user.consultant_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-700 shadow-xl mx-auto">
+                    {% elif target_user.role == 'AMBASSADOR' and target_user.ambassador_profile.avatar %}
+                        <img src="{{ target_user.ambassador_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-700 shadow-xl mx-auto">
+                    {% else %}
+                        <div class="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-2xl font-black text-pink-400 mx-auto">
+                            {{ target_user.first_name|default:target_user.email|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-white">{{ target_user.get_full_name|default:"No Name Set" }}</h2>
+                    <p class="text-xs text-slate-400 mt-1 font-mono">{{ target_user.email }}</p>
+                </div>
+
+                <!-- Role Badge: Renders human-readable label ('Associate') -->
+                <div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold tracking-wider border
+                        {% if target_user.role == 'SUPER_ADMIN' or target_user.is_superuser %}bg-purple-950/60 text-purple-300 border-purple-800/60
+                        {% elif target_user.role == 'SUPERVISOR' %}bg-indigo-950/60 text-indigo-300 border-indigo-800/60
+                        {% elif target_user.role == 'CONSULTANT' %}bg-sky-950/60 text-sky-300 border-sky-800/60
+                        {% elif target_user.role == 'AMBASSADOR' %}bg-pink-950/60 text-pink-300 border-pink-800/60
+                        {% else %}bg-slate-800 text-slate-300 border-slate-700{% endif %}">
+                        {{ target_user.get_role_display|default:"User / Client" }}
+                    </span>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-around text-xs">
+                    <div>
+                        <span class="block text-slate-500 font-medium text-[11px]">Account Status</span>
+                        {% if target_user.is_active %}
+                            <span class="text-emerald-400 font-semibold">Active</span>
+                        {% else %}
+                            <span class="text-rose-400 font-semibold">Inactive</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span class="block text-slate-500 font-medium text-[11px]">Superuser</span>
+                        <span class="text-slate-300 font-semibold">{% if target_user.is_superuser %}Yes{% else %}No{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Details -->
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-5 space-y-3">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">User Details</h3>
+                
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/40">
+                        <span class="text-slate-500">WhatsApp Phone</span>
+                        <span class="text-slate-200 font-medium">{{ target_user.whatsapp_number|default:"N/A" }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/40">
+                        <span class="text-slate-500">Alternative Phone</span>
+                        <span class="text-slate-200 font-medium">{{ target_user.alternative_number|default:"N/A" }}</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-slate-800/40">
+                        <span class="text-slate-500">Last Login</span>
+                        <span class="text-slate-200 font-medium">{{ target_user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Role Profiles -->
+        <div class="lg:col-span-8 space-y-6">
+
+            <!-- 1. CONSULTANT PROFILE SECTION (Only when active role is CONSULTANT) -->
+            {% if target_user.role == 'CONSULTANT' %}
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Consultant Details</span>
+                    </h3>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
+                        {% if target_user.consultant_profile.verification_status == 'APPROVED' %}bg-emerald-950/60 text-emerald-400 border-emerald-800/60
+                        {% elif target_user.consultant_profile.verification_status == 'DECLINED' %}bg-rose-950/60 text-rose-400 border-rose-800/60
+                        {% else %}bg-amber-950/60 text-amber-400 border-amber-800/60{% endif %}">
+                        {{ target_user.consultant_profile.get_verification_status_display|default:"PENDING" }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <span class="text-slate-500 block">Bio</span>
+                        <p class="text-slate-300 mt-1 font-medium">{{ target_user.consultant_profile.bio|default:"No bio provided." }}</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Status</span>
+                        <span class="inline-block mt-1 font-semibold {% if target_user.consultant_profile.is_active_consultant %}text-emerald-400{% else %}text-amber-400{% endif %}">
+                            {% if target_user.consultant_profile.is_active_consultant %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Verification Files -->
+                <div class="pt-2">
+                    <h4 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Uploaded Verification Files</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block">National ID Card</span>
+                            {% if target_user.consultant_profile.id_card %}
+                                <a href="{{ target_user.consultant_profile.id_card.url }}" target="_blank" class="mt-2 inline-flex items-center gap-1.5 text-xs text-pink-400 hover:underline">
+                                    <span>View ID Document</span> ↗
+                                </a>
+                            {% else %}
+                                <span class="text-xs text-slate-600 block mt-1">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block">Selfie/Passport Pic</span>
+                            {% if target_user.consultant_profile.verification_selfie %}
+                                <a href="{{ target_user.consultant_profile.verification_selfie.url }}" target="_blank" class="mt-2 inline-flex items-center gap-1.5 text-xs text-pink-400 hover:underline">
+                                    <span>View Selfie</span> ↗
+                                </a>
+                            {% else %}
+                                <span class="text-xs text-slate-600 block mt-1">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block">Curriculum Vitae (CV)</span>
+                            {% if target_user.consultant_profile.cv %}
+                                <a href="{{ target_user.consultant_profile.cv.url }}" target="_blank" class="mt-2 inline-flex items-center gap-1.5 text-xs text-pink-400 hover:underline">
+                                    <span>Download CV</span> ↗
+                                </a>
+                            {% else %}
+                                <span class="text-xs text-slate-600 block mt-1">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+
+            <!-- 2. ASSOCIATE PROFILE SECTION (Only when active role is AMBASSADOR) -->
+            {% if target_user.role == 'AMBASSADOR' %}
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <h3 class="text-sm font-bold text-white">Associate Details</h3>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
+                        {% if target_user.ambassador_profile.verification_status == 'APPROVED' %}bg-emerald-950/60 text-emerald-400 border-emerald-800/60
+                        {% elif target_user.ambassador_profile.verification_status == 'DECLINED' %}bg-rose-950/60 text-rose-400 border-rose-800/60
+                        {% else %}bg-amber-950/60 text-amber-400 border-amber-800/60{% endif %}">
+                        {{ target_user.ambassador_profile.get_verification_status_display|default:"PENDING" }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <span class="text-slate-500 block">Bio</span>
+                        <p class="text-slate-300 mt-1 font-medium">{{ target_user.ambassador_profile.bio|default:"No bio provided." }}</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Status</span>
+                        <span class="inline-block mt-1 font-semibold {% if target_user.ambassador_profile.is_active_field_agent %}text-emerald-400{% else %}text-amber-400{% endif %}">
+                            {% if target_user.ambassador_profile.is_active_field_agent %}Field Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div>
+                    <h4 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Uploaded Verification Files</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block">National ID Card</span>
+                            {% if target_user.ambassador_profile.id_card %}
+                                <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="mt-2 inline-flex items-center gap-1.5 text-xs text-pink-400 hover:underline">
+                                    <span>View ID Document</span> ↗
+                                </a>
+                            {% else %}
+                                <span class="text-xs text-slate-600 block mt-1">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block">Selfie/Passport Pic</span>
+                            {% if target_user.ambassador_profile.verification_selfie %}
+                                <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="mt-2 inline-flex items-center gap-1.5 text-xs text-pink-400 hover:underline">
+                                    <span>View Selfie</span> ↗
+                                </a>
+                            {% else %}
+                                <span class="text-xs text-slate-600 block mt-1">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignments -->
+                {% if target_user.ambassador_assignments.all %}
+                <div class="pt-3 border-t border-slate-800/80">
+                    <h4 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Field Assignments History</h4>
+                    <div class="space-y-2">
+                        {% for assign in target_user.ambassador_assignments.all %}
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
+                            <div>
+                                <span class="text-white font-medium block">{{ assign.title|default:"Field Project" }}</span>
+                                <span class="text-slate-500 text-[11px]">Assigned on {{ assign.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300">
+                                {{ assign.status|default:"ACTIVE" }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

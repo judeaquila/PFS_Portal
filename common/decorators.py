@@ -1,3 +1,4 @@
+import functools
 from django.core.exceptions import PermissionDenied
 from functools import wraps
 from django.shortcuts import redirect
@@ -7,12 +8,19 @@ from dashboard.models import DocumentType, DocumentStatus
 # CUSTOM ROLES
 def role_required(allowed_roles=None):
     allowed_roles = allowed_roles or []
+    allowed_roles_str = [str(role) for role in allowed_roles]
 
     def decorator(view_func):
+        @functools.wraps(view_func)
         def wrapper(request, *args, **kwargs):
-            if str(request.user.role) not in [str(role) for role in allowed_roles]:
-                raise PermissionDenied
+            if not request.user.is_authenticated:
+                return redirect('accounts:login')
+
+            user_role = getattr(request.user, 'role', None)
             
+            if str(user_role) not in allowed_roles_str and not request.user.is_superuser:
+                raise PermissionDenied
+
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
