@@ -1,0 +1,105 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}Business Profile | PFS Online Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Overview Banner -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-pink-50 border border-pink-200 rounded-xl flex items-center justify-center text-pink-700 font-bold text-2xl flex-shrink-0">
+                {{ user.business_name|default:user.first_name|first|upper }}
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900">{{ user.business_name|default:"No Company Name" }}</h1>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Sector: <span class="font-semibold text-slate-700">{{ user.get_sector_display|default:"Not specified" }}</span>
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600">
+            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Account Active</span>
+        </div>
+    </div>
+
+    <!-- Edit Form Card -->
+    <form method="POST" action="{% url 'dashboard:business-profile' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        {% csrf_token %}
+        
+        <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70 flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-lg text-slate-900">Business Details</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Keep your business details accurate for accurate tracking.</p>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Business Name -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.business_name.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Registered Business Name
+                    </label>
+                    {{ form.business_name }}
+                    {% if form.business_name.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.business_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Sector -->
+                <div>
+                    <label for="{{ form.sector.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Industry/Business Sector
+                    </label>
+                    {{ form.sector }}
+                    {% if form.sector.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.sector.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-slate-400 mt-1">Changing your sector automatically updates required mandatory documents.</p>
+                </div>
+
+                <!-- Region -->
+                <div>
+                    <label for="{{ form.region.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Region
+                    </label>
+                    {{ form.region }}
+                    {% if form.region.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.region.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- WhatsApp Number -->
+                <div>
+                    <label for="{{ form.whatsapp_number.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        WhatsApp Contact
+                    </label>
+                    {{ form.whatsapp_number }}
+                    {% if form.whatsapp_number.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.whatsapp_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Primary Email -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                        Email Address
+                    </label>
+                    <input type="text" value="{{ user.email }}" disabled class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed">
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="submit" class="bg-pink-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
+                Save Profile Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

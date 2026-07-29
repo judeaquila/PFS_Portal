@@ -4,6 +4,7 @@ from functools import wraps
 from django.shortcuts import redirect
 from django.contrib import messages
 from dashboard.models import DocumentType, DocumentStatus
+from .utils import get_required_document_types
 
 # CUSTOM ROLES
 def role_required(allowed_roles=None):
@@ -35,32 +36,26 @@ def mandatory_docs_required(view_func):
     """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        # 1. Fallback guard: ensure we are dealing with an authenticated regular user
         if not request.user.is_authenticated or request.user.role != 'USER':
             return view_func(request, *args, **kwargs)
 
-        # 2. Define the absolute mandatory statutory checklist items
-        required_types = [
-            DocumentType.BUSINESS_CERT,
-            DocumentType.HEALTH_CARD,
-            DocumentType.FACILITY_SKETCH
-        ]
+        # Dynamic required list based on client's industry/sector
+        required_types = get_required_document_types(request.user)
         required_count = len(required_types)
 
-        # 3. Query the database for valid, payload-containing files matching our checklist
-        uploaded_count = request.user.documents.filter(
-            document_type__in=required_types
+        # Exclude rejected or empty files from valid uploads count
+        valid_uploaded_count = request.user.documents.filter(
+            document_type__in=required_types,
+            status__in=[DocumentStatus.PENDING, DocumentStatus.APPROVED]
         ).exclude(file="").count()
 
-        # 4. Enforce the gate: if the tally falls short, redirect them to the tracker page
-        if uploaded_count < required_count:
+        if valid_uploaded_count < required_count:
             messages.warning(
                 request, 
-                "Access Restricted: Please complete your mandatory regulatory document uploads to unlock full workspace controls."
+                "Access Restricted: Please upload all required compliance documents for your business."
             )
-            
             return redirect('dashboard:user-dashboard')
 
         return view_func(request, *args, **kwargs)
-        
+
     return _wrapped_view

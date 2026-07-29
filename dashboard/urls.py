@@ -42,6 +42,7 @@ urlpatterns = [
 
     path("user/", views.user_dashboard, name="user-dashboard"),
     path("user/profile/", views.user_profile, name="user-profile"),
+    path('user/business-profile/', views.business_profile_view, name='business-profile'),
     path("user/documents/", views.user_documents_vault, name="user-documents"),
     path("user/documents/supplementary/", views.create_supplementary_slot, name="create-supplementary-slot"),
     path("user/documents/supplementary/upload/<int:doc_id>/", views.upload_document_asset, name="upload-asset"),

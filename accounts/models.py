@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from dashboard.models import ProductCategory
 
 # User Roles
 class UserRole(models.TextChoices):
@@ -69,6 +70,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True, help_text=_("Primary contact number for updates."))
     alternative_number = models.CharField(max_length=20, blank=True, null=True, help_text=_("Secondary contact number for updates."))
     business_name = models.CharField(max_length=255, blank=True, null=True, help_text=_("Registered business name (Applicable to clients/users)."))
+    sector = models.CharField(
+        max_length=30,
+        choices=ProductCategory.choices,
+        default=ProductCategory.FOOD
+    )
 
     role = models.CharField(
         max_length=20,

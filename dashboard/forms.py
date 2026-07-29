@@ -78,3 +78,27 @@ class AdminUserManagementForm(TailwindFormMixin, forms.ModelForm):
             if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
                 raise forms.ValidationError("Another account with this email address already exists.")
         return email
+
+
+class BusinessProfileForm(forms.ModelForm):
+    """Form to allow clients to update their company and sector details."""
+    
+    class Meta:
+        model = User
+        fields = ['business_name', 'sector', 'region', 'whatsapp_number']
+        widgets = {
+            'business_name': forms.TextInput(attrs={
+                'class': 'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition',
+                'placeholder': 'e.g., Pneuma Food Scientifics'
+            }),
+            'sector': forms.Select(attrs={
+                'class': 'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition bg-white'
+            }),
+            'region': forms.Select(attrs={
+                'class': 'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition bg-white'
+            }),
+            'whatsapp_number': forms.TextInput(attrs={
+                'class': 'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition',
+                'placeholder': 'e.g., 0501234567'
+            }),
+        }

@@ -47,10 +47,18 @@ class ConsultantProfile(models.Model):
 
 class DocumentType(models.TextChoices):
     BUSINESS_CERT = "BUSINESS_CERT", "Business Registration Certificate"
-    HEALTH_CARD = "HEALTH_CARD", "Medical Fitness Certificates (Health Cards)"
     FACILITY_SKETCH = "FACILITY_SKETCH", "Facility Floor Sketch Plan"
+    COMPANY_LOGO = "COMPANY_LOGO", "Company Logo"
+    BRAND_LOGO = "BRAND_LOGO", "Product/Brand Logo"
     PRODUCT_LABEL = "PRODUCT_LABEL", "Proposed Product Labels"
-    WATER_ANALYSIS = "WATER_ANALYSIS", "Water Analysis Report (If Applicable)"
+    PRODUCT_PICS = "PRODUCT_PICS", "Pictures of Product (With Label)"
+    LAB_RESULTS = "LAB_RESULTS", "Laboratory Results"
+
+    HEALTH_CARD = "HEALTH_CARD", "Medical Fitness Certificate"
+    WATER_ANALYSIS = "WATER_ANALYSIS", "Water Analysis Report"
+    MENU = "MENU", "Menu"
+    RECIPE_STEPS = "RECIPE_STEPS", "Recipe Steps"
+
     PEST_CONTROL = "PEST_CONTROL", "Pest Control Contract/Certificate"
     SOP_MANUAL = "SOP_MANUAL", "Standard Operating Procedures (SOPs)"
     SUPPLEMENTARY = "SUPPLEMENTARY_DOC", "Supplementary Documents"
@@ -73,7 +81,7 @@ class ClientDocument(models.Model):
         choices=DocumentType.choices
     )
     custom_title = models.CharField(max_length=255, blank=True, null=True)
-    file = models.FileField(upload_to="client_docs/%Y/%m/")
+    file = models.FileField(upload_to="client_docs/%Y/%m/", blank=True, null=True)
     status = models.CharField(
         max_length=20, 
         choices=DocumentStatus.choices, 
@@ -94,7 +102,7 @@ class ClientDocument(models.Model):
     @property
     def is_uploaded_by_proxy(self):
         """Returns True if someone other than the file owner committed the upload."""
-        return self.uploaded_by != self.user
+        return self.uploaded_by != self.client
 
     class Meta:
         constraints = [
@@ -170,11 +178,14 @@ class ClientPackage(models.TextChoices):
 
 class ProductCategory(models.TextChoices):
     FOOD = "FOOD", "Food"
+    FOOD_SERVICE = "FOOD_SERVICE", "Food Service"
     COSMETICS = "COSMETICS", "Cosmetics"
     PHARMA = "PHARMA", "Pharmaceuticals"
     FABRICS = "FABRICS", "Fabrics"
     NON_FOOD = "NON_FOOD", "Non Food"
     SUPPLEMENTS = "SUPPLEMENTS", "Supplements"
+    HERBAL = "HERBAL", "Herbal"
+    CHEMICAL = "HOUSEHOLD_CHEMICAL", "Household Chemicals"
     OTHERS = "OTHERS", "Others"
 
 

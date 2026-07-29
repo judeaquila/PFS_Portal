@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from accounts.models import UserRole
 from common.decorators import role_required, mandatory_docs_required
-from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificationForm, ConsultantVerificationForm, AdminUserManagementForm
+from common.utils import get_required_document_types
+from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificationForm, ConsultantVerificationForm, AdminUserManagementForm, BusinessProfileForm
 from django.contrib import messages
 from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile
 from django.contrib.auth import get_user_model
@@ -261,6 +262,7 @@ def admin_user_update(request, pk):
                     profile_form.save()
 
             messages.success(request, f"Account details for {target_user.email} updated successfully.")
+            
             return redirect('dashboard:admin-user-detail', pk=target_user.pk)
 
     context = {
@@ -1255,13 +1257,7 @@ def user_dashboard(request):
     Handles multi-file onboarding uploads and automatically transitions
     the view state when the initial baseline is completed.
     """
-
-    # Define our list of mandatory baseline document keys
-    required_types = [
-        DocumentType.BUSINESS_CERT,
-        DocumentType.HEALTH_CARD,
-        DocumentType.FACILITY_SKETCH
-    ]
+    required_types = get_required_document_types(request.user)
 
     # --- PROCESS INCOMING FILE UPLOADS ---
     if request.method == 'POST':
@@ -1276,7 +1272,8 @@ def user_dashboard(request):
                     document_type=doc_key,
                     defaults={
                         'file': uploaded_file,
-                        'status': DocumentStatus.PENDING
+                        'status': DocumentStatus.PENDING,
+                        'uploaded_by': request.user
                     }
                 )
                 files_saved += 1
@@ -1295,7 +1292,10 @@ def user_dashboard(request):
     uploaded_dict = {doc.document_type: doc for doc in client_docs}
     
     total_required = len(required_types)
-    total_uploaded = client_docs.filter(document_type__in=required_types).count()
+    total_uploaded = client_docs.filter(
+        document_type__in=required_types,
+        status__in=[DocumentStatus.PENDING, DocumentStatus.APPROVED]
+        ).exclude(file="").count()
     
     # Safely query active tracking projects for summary presentation dashboards
     active_projects = request.user.projects.all()
@@ -1305,6 +1305,7 @@ def user_dashboard(request):
         'total_uploaded': total_uploaded,
         'total_required': total_required,
         'active_projects': active_projects,
+        'required_types': required_types,
     }
 
     # If the user has fulfilled all baseline uploads, dynamically swap out the UI view template
@@ -1322,70 +1323,123 @@ def user_dashboard(request):
     return render(request, "dashboards/user.html", context)
 
 
-# Client Documents
+
 @login_required
 @role_required([UserRole.USER])
 @mandatory_docs_required
 def user_documents_vault(request):
     """
-    Manages explicit standalone updates for all static required baseline FDA document types.
+    Manages explicit standalone updates for baseline FDA document types.
+    Supports sector switching by maintaining visibility for non-mandatory uploaded assets.
     """
-    # Extract only standard statutory keys
-    all_document_keys = [
-        choice[0] for choice in DocumentType.choices 
-        if choice[0] != 'SUPPLEMENTARY'
+    # Fetch current sector's required document types
+    required_doc_types = get_required_document_types(request.user)
+
+    # Convert required doc types into clean upper-case string keys
+    required_keys = [
+        dt.value for dt in required_doc_types
     ]
 
-    # Fetch existing core documents into a dictionary mapping for quick lookup
+    # Fetch all client documents
     client_docs = request.user.documents.all()
+
+    # Map uploaded non-supplementary documents into a lookup dictionary
     uploaded_dict = {
-        doc.document_type: doc for doc in client_docs 
-        if doc.document_type != 'SUPPLEMENTARY'
+        str(doc.document_type.value if hasattr(doc.document_type, 'value') else doc.document_type).upper(): doc
+        for doc in client_docs
+        if str(doc.document_type).upper() != DocumentType.SUPPLEMENTARY
     }
 
+    # Helper function to extract human-readable labels
+    def get_label_for_key(raw_key):
+        if hasattr(DocumentType, 'choices'):
+            choices_dict = dict(DocumentType.choices)
+            if raw_key in choices_dict:
+                return choices_dict[raw_key]
+        return raw_key.replace('_', ' ').title()
+
+    # Handle Document Upload POST Requests
     if request.method == 'POST':
         saved_count = 0
-        
-        for doc_key in all_document_keys:
-            if doc_key in request.FILES:
-                
-                # Check if this specific document key is already approved
-                existing_doc = uploaded_dict.get(doc_key)
-                if existing_doc and existing_doc.status == DocumentStatus.APPROVED:
-                    messages.error(request, f"Modifications blocked: Your {existing_doc.get_document_type_display()} is already approved and cannot be altered.")
-                    return redirect('dashboard:user-documents')
 
-                # Proceed safely if it's new or not yet approved
-                doc, created = ClientDocument.objects.update_or_create(
-                    client=request.user,
-                    document_type=doc_key,
-                    defaults={
-                        'file': request.FILES[doc_key],
-                        'status': DocumentStatus.PENDING  # Require re-review on update
-                    }
-                )
-                saved_count += 1
+        # Process any uploaded file key present in request.FILES
+        for doc_key, uploaded_file in request.FILES.items():
+            if doc_key == 'attached_file':  # Skip supplementary form input
+                continue
 
-                # Log Activity Stream
-                action = "Uploaded a new version of" if not created else "Submitted initial draft of"
-                create_activity_log(
-                    user=request.user,
-                    category=LogCategory.DOCUMENT,
-                    description=f"{action} {doc.get_document_type_display()}."
+            doc_key_clean = str(doc_key).upper()
+            existing_doc = uploaded_dict.get(doc_key_clean)
+
+            # Block editing if document is already approved
+            if existing_doc and existing_doc.status == DocumentStatus.APPROVED:
+                doc_label = existing_doc.get_document_type_display() if hasattr(existing_doc, 'get_document_type_display') else doc_key_clean
+                messages.error(
+                    request, 
+                    f"Modifications blocked: Your {doc_label} is already approved and cannot be altered."
                 )
-        
+                return redirect('dashboard:user-documents')
+
+            # Create or update document asset
+            doc, created = ClientDocument.objects.update_or_create(
+                client=request.user,
+                document_type=doc_key_clean,
+                defaults={
+                    'file': uploaded_file,
+                    'status': DocumentStatus.PENDING,
+                    'uploaded_by': request.user
+                }
+            )
+            saved_count += 1
+
+            doc_label = doc.get_document_type_display() if hasattr(doc, 'get_document_type_display') else doc_key_clean
+            action = "Submitted initial draft of" if created else "Uploaded a new version of"
+            
+            create_activity_log(
+                user=request.user,
+                category=LogCategory.DOCUMENT,
+                description=f"{action} {doc_label}."
+            )
+
         if saved_count > 0:
-            messages.success(request, f"Successfully uploaded and catalogued {saved_count} mandatory file(s) inside your portal.")
+            messages.success(
+                request, 
+                f"Successfully uploaded and catalogued {saved_count} file(s) inside your portal."
+            )
         return redirect('dashboard:user-documents')
 
-    # Grab all custom requests in insertion order
-    supplementary_documents = client_docs.filter(document_type='SUPPLEMENTARY').order_by('id')
+    # Categorize Documents for Rendering
     
+    # Active Sector Required Documents
+    active_required_documents = []
+    for raw_key in required_keys:
+        active_required_documents.append({
+            'key': raw_key,
+            'label': get_label_for_key(raw_key),
+            'doc': uploaded_dict.get(raw_key),
+            'is_required': True
+        })
+
+    # Other Uploaded Documents (Uploaded files NOT in the current sector's required list)
+    other_uploaded_documents = []
+    for key_str, doc in uploaded_dict.items():
+        if key_str not in required_keys and doc.file:
+            other_uploaded_documents.append({
+                'key': key_str,
+                'label': doc.get_document_type_display() if hasattr(doc, 'get_document_type_display') else get_label_for_key(key_str),
+                'doc': doc,
+                'is_required': False
+            })
+
+    # Supplementary Custom Request Docs
+    supplementary_documents = client_docs.filter(document_type=DocumentType.SUPPLEMENTARY).order_by('id')
+
     context = {
-        'uploaded_dict': uploaded_dict,
+        'active_required_documents': active_required_documents,
+        'other_uploaded_documents': other_uploaded_documents,
         'supplementary_documents': supplementary_documents,
-        'total_uploaded': client_docs.exclude(file="").count(),
+        'total_uploaded': client_docs.filter(file__isnull=False).exclude(file="").count(),
     }
+
     return render(request, "dashboards/user_documents.html", context)
 
 
@@ -1405,7 +1459,7 @@ def create_supplementary_slot(request):
         # Defensive Check: Does this client already have this exact custom slot?
         existing_slot = ClientDocument.objects.filter(
             client=request.user,
-            document_type='SUPPLEMENTARY',
+            document_type=DocumentType.SUPPLEMENTARY,
             custom_title__iexact=title
         ).exists()
 
@@ -1416,7 +1470,7 @@ def create_supplementary_slot(request):
         # If it passes the check, create it safely
         ClientDocument.objects.create(
             client=request.user,
-            document_type='SUPPLEMENTARY',
+            document_type=DocumentType.SUPPLEMENTARY,
             custom_title=title,
             status=DocumentStatus.PENDING
         )
@@ -1448,7 +1502,7 @@ def upload_document_asset(request, doc_id):
         document.status = DocumentStatus.PENDING  # Reset workflow routing state flags
         document.save()
         
-        display_name = document.custom_title if document.document_type == 'SUPPLEMENTARY' else document.get_document_type_display()
+        display_name = document.custom_title if document.document_type == DocumentType.SUPPLEMENTARY else document.get_document_type_display()
         
         # Log Custom Supplementary Submission activity record
         create_activity_log(
@@ -1547,3 +1601,26 @@ def client_confirm_verification(request):
         return redirect('dashboard:user-dashboard')
 
     return redirect('dashboard:user-dashboard')
+
+
+@login_required
+def business_profile_view(request):
+    """View to display and edit client business profile metrics."""
+    user = request.user
+
+    if request.method == 'POST':
+        form = BusinessProfileForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your business profile has been updated successfully.")
+            return redirect('dashboard:business-profile')
+        else:
+            messages.error(request, "Please correct the errors below to update your profile.")
+    else:
+        form = BusinessProfileForm(instance=user)
+
+    context = {
+        'form': form,
+        'user': user,
+    }
+    return render(request, 'dashboards/user_business_profile.html', context)

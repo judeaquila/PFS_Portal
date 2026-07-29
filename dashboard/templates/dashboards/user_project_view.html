@@ -10,9 +10,9 @@
         <div class="mb-6">
             <h2 class="text-xl font-bold text-slate-900 flex items-center">
                 <i class="fa-solid fa-list-check mr-2 text-xs text-pink-600"></i> 
-                {{ project.get_client_package_display }} TRACKING WORKSPACE
+                {{ project.get_client_package_display }} Workspace
                 <span class="ml-3 text-xs font-medium text-slate-600 bg-slate-200 px-2.5 py-0.5 rounded-full">
-                    Live Status Tracking
+                    Live Project Update
                 </span>
             </h2>
         </div>
@@ -26,9 +26,9 @@
                         <th class="py-3.5 px-4 min-w-[160px]">Service Package</th>
                         <th class="py-3.5 px-4 min-w-[110px]">Product Category</th>
                         <th class="py-3.5 px-4 min-w-[120px]">Region</th>
-                        <th class="py-3.5 px-4 min-w-[140px]">Commencement Date</th>
-                        <th class="py-3.5 px-4 min-w-[220px]">Registered Item SKUs</th>
-                        <th class="py-3.5 px-4 text-center min-w-[140px]">Assigned Manager</th>
+                        <th class="py-3.5 px-4 min-w-[140px]">Date Started</th>
+                        <th class="py-3.5 px-4 min-w-[220px]">Registered Item/Product</th>
+                        <th class="py-3.5 px-4 text-center min-w-[140px]">Assigned Consultant</th>
                         <th class="py-3.5 px-4 min-w-[140px]">Overall Progress</th>
                     </tr>
                 </thead>
@@ -96,7 +96,7 @@
                                         <thead>
                                             <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
                                                 <th class="p-3 w-1/3">Milestone Task Name</th>
-                                                <th class="p-3 w-1/2">Operational Status & Consultant Updates Log</th>
+                                                <th class="p-3 w-1/2">Status & Consultant Updates Log</th>
                                                 <th class="p-3 text-center w-40">Milestone Status</th>
                                             </tr>
                                         </thead>
@@ -139,7 +139,7 @@
                                             {% empty %}
                                                 <tr>
                                                     <td colspan="3" class="p-6 text-center text-slate-400 italic">
-                                                        No processing sub-milestones assigned to this layout profile file yet.
+                                                        No processing sub-milestones assigned to this project file yet.
                                                     </td>
                                                 </tr>
                                             {% endfor %}

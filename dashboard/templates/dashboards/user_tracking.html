@@ -9,13 +9,13 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Welcome back, {{ request.user.first_name|default:request.user.email }}</h1>
-            <p class="text-sm text-slate-500 mt-0.5">Select an active registration workspace track below to manage sub-milestones, lab assets, and tasks.</p>
+            <p class="text-sm text-slate-500 mt-0.5">Select a project workspace track below to manage sub-milestones, tasks and progress.</p>
         </div>
     </div>
 
     <!-- MAIN INTERACTIVE WORKSPACE GRID -->
     <div>
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Active Projects Matrix</h2>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Active Projects</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for proj in active_projects %}
                 <a href="{% url 'dashboard:user-project-dashboard' proj.id %}" 
@@ -74,21 +74,23 @@
         <!-- Document Vault List Card Display -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
             <div>
-                <h3 class="font-bold text-slate-800 text-base">Baseline System Vault</h3>
-                <p class="text-xs text-slate-500 mt-0.5 mb-4">Core files verified during platform instantiation.</p>
+                <h3 class="font-bold text-slate-800 text-base">Document Archives</h3>
+                <p class="text-xs text-slate-500 mt-0.5 mb-4">Uploaded documents in your profile.</p>
                 
                 <div class="space-y-2">
                     {% for type, doc in uploaded_dict.items %}
+                        {% if doc.file %}
                         <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
                             <span class="font-medium text-slate-700 text-xs truncate mr-2">{{ doc.get_document_type_display }}</span>
-                            <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-xs shrink-0">View File ↗</a>
+                            <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-xs shrink-0">View File</a>
                         </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
             
             <div class="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-                To update baseline documents, please submit an auditing ticket via support channels.
+                To update documents, please submit a request to our technical team.
             </div>
         </div>
 
