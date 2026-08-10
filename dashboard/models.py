@@ -43,7 +43,26 @@ class ConsultantProfile(models.Model):
 
     def __str__(self):
         return f"Consultant: {self.user.get_full_name() or self.user.first_name} ({self.verification_status})"
-    
+
+
+class ConsultantAssignment(models.Model):
+    class TaskStatus(models.TextChoices):
+        UNASSIGNED = 'UNASSIGNED', 'Unassigned'
+        ASSIGNED = 'ASSIGNED', 'Assigned/In Progress'
+        COMPLETED = 'COMPLETED', 'Completed'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+
+    consultant = models.ForeignKey(ConsultantProfile, on_delete=models.CASCADE, related_name='consultant_assignments', null=True, blank=True)
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_consultants')
+    project = models.ForeignKey('ClientProject', on_delete=models.SET_NULL, null=True, blank=True)
+
+    status = models.CharField(max_length=10, choices=TaskStatus.choices, default=TaskStatus.UNASSIGNED)
+    cancellation_reason = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 
 class DocumentType(models.TextChoices):
     BUSINESS_CERT = "BUSINESS_CERT", "Business Registration Certificate"
@@ -357,25 +376,24 @@ class AmbassadorProfile(models.Model):
 
 
 class AmbassadorAssignment(models.Model):
-    ASSISTANCE_MODALITY = [
-        ('REMOTE', 'Remote Assistance'),
-        ('IN_PERSON', 'In-Person Field Visit'),
-    ]
-    
-    TASK_STATUS = [
-        ('ASSIGNED', 'Assigned / In Progress'),
-        ('COMPLETED', 'Fully Resolved'),
-        ('CANCELLED', 'Cancelled'),
-    ]
+    class AssistanceModality(models.TextChoices):
+        REMOTE = "REMOTE", "Remote Assistance"
+        IN_PERSON = "IN_PERSON", "In-Person Visit"
 
-    ambassador = models.ForeignKey(AmbassadorProfile, on_delete=models.CASCADE, related_name='assignments')
+    class TaskStatus(models.TextChoices):
+        UNASSIGNED = 'UNASSIGNED', 'Unassigned'
+        ASSIGNED = 'ASSIGNED', 'Assigned/In Progress'
+        COMPLETED = 'COMPLETED', 'Completed'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+
+    ambassador = models.ForeignKey(AmbassadorProfile, on_delete=models.CASCADE, related_name='assignments', null=True, blank=True)
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_ambassadors')
     project = models.ForeignKey(ClientProject, on_delete=models.SET_NULL, null=True, blank=True)
     
-    modality = models.CharField(max_length=10, choices=ASSISTANCE_MODALITY, default='REMOTE')
-    status = models.CharField(max_length=15, choices=TASK_STATUS, default='ASSIGNED')
+    modality = models.CharField(max_length=10, choices=AssistanceModality.choices, default=AssistanceModality.REMOTE)
+    status = models.CharField(max_length=15, choices=TaskStatus.choices, default=TaskStatus.UNASSIGNED)
+    cancellation_reason = models.TextField(blank=True, null=True)
     
-    # Dual Sign-off Closures
     client_marked_complete = models.BooleanField(default=False)
     client_completed_at = models.DateTimeField(null=True, blank=True)
     
@@ -384,6 +402,7 @@ class AmbassadorAssignment(models.Model):
     
     payout_processed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def check_and_finalize_payout(self):
         """Triggers the payout engine if both entities clear the completion gate."""
@@ -392,3 +411,43 @@ class AmbassadorAssignment(models.Model):
             # Execute logic linking to your accounting ledger/stripe batching here
             self.payout_processed = True
             self.save()
+
+
+    @property
+    def is_in_person(self):
+        return self.modality == self.AssistanceModality.IN_PERSON
+
+    @property
+    def is_remote(self):
+        return self.modality == self.AssistanceModality.REMOTE
+
+
+
+# Consultant/Associate Availability
+class Availability(models.Model):
+    class WeekDay(models.IntegerChoices):
+        MONDAY = 1, "Monday"
+        TUESDAY = 2, "Tuesday"
+        WEDNESDAY = 3, "Wednesday"
+        THURSDAY = 4, "Thursday"
+        FRIDAY = 5, "Friday"
+        SATURDAY = 6, "Saturday"
+        SUNDAY = 7, "Sunday"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="availability"
+    )
+
+    weekday = models.PositiveSmallIntegerField(
+        choices=WeekDay.choices
+    )
+
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["weekday", "start_time"]

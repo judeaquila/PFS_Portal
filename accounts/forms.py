@@ -129,12 +129,6 @@ class RegistrationForm(BaseUserRegistrationForm):
     """Standard Client/User registration form."""
     assigned_role = UserRole.USER
 
-    # sector = forms.ChoiceField(
-    #     choices=ProductCategory.choices,
-    #     label="Industry Sector",
-    #     widget=forms.Select(attrs={'class': 'w-full rounded-lg border-slate-300 focus:border-pink-500 focus:ring-pink-500'})
-    # )
-
     class Meta(BaseUserRegistrationForm.Meta):
         fields = ['first_name', 'last_name', 'business_name', 'email', 'whatsapp_number', 'sector', 'region', 'password']
         widgets = {
@@ -143,6 +137,7 @@ class RegistrationForm(BaseUserRegistrationForm):
             'business_name': forms.TextInput(attrs={'placeholder': 'e.g. Pneuma Food Scientifics'}),
             'email': forms.EmailInput(attrs={'placeholder': 'you@company.com'}),
             'whatsapp_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
+            'alternative_number': forms.TextInput(attrs={'placeholder': 'For calls: e.g. 0501234567'}),
             'region': forms.Select(),
             'sector': forms.Select(),
         }

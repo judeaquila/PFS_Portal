@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Consultant Dashboard | PFS Online Portal{% endblock %}</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/img/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/img/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/img/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/img/site.webmanifest' %}">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -43,9 +49,18 @@
             <a href="{% url 'dashboard:global-boards' %}" 
             class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'global-boards' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-</svg>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
                 Global Board
+            </a>
+
+            <a href="{% url 'dashboard:consultant-availability' %}"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors {% if url_name == 'consultant-availability' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 9h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2h-1V3m-10 2V3H8m0 2h8M6 21a2 2 0 01-2-2V7a2 2 0 012-2h1" />
+                </svg>
+                Availability Schedule
             </a>
 
             <a href="{% url 'dashboard:consultant-profile' %}" 
@@ -71,7 +86,7 @@
                 <button @click="mobileSidebarOpen = true" class="text-slate-600 hover:text-indigo-600 md:hidden focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
-                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider hidden sm:block">Internal Audit Desk</h2>
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider hidden sm:block">Consultant Workspace</h2>
             </div>
             
             <div class="flex items-center gap-3">
@@ -82,9 +97,60 @@
         </header>
 
         <main class="flex-1 overflow-y-auto p-6 bg-slate-100">
+            <!-- Toast Notifications -->
+            {% if messages %}
+            <div class="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-md">
+                {% for message in messages %}
+                    <div
+                        data-toast
+                        class="flex items-start gap-3 px-5 py-4 rounded-xl shadow-xl border text-sm font-medium transition-all duration-500 animate-fade-in
+
+                        {% if message.tags == 'error' %}
+                            bg-red-50 border-red-200 text-red-800
+                        {% elif message.tags == 'warning' %}
+                            bg-amber-50 border-amber-200 text-amber-800
+                        {% elif message.tags == 'success' %}
+                            bg-emerald-50 border-emerald-200 text-emerald-800
+                        {% else %}
+                            bg-blue-50 border-blue-200 text-blue-800
+                        {% endif %}
+                        "
+                    >
+
+                        <!-- Message -->
+                        <div class="flex-1">
+                            {{ message }}
+                        </div>
+
+                        <!-- Close Button -->
+                        <button
+                            type="button"
+                            class="ml-2 text-slate-400 hover:text-slate-700 transition"
+                            onclick="this.parentElement.remove();"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll("[data-toast]").forEach((toast) => {
+                setTimeout(() => {
+                    toast.classList.add("opacity-0", "translate-x-6");
+
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, 4000);
+            });
+        });
+    </script>
 
 </body>
 </html>

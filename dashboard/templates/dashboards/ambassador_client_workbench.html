@@ -1,20 +1,26 @@
 {% extends 'dashboards/base_ambassador.html' %}
 
-{% block title %}Client Case Workbench | PFS Online Portal{% endblock %}
+{% block title %}My Assigned Client's Workbench | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-6">
+    {% comment %} Header Section {% endcomment %}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-            <span class="text-[10px] bg-pink-50 border border-pink-200 text-pink-700 font-bold tracking-wider uppercase px-2 py-0.5 rounded">Active Assignment</span>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] bg-pink-50 border border-pink-200 text-pink-700 font-bold tracking-wider uppercase px-2 py-0.5 rounded">Active Assignment</span>
+                <span class="text-[10px] bg-slate-100 border border-slate-200 text-slate-700 font-bold font-mono px-2 py-0.5 rounded">
+                    Progress: {{ total_uploaded }}/{{ total_required }}
+                </span>
+            </div>
             <h1 class="text-2xl font-bold text-slate-900 mt-1">
-                {{ client_profile.business_name|default:"Unnamed Business" }}
+                {{ client_user.business_name|default:"Unnamed Business" }}
             </h1>
             <p class="text-sm text-slate-500 mt-0.5">
-                Email: {{ client_user.get_full_name|default:client_user.email }} | Contact: {{ client_user.whatsapp_number }}
+                Client: {{ client_user.get_full_name|default:client_user.email }} | Contact: {{ client_user.whatsapp_number|default:"N/A" }}
             </p>
         </div>
-        <a href="{% url 'dashboard:ambassador-dashboard' %}" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-50 shadow-sm transition">
+        <a href="{% url 'dashboard:ambassador-dashboard' %}" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-50 shadow-sm transition self-start sm:self-auto">
             ← Back to Dashboard
         </a>
     </div>
@@ -22,52 +28,69 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         <div class="lg:col-span-2 space-y-6">
+            {% comment %} Dynamic Document Upload Card {% endcomment %}
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-sm">Documents  Upload</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Upload the missing files required to move this client's application forward.</p>
+                    <h3 class="font-bold text-slate-800 text-sm">Proxy Document Upload</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Upload missing required files on behalf of this client.</p>
                 </div>
 
-                <form method="POST" enctype="multipart/form-data" class="space-y-4">
-                    {% csrf_token %}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Required Documentation</label>
-                            <select name="document_type" required class="w-full text-xs rounded-lg border-slate-200 shadow-sm focus:border-pink-500 focus:ring-pink-500">
-                                {% if not has_business_cert %}
-                                    <option value="BUSINESS_CERT">Business Registration Certificate</option>
-                                {% endif %}
-                                {% if not has_health_card %}
-                                    <option value="HEALTH_CARD">Medical Fitness Certificate (Health Card)</option>
-                                {% endif %}
-                                {% if not has_facility_sketch %}
-                                    <option value="FACILITY_SKETCH">Facility Floor Sketch Plan</option>
-                                {% endif %}
-                            </select>
+                {% if missing_types %}
+                    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Missing Document Type</label>
+                                <select name="document_type" required class="w-full text-xs rounded-lg border-slate-200 shadow-sm focus:border-pink-500 focus:ring-pink-500">
+                                    <option value="" disabled selected>Select document to upload...</option>
+                                    {% for doc in missing_types %}
+                                        <option value="{{ doc.code }}">{{ doc.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select File</label>
+                                <input type="file" name="document_file" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition file:cursor-pointer" />
+                            </div>
                         </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition">
+                                Upload Document
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="p-4 rounded-lg bg-emerald-50 border border-emerald-200/80 flex items-center gap-3">
+                        <span class="text-emerald-700 font-bold text-base">✓</span>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select Document</label>
-                            <input type="file" name="document_file" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 transition file:cursor-pointer" />
+                            <h4 class="text-xs font-bold text-emerald-900">All Required Documents Uploaded</h4>
+                            <p class="text-[11px] text-emerald-700 mt-0.5">There are no outstanding missing files required for this client's onboarding profile.</p>
                         </div>
                     </div>
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition">
-                            Upload
-                        </button>
-                    </div>
-                </form>
+                {% endif %}
             </div>
 
+            
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="p-4 bg-slate-50 border-b border-slate-200">
-                    <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Uploaded Documents</h3>
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Uploaded Documents Ledger</h3>
+                    <span class="text-[11px] font-mono font-semibold text-slate-500">{{ client_docs|length }} file(s)</span>
                 </div>
                 <div class="divide-y divide-slate-100 text-xs">
                     {% for doc in client_docs %}
                         <div class="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/50 transition">
-                            <div>
-                                <span class="font-bold text-slate-900">{{ doc.get_document_type_display }}</span>
-                                <span class="block text-[10px] text-slate-400 font-mono mt-0.5">
+                            <div class="space-y-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-slate-900 truncate">{{ doc.get_display_name }}</span>
+                                    {% if doc.status == 'APPROVED' %}
+                                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                    {% elif doc.status == 'REJECTED' %}
+                                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">Rejected</span>
+                                    {% else %}
+                                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Pending Review</span>
+                                    {% endif %}
+                                </div>
+                                <span class="block text-[10px] text-slate-400 font-mono">
                                     Uploaded: {{ doc.uploaded_at|date:"M d, Y H:i" }} | By: 
                                     {% if doc.uploaded_by %}
                                         {% if doc.uploaded_by == client_user %}
@@ -79,8 +102,23 @@
                                         {{ client_user.get_full_name|default:client_user.email }} (Client)
                                     {% endif %}
                                 </span>
+                                {% if doc.rejection_reason and doc.status == 'REJECTED' %}
+                                    <p class="text-[11px] text-rose-600 bg-rose-50/60 p-2 rounded border border-rose-100 mt-1">
+                                        Reason: {{ doc.rejection_reason }}
+                                    </p>
+                                {% endif %}
                             </div>
-                            <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 hover:text-pink-800 font-bold transition">View Document ↗</a>
+
+                            {% comment %} Safe File URL Evaluation {% endcomment %}
+                            {% if doc.file %}
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 hover:text-pink-800 font-bold transition shrink-0">
+                                    View ↗
+                                </a>
+                            {% else %}
+                                <span class="text-slate-400 font-mono text-[11px] italic shrink-0">
+                                    No file attached
+                                </span>
+                            {% endif %}
                         </div>
                     {% empty %}
                         <div class="p-8 text-center text-slate-500 italic text-sm">
@@ -91,6 +129,7 @@
             </div>
         </div>
 
+        {% comment %} Sidebar Metadata {% endcomment %}
         <div class="space-y-6">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
                 <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">Client Profile Info</h3>
@@ -119,8 +158,8 @@
                 <hr class="border-slate-100">
 
                 <div class="space-y-2">
-                    <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assignment Status</span>
-                    <div class="p-3 bg-slate-50 border rounded-lg text-xs font-medium text-slate-600 space-y-1">
+                    <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assignment Details</span>
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium text-slate-600 space-y-1">
                         <p>Modality: <span class="font-bold text-slate-800">{{ assignment.get_modality_display }}</span></p>
                         <p>Initialized: <span class="font-mono text-slate-500">{{ assignment.created_at|date:"M d, Y" }}</span></p>
                     </div>

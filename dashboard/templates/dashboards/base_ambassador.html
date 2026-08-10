@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Associate Dashboard | PFS Online Portal{% endblock %}</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/img/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/img/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/img/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'core/img/site.webmanifest' %}">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -36,6 +42,15 @@
                class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors {% if url_name == 'ambassador-clients' %}bg-pink-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 My Clients
+            </a>
+
+            <a href="{% url 'dashboard:associate-availability' %}"
+                class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors {% if url_name == 'associate-availability' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 9h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2h-1V3m-10 2V3H8m0 2h8M6 21a2 2 0 01-2-2V7a2 2 0 012-2h1" />
+                </svg>
+                Availability Schedule
             </a>
 
             <!-- Profile Settings Link -->

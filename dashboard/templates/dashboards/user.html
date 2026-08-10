@@ -29,6 +29,7 @@
             </span>
         </div>
         
+        <!-- DOCUMENT UPLOAD LIST -->
         <div class="divide-y divide-slate-100">
             {% for doc_key in required_types %}
                 {% with doc=uploaded_dict|get_item:doc_key %}
@@ -71,7 +72,89 @@
             {% endfor %}
         </div>
 
-        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <!-- ASSOCIATE ASSISTANCE REQUEST -->
+        <div class="p-6 bg-slate-50/70 border-t border-slate-200 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <span>In-Person/Remote Associate Assistance</span>
+                        {% if existing_associate_request %}
+                            <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">
+                                Status: {{ existing_associate_request.get_status_display }}
+                            </span>
+                        {% else %}
+                            <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Optional</span>
+                        {% endif %}
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Would you like an assigned PFS Associate to assist you in-person or remotely with document uploads and process execution?
+                    </p>
+                </div>
+                
+                <!-- Toggle Checkbox -->
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                    <input type="checkbox" name="requires_associate" id="requires_associate" class="sr-only peer" 
+                        {% if existing_associate_request %}checked disabled{% endif %}
+                        onchange="document.getElementById('modality_options').classList.toggle('hidden', !this.checked)">
+                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600 peer-disabled:opacity-60 peer-disabled:cursor-not-allowed"></div>
+                </label>
+            </div>
+
+            <!-- NEW: ASSIGNED ASSOCIATE DISPLAY BANNER -->
+            {% if assignment and assignment.ambassador %}
+                {% with associate=assignment.ambassador %}
+                <div class="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                            {{ associate.user.first_name|slice:":1"|upper|default:associate.user.email|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
+                                Assigned Associate
+                            </span>
+                            <h4 class="text-xs font-bold text-slate-800 mt-1">
+                                {{ associate.user.get_full_name|default:associate.user.email }}
+                            </h4>
+                            <p class="text-[11px] text-slate-500">
+                                Email: <a href="mailto:{{ associate.user.email }}" class="text-pink-600 font-semibold hover:underline">{{ associate.user.email }}</a>
+                                {% if associate.user.phone_number %} | Phone: {{ associate.user.phone_number }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Optional View Details Link -->
+                    <a href="{% url 'dashboard:assigned-associate-detail' %}" 
+                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition shadow-sm flex items-center gap-1.5 flex-shrink-0">
+                        <span>View Details</span>
+                        <span>→</span>
+                    </a>
+                </div>
+                {% endwith %}
+            {% endif %}
+
+            <!-- Assistance Modality Selection -->
+            <div id="modality_options" class="{% if not existing_associate_request %}hidden{% endif %} pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-pink-300 transition">
+                    <input type="radio" name="associate_modality" value="REMOTE" class="text-pink-600 focus:ring-pink-500" 
+                        {% if existing_associate_request %}{% if existing_associate_request.modality == 'REMOTE' %}checked{% endif %} disabled{% else %}checked{% endif %}>
+                    <div class="ml-3">
+                        <span class="block text-xs font-bold text-slate-800">Remote Assistance</span>
+                        <span class="block text-[11px] text-slate-400">Guidance via phone/video call or email.</span>
+                    </div>
+                </label>
+
+                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-pink-300 transition">
+                    <input type="radio" name="associate_modality" value="IN_PERSON" class="text-pink-600 focus:ring-pink-500"
+                        {% if existing_associate_request.modality == 'IN_PERSON' %}checked{% endif %} {% if existing_associate_request %}disabled{% endif %}>
+                    <div class="ml-3">
+                        <span class="block text-xs font-bold text-slate-800">In-Person Visit</span>
+                        <span class="block text-[11px] text-slate-400">A PFS Associate will visit your facility (You will bear cost of transportation).</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="p-4 bg-slate-100 border-t border-slate-200 flex justify-end">
             <button type="submit" class="bg-pink-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
                 Upload and Save Documents
             </button>

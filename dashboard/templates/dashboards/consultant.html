@@ -8,11 +8,11 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200/80 pb-6">
         <div>
             <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Workspace Overview</h1>
-            <p class="text-xs text-zinc-500 mt-1">Operational status of assigned FDA compliance workflows and client package subactivities.</p>
+            <p class="text-xs text-zinc-500 mt-1">Status of assigned FDA/GSA Clients and Package Activities/Subactivities.</p>
         </div>
         <div class="flex items-center gap-2 text-[11px] font-medium text-zinc-500 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg shadow-2xs">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            System Synced
+            <span id="live-datetime"></span>
         </div>
     </div>
 
@@ -84,8 +84,8 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:col-span-2">
             <div class="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-sm">Urgent Pending Upload Stream</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Documents recently submitted by users requiring compliance confirmation.</p>
+                    <h3 class="font-bold text-slate-800 text-sm">Recent Client Documents Uploads</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Documents recently submitted by clients requiring verification.</p>
                 </div>
                 <span class="w-2 h-2 bg-amber-500 rounded-full animate-ping"></span>
             </div>
@@ -95,7 +95,7 @@
                     <div class="p-5 flex items-center justify-between hover:bg-slate-50/40 transition gap-4">
                         <div class="space-y-1">
                             <span class="text-[10px] uppercase font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
-                                {% if doc.document_type == 'SUPPLEMENTARY' %}Supplementary{% else %}Core Checklist{% endif %}
+                                {% if doc.document_type == 'SUPPLEMENTARY' %}Supplementary{% else %}Mandatory Document{% endif %}
                             </span>
                             <h4 class="font-bold text-slate-800 text-sm mt-1">
                                 {% if doc.document_type == 'SUPPLEMENTARY' %}{{ doc.custom_title }}{% else %}{{ doc.get_document_type_display }}{% endif %}
@@ -116,7 +116,7 @@
                     </div>
                 {% empty %}
                     <div class="p-8 text-center text-slate-400 text-xs font-medium italic">
-                        Incredible job! There are no pending document files left in the auditing queue channel right now.
+                        Incredible job! There are no pending document files left to be verified right now.
                     </div>
                 {% endfor %}
             </div>
@@ -126,8 +126,8 @@
             
             <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl p-6 text-white shadow-md space-y-4">
                 <div>
-                    <h3 class="font-bold text-base tracking-tight">Global Roster Management</h3>
-                    <p class="text-xs text-indigo-200/80 mt-1">Access the master tracking table to review individual pipelines, send progress reminders, and browse complete historical company records.</p>
+                    <h3 class="font-bold text-base tracking-tight">All Active Clients</h3>
+                    <p class="text-xs text-indigo-200/80 mt-1">Access the all clients currently signed on to one or more of the client packages, and track their progress.</p>
                 </div>
                 
                 <a href="{% url 'dashboard:client-submissions' %}" class="w-full text-center block bg-white text-indigo-900 hover:bg-slate-50 font-bold text-xs py-3 rounded-lg transition shadow-sm">
@@ -137,15 +137,15 @@
 
             <button type="button" @click="openDrawer = true" class="w-full text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 text-xs transition duration-150 ease-in-out shadow-sm space-y-3 group focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Client Package Playbook</span>
+                    <span class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Client Packages Checklist</span>
                     <span class="text-indigo-600 font-bold tracking-wide group-hover:translate-x-0.5 transition-transform duration-150 block">View &rarr;</span>
                 </div>
                 <p class="text-slate-500 leading-relaxed">
-                    Review the operational requirements for all 10 client support categories—including subactivity protocols for registrations, renewals, and QMS configurations.
+                    Review the activities and subactivities required all client packages.
                 </p>
                 <div class="pt-2 border-t border-slate-100 flex items-center gap-4 text-[11px] font-medium text-slate-400">
-                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> 10 Framework Tiers</span>
-                    <span>• Verified Rules</span>
+                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> 10 Packages</span>
+                    <span>• Verified Subactivities</span>
                 </div>
             </button>
 
@@ -186,8 +186,8 @@
                         <div class="p-6 bg-slate-900 text-white">
                             <div class="flex items-start justify-between">
                                 <div class="space-y-1">
-                                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400" id="slide-over-title">Reference Matrix</h2>
-                                    <p class="text-base font-black tracking-tight text-white">Client Package Breakdown</p>
+                                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400" id="slide-over-title">Reference Checklist</h2>
+                                    <p class="text-base font-black tracking-tight text-white">Client Packages Breakdown</p>
                                 </div>
                                 <button type="button" @click="openDrawer = false" class="rounded-md text-slate-400 hover:text-white focus:outline-none">
                                     <span class="sr-only">Close panel</span>
@@ -216,7 +216,7 @@
                                     <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">01</span>
                                     <h4 class="text-xs font-bold text-slate-900">Product Registration Support</h4>
                                 </div>
-                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of their products only with the FDA, provided the facility has already been registered or an application for the facility has been submitted to the FDA.</p>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of their products ONLY with the FDA, provided the facility has already been registered or an application for the facility has been submitted to the FDA.</p>
                                 <div class="pt-2 border-t border-slate-100">
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
                                     <div class="flex flex-wrap gap-1">
@@ -235,7 +235,7 @@
                                     <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">02</span>
                                     <h4 class="text-xs font-bold text-slate-900">Facility Registration Support</h4>
                                 </div>
-                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of their facility only with the FDA, with no product registration support included.</p>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">Clients who sign up for registration of their facility ONLY with the FDA, with no product registration support included.</p>
                                 <div class="pt-2 border-t border-slate-100">
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Subactivities</span>
                                     <div class="flex flex-wrap gap-1">
@@ -384,4 +384,35 @@
     </div>
 
 </div>
+
+
+<script>
+function updateDateTime() {
+    const now = new Date();
+
+    const date = now.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
+
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+
+    const ampm = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
+    hours = String(hours).padStart(2, "0");
+
+    document.getElementById("live-datetime").textContent =
+        `${date} | ${hours}:${minutes}:${seconds}${ampm}`;
+}
+
+// Initial render
+updateDateTime();
+
+// Refresh every second
+setInterval(updateDateTime, 1000);
+</script>
 {% endblock %}

@@ -69,12 +69,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True, help_text=_("Primary contact number for updates."))
     alternative_number = models.CharField(max_length=20, blank=True, null=True, help_text=_("Secondary contact number for updates."))
+    emergency_contact = models.CharField(max_length=20, blank=True, null=True, help_text=_("Emergency contact number in case of emergencies."))
     business_name = models.CharField(max_length=255, blank=True, null=True, help_text=_("Registered business name (Applicable to clients/users)."))
     sector = models.CharField(
         max_length=30,
         choices=ProductCategory.choices,
         default=ProductCategory.FOOD
     )
+    company_logo = models.ImageField(upload_to='companies/logos/', help_text='Company Logo', blank=True)
 
     role = models.CharField(
         max_length=20,

@@ -3,43 +3,86 @@
 {% block title %}Business Profile | PFS Online Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-4xl mx-auto space-y-8">
 
-    <!-- Overview Banner -->
-    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-            <div class="w-14 h-14 bg-pink-50 border border-pink-200 rounded-xl flex items-center justify-center text-pink-700 font-bold text-2xl flex-shrink-0">
-                {{ user.business_name|default:user.first_name|first|upper }}
+    <!-- 1. DISPLAY CARD: Current Business Profile Details -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Card Header -->
+        <div class="bg-slate-900 text-white p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <!-- Logo with Text Fallback -->
+                {% if user.company_logo %}
+                    <img src="{{ user.company_logo.url }}" 
+                         alt="{{ user.business_name|default:'Company Logo' }}" 
+                         class="w-16 h-16 rounded-xl object-cover border-2 border-slate-700 shadow-md flex-shrink-0" />
+                {% else %}
+                    <div class="w-16 h-16 bg-pink-600 text-white rounded-xl flex items-center justify-center font-black text-2xl flex-shrink-0 shadow-md">
+                        {{ user.business_name|default:user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">{{ user.business_name|default:"No Company Name Set" }}</h1>
+                    <p class="text-xs text-slate-300 mt-0.5">
+                        Sector: <span class="font-semibold text-pink-400">{{ user.get_sector_display|default:"Not Specified" }}</span>
+                    </p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-xl font-bold text-slate-900">{{ user.business_name|default:"No Company Name" }}</h1>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    Sector: <span class="font-semibold text-slate-700">{{ user.get_sector_display|default:"Not specified" }}</span>
-                </p>
+
+            <!-- Account Status Badge -->
+            <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full self-start sm:self-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Account Active</span>
             </div>
         </div>
-        
-        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600">
-            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>Account Active</span>
+
+        <!-- Card Body Details Grid -->
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50/50">
+            <div class="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Registered Name</span>
+                <span class="text-xs font-bold text-slate-800 mt-1 block truncate">
+                    {{ user.business_name|default:"N/A" }}
+                </span>
+            </div>
+
+            <div class="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Region / Location</span>
+                <span class="text-xs font-bold text-slate-800 mt-1 block">
+                    {{ user.get_region_display|default:"Not Specified" }}
+                </span>
+            </div>
+
+            <div class="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">WhatsApp Line</span>
+                <span class="text-xs font-bold text-slate-800 mt-1 block">
+                    {{ user.whatsapp_number|default:"N/A" }}
+                </span>
+            </div>
+
+            <div class="p-4 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Primary Email</span>
+                <span class="text-xs font-bold text-slate-800 mt-1 block truncate" title="{{ user.email }}">
+                    {{ user.email }}
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- Edit Form Card -->
-    <form method="POST" action="{% url 'dashboard:business-profile' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+    <!-- 2. UPDATE FORM CARD: Edit Details Beneath -->
+    <form method="POST" action="{% url 'dashboard:business-profile' %}" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {% csrf_token %}
         
         <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70 flex justify-between items-center">
             <div>
-                <h2 class="font-bold text-lg text-slate-900">Business Details</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Keep your business details accurate for accurate tracking.</p>
+                <h2 class="font-bold text-base text-slate-900">Update Profile Details</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Edit your company info below to keep your compliance records updated.</p>
             </div>
         </div>
 
         <div class="p-6 space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
                 <!-- Business Name -->
                 <div class="md:col-span-2">
                     <label for="{{ form.business_name.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -51,10 +94,33 @@
                     {% endif %}
                 </div>
 
+                <!-- Company Logo Upload -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.company_logo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Upload Company / Brand Logo
+                    </label>
+                    
+                    <div class="flex items-center gap-4">
+                        {% if user.company_logo %}
+                            <div class="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50">
+                                <img src="{{ user.company_logo.url }}" alt="Current Logo Preview" class="w-full h-full object-cover" />
+                            </div>
+                        {% endif %}
+                        <div class="flex-1">
+                            {{ form.company_logo }}
+                            <p class="text-xs text-slate-400 mt-1">Recommended format: Square PNG, JPG, or WEBP (Max 2MB).</p>
+                        </div>
+                    </div>
+
+                    {% if form.company_logo.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.company_logo.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
                 <!-- Sector -->
                 <div>
                     <label for="{{ form.sector.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                        Industry/Business Sector
+                        Industry / Sector
                     </label>
                     {{ form.sector }}
                     {% if form.sector.errors %}
@@ -85,21 +151,26 @@
                     {% endif %}
                 </div>
 
-                <!-- Primary Email -->
+                <!-- Readonly Email Address -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                        Email Address
+                        Email Address (Read-Only)
                     </label>
                     <input type="text" value="{{ user.email }}" disabled class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed">
                 </div>
             </div>
         </div>
 
+        <!-- Form Submit Footer -->
         <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-            <button type="submit" class="bg-pink-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
-                Save Profile Changes
+            <button type="submit" class="bg-pink-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-pink-800 transition shadow-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Save Profile Changes</span>
             </button>
         </div>
     </form>
+
 </div>
 {% endblock %}

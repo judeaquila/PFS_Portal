@@ -1,0 +1,241 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}My Assigned Associate | PFS Online Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6" x-data="{ showChangeModal: false }">
+
+    <!-- Back Navigation -->
+    <a href="javascript:history.back()" class="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition">
+        <span>←</span> Back to Dashboard
+    </a>
+
+    <!-- Header Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+            
+            <!-- Avatar / Verification Selfie with Initials Fallback -->
+            {% if associate.avatar %}
+                <img src="{{ associate.avatar.url }}" 
+                    alt="{{ associate.user.get_full_name|default:'Associate Avatar' }}" 
+                    class="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-md flex-shrink-0" />
+            {% elif associate.verification_selfie %}
+                <img src="{{ associate.verification_selfie.url }}" 
+                    alt="{{ associate.user.get_full_name|default:'Associate Selfie' }}" 
+                    class="w-16 h-16 rounded-2xl object-cover border border-slate-200 shadow-md flex-shrink-0" />
+            {% else %}
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md flex-shrink-0">
+                    {{ associate.user.first_name|slice:":1"|upper }}{{ associate.user.last_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+
+            <div>
+                <h1 class="text-xl font-bold text-slate-900">
+                    {{ associate.user.get_full_name|default:associate.user.email }}
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">Assigned PFS Onboarding Associate</p>
+                
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    {% if assignment.client_marked_complete %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            ✓ Client Signed Off
+                        </span>
+                    {% else %}
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                            Active Assignment
+                        </span>
+                    {% endif %}
+
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                        Modality: {{ assignment.get_modality_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100">
+            {% if associate.user.email %}
+                <a href="mailto:{{ associate.user.email }}" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2">
+                    Contact Via Email
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Contact & Profile Details -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
+                    Associate Information
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Full Name</span>
+                        <span class="text-xs font-bold text-slate-800 mt-1 block">
+                            {{ associate.user.get_full_name|default:"N/A" }}
+                        </span>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Email Address</span>
+                        <span class="text-xs font-bold text-slate-800 mt-1 block">
+                            {{ associate.user.email }}
+                        </span>
+                    </div>
+
+                    {% if associate.user.whatsapp_number %}
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Whatsapp Number</span>
+                        <span class="text-xs font-bold text-slate-800 mt-1 block">
+                            {{ associate.user.whatsapp_number }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Assignment Date</span>
+                        <span class="text-xs font-bold text-slate-800 mt-1 block">
+                            {{ assignment.created_at|date:"F d, Y" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Scope Guidance -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
+                <h2 class="text-sm font-bold text-slate-900">Assistance Scope</h2>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Your assigned PFS Associate will support you throughout your onboarding journey. Their responsibilities include:
+                </p>
+                <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside pt-1">
+                    <li>Assisting with document verification and file uploads.</li>
+                    <li>Guiding you through process requirements and registration steps.</li>
+                    {% if assignment.is_in_person %}
+                        <li>On-site facility visits for hands-on assistance.</li>
+                    {% else %}
+                        <li>Remote guidance via phone calls, emails, or virtual sessions.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sidebar Actions & Modality Notice -->
+        <div class="space-y-6">
+            
+            <!-- ASSIGNMENT MANAGEMENT ACTIONS -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">Assignment Actions</h3>
+
+                <!-- Mark Complete Toggle Button -->
+                <form method="POST" action="{% url 'dashboard:user-toggle-assignment-complete' assignment.id %}">
+                    {% csrf_token %}
+                    {% if assignment.client_marked_complete %}
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl mb-3 text-xs text-emerald-800">
+                            <strong>✓ Marked Complete:</strong> You signed off on {{ assignment.client_completed_at|date:"M d, Y" }}.
+                        </div>
+                        <button type="submit" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2">
+                            <span>Reopen Assignment</span>
+                        </button>
+                    {% else %}
+                        <p class="text-xs text-slate-500 mb-3">Has this associate provided all requested onboarding assistance?</p>
+                        <button type="submit" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Mark Assistance Complete</span>
+                        </button>
+                    {% endif %}
+                </form>
+
+                <hr class="border-slate-100">
+
+                <!-- Change Associate Button (Disabled if client marked complete) -->
+                <div>
+                    {% if assignment.client_marked_complete %}
+                        <button type="button" disabled class="w-full py-2.5 px-4 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl border border-slate-200 cursor-not-allowed flex items-center justify-center gap-2" title="Cannot re-assign an assignment marked as complete.">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <span>Request Different Associate</span>
+                        </button>
+                        <p class="text-[10px] text-slate-400 mt-1.5 text-center">Reopen assignment to request a change.</p>
+                    {% else %}
+                        <button type="button" @click="showChangeModal = true" class="w-full py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200/60 transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            <span>Request Different Associate</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Modality Sidebar Card -->
+            <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="font-bold text-sm">Modality Details</h3>
+                
+                {% if assignment.is_in_person %}
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        You selected <strong class="text-white">In-Person Assistance</strong>. Your associate will contact you to coordinate a visit to your facility.
+                    </p>
+                    <div class="p-3 rounded-xl bg-slate-800 border border-slate-700 text-[11px] text-amber-300">
+                        ⚠️ <strong>Note:</strong> Transportation costs for facility visits are borne by the client.
+                    </div>
+                {% else %}
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        You selected <strong class="text-white">Remote Assistance</strong>. Your associate will reach out via email or phone to schedule your support session.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CANCELLATION & RE-ASSIGNMENT MODAL -->
+    <div x-show="showChangeModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 border border-slate-200" @click.away="showChangeModal = false">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                    !
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Request New Associate</h3>
+                    <p class="text-xs text-slate-500">Cancel current assignment & request reassignment</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'dashboard:user-request-change-associate' assignment.id %}" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label for="cancellation_reason" class="block text-xs font-bold text-slate-700 mb-1">
+                        Reason for Cancellation <span class="text-rose-500">*</span>
+                    </label>
+                    <textarea 
+                        id="cancellation_reason" 
+                        name="cancellation_reason" 
+                        rows="3" 
+                        required 
+                        placeholder="Please tell us why you are requesting a different associate (e.g., communication issues, schedule conflict, lack of availability)..." 
+                        class="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none text-slate-800 placeholder:text-slate-400 resize-none"
+                    ></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" @click="showChangeModal = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                        Submit & Cancel Assignment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

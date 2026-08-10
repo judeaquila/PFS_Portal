@@ -5,15 +5,17 @@ from django.views.decorators.http import require_POST
 from accounts.models import UserRole
 from common.decorators import role_required, mandatory_docs_required
 from common.utils import get_required_document_types
-from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificationForm, ConsultantVerificationForm, AdminUserManagementForm, BusinessProfileForm
+from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificationForm, ConsultantVerificationForm, AdminUserManagementForm, BusinessProfileForm, AvailabilityForm
 from django.contrib import messages
-from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile
+from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile, Availability, ConsultantAssignment
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Count, Max, F
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from .signals import get_activities_for_package
+from collections import defaultdict
+
 
 
 User = get_user_model()
@@ -48,25 +50,339 @@ def redirect_dashboard(request):
 
 
 # SUPER ADMIN Dashboard
+# @login_required
+# @role_required([UserRole.SUPER_ADMIN])
+# def superadmin_dashboard(request):
+#     """Admin dashboard with combined unassigned/cancelled request queues & inline assignments."""
+
+#     # ==========================================
+#     # POST ACTIONS (INLINE ASSIGNMENTS)
+#     # ==========================================
+#     if request.method == "POST":
+#         action = request.POST.get("action")
+
+#         # --- ASSIGN / RE-ASSIGN FIELD ASSOCIATE ---
+#         if action == "assign_associate_request":
+#             assignment_id = request.POST.get("assignment_id")
+#             associate_id = request.POST.get("associate_id")
+
+#             if not associate_id:
+#                 messages.error(request, "Please select an associate from the list before assigning.")
+#                 return redirect("dashboard:super-admin-dashboard")
+
+#             assignment = get_object_or_404(AmbassadorAssignment, pk=assignment_id)
+#             ambassador_profile = get_object_or_404(AmbassadorProfile, user_id=associate_id)
+
+#             assignment.ambassador = ambassador_profile
+#             assignment.status = AmbassadorAssignment.TaskStatus.ASSIGNED
+#             assignment.cancellation_reason = None  # Clear reason on reassignment
+#             assignment.save(update_fields=['ambassador', 'status', 'cancellation_reason'])
+
+#             client_name = assignment.client.business_name or assignment.client.get_full_name() or assignment.client.email
+#             messages.success(
+#                 request, 
+#                 f"Successfully assigned Associate {ambassador_profile.user.get_full_name()} to {client_name}."
+#             )
+#             return redirect("dashboard:super-admin-dashboard")
+
+#         # --- ASSIGN / RE-ASSIGN CONSULTANT ---
+#         elif action == "assign_consultant_request":
+#             assignment_id = request.POST.get("assignment_id")
+#             consultant_id = request.POST.get("consultant_id")
+
+#             if not consultant_id:
+#                 messages.error(request, "Please select a consultant from the list before assigning.")
+#                 return redirect("dashboard:super-admin-dashboard")
+
+#             assignment = get_object_or_404(ConsultantAssignment, pk=assignment_id)
+#             consultant_profile = get_object_or_404(ConsultantProfile, user_id=consultant_id)
+
+#             assignment.consultant = consultant_profile
+#             assignment.status = ConsultantAssignment.TaskStatus.ASSIGNED
+#             assignment.cancellation_reason = None
+#             assignment.save(update_fields=['consultant', 'status', 'cancellation_reason'])
+
+#             client_name = assignment.client.business_name or assignment.client.get_full_name() or assignment.client.email
+#             messages.success(
+#                 request, 
+#                 f"Successfully assigned Consultant {consultant_profile.user.get_full_name()} to {client_name}."
+#             )
+#             return redirect("dashboard:super-admin-dashboard")
+
+#     # ==========================================
+#     # COMBINED UNASSIGNED + CANCELLED QUEUES
+#     # ==========================================
+#     pending_associate_requests = AmbassadorAssignment.objects.filter(
+#         status__in=[
+#             AmbassadorAssignment.TaskStatus.UNASSIGNED,
+#             AmbassadorAssignment.TaskStatus.CANCELLED
+#         ]
+#     ).select_related('client', 'project', 'ambassador__user').order_by('-updated_at')
+
+#     pending_consultant_requests = ConsultantAssignment.objects.filter(
+#         status__in=[
+#             ConsultantAssignment.TaskStatus.UNASSIGNED,
+#             ConsultantAssignment.TaskStatus.CANCELLED
+#         ]
+#     ).select_related('client', 'project', 'consultant__user').order_by('-updated_at')
+
+#     # ==========================================
+#     # AVAILABLE AGENTS WITH ACTIVE TASK COUNTS
+#     # ==========================================
+#     available_associates = User.objects.filter(
+#         role=UserRole.AMBASSADOR,
+#         ambassador_profile__is_active_field_agent=True
+#     ).annotate(
+#         active_task_count=Count(
+#             'ambassador_profile__assignments',
+#             filter=Q(ambassador_profile__assignments__status=AmbassadorAssignment.TaskStatus.ASSIGNED)
+#         )
+#     ).order_by('first_name')
+
+#     available_consultants = User.objects.filter(
+#         role=UserRole.CONSULTANT,
+#         consultant_profile__is_active_consultant=True
+#     ).annotate(
+#         active_task_count=Count(
+#             'consultant_profile__consultant_assignments',
+#             filter=Q(consultant_profile__consultant_assignments__status=ConsultantAssignment.TaskStatus.ASSIGNED)
+#         )
+#     ).order_by('first_name')
+
+#     # ==========================================
+#     # ACTIVE ASSIGNMENTS
+#     # ==========================================
+#     active_associate_assignments = AmbassadorAssignment.objects.filter(
+#         ambassador__isnull=False,
+#         status=AmbassadorAssignment.TaskStatus.ASSIGNED
+#     ).select_related('ambassador__user', 'client', 'project').order_by('-created_at')
+
+#     active_consultant_assignments = ConsultantAssignment.objects.filter(
+#         consultant__isnull=False,
+#         status=ConsultantAssignment.TaskStatus.ASSIGNED
+#     ).select_related('consultant__user', 'client', 'project').order_by('-created_at')
+
+#     # ==========================================
+#     # PROJECTS, LOGS & KPI METRICS
+#     # ==========================================
+#     recent_projects = ClientProject.objects.select_related(
+#         'client', 'assigned_consultant'
+#     ).prefetch_related('activities').order_by('-updated_at')[:8]
+
+#     recent_activity_logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:6]
+#     today = timezone.now().date()
+
+#     metrics = {
+#         'active_clients': User.objects.filter(role=UserRole.USER, is_active=True).count(),
+#         'active_projects': ClientProject.objects.count(),
+#         'total_ambassadors': AmbassadorProfile.objects.filter(is_active_field_agent=True).count(),
+#         'total_consultants': ConsultantProfile.objects.filter(is_active_consultant=True).count(),
+#         'pending_verifications': (
+#             AmbassadorProfile.objects.filter(verification_status=AmbassadorProfile.VerificationStatus.PENDING).count() +
+#             ConsultantProfile.objects.filter(verification_status=ConsultantProfile.VerificationStatus.PENDING).count()
+#         ),
+#         'pending_documents': ClientDocument.objects.filter(status=DocumentStatus.PENDING).count(),
+#         'delayed_activities': ProjectActivity.objects.filter(
+#             Q(activity_status=ActivityStatus.PAUSED) | 
+#             Q(activity_deadline__lt=today, activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED])
+#         ).count(),
+#         'active_assignments': active_associate_assignments.count(),
+#         'active_consultant_assignments': active_consultant_assignments.count(),
+#         'pending_requests_count': pending_associate_requests.count(),
+#         'pending_consultant_requests_count': pending_consultant_requests.count(),
+#     }
+
+#     recent_signups = AmbassadorProfile.objects.filter(
+#         verification_status=AmbassadorProfile.VerificationStatus.PENDING
+#     ).select_related('user').order_by('-id')[:5]
+
+#     context = {
+#         'metrics': metrics,
+#         'recent_signups': recent_signups,
+#         'recent_projects': recent_projects,
+#         'recent_activity_logs': recent_activity_logs,
+        
+#         # Combined Unassigned/Cancelled Queues
+#         'pending_associate_requests': pending_associate_requests,
+#         'pending_consultant_requests': pending_consultant_requests,
+        
+#         # Agent Lists for Inline Action Dropdowns
+#         'available_associates': available_associates,
+#         'available_consultants': available_consultants,
+        
+#         'active_associate_assignments': active_associate_assignments,
+#         'active_consultant_assignments': active_consultant_assignments,
+#     }
+
+#     return render(request, 'dashboards/super_admin.html', context)
+
+
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def superadmin_dashboard(request):
-    """Provides a bird's-eye view of platform metrics and urgent administrative actions."""
+    """Admin dashboard featuring inline associate dispatches and client-consultant management."""
+
+    # ==========================================
+    # POST ACTIONS (INLINE ASSIGNMENTS)
+    # ==========================================
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        # --- ASSIGN / RE-ASSIGN FIELD ASSOCIATE ---
+        if action == "assign_associate_request":
+            assignment_id = request.POST.get("assignment_id")
+            associate_id = request.POST.get("associate_id")
+
+            if not associate_id:
+                messages.error(request, "Please select an associate from the list before assigning.")
+                return redirect("dashboard:super-admin-dashboard")
+
+            assignment = get_object_or_404(AmbassadorAssignment, pk=assignment_id)
+            ambassador_profile = get_object_or_404(AmbassadorProfile, user_id=associate_id)
+
+            assignment.ambassador = ambassador_profile
+            assignment.status = AmbassadorAssignment.TaskStatus.ASSIGNED
+            assignment.cancellation_reason = None  # Reset cancellation flag
+            assignment.save(update_fields=['ambassador', 'status', 'cancellation_reason'])
+
+            client_name = assignment.client.business_name or assignment.client.get_full_name() or assignment.client.email
+            messages.success(
+                request, 
+                f"Successfully assigned Associate {ambassador_profile.user.get_full_name()} to {client_name}."
+            )
+            return redirect("dashboard:super-admin-dashboard")
+
+        # --- ASSIGN / CHANGE CONSULTANT ON CLIENT PROJECT ---
+        elif action == "assign_project_consultant":
+            project_id = request.POST.get("project_id")
+            consultant_user_id = request.POST.get("consultant_user_id")
+
+            project = get_object_or_404(ClientProject, pk=project_id)
+
+            if consultant_user_id:
+                consultant_user = get_object_or_404(User, pk=consultant_user_id, role=UserRole.CONSULTANT)
+                project.assigned_consultant = consultant_user
+                project.save(update_fields=['assigned_consultant'])
+
+                client_name = project.client.business_name or project.client.get_full_name() or project.client.email
+                messages.success(
+                    request, 
+                    f"Successfully assigned Consultant {consultant_user.get_full_name()} to project for {client_name}."
+                )
+            else:
+                # Handle clearing consultant assignment
+                project.assigned_consultant = None
+                project.save(update_fields=['assigned_consultant'])
+                messages.info(request, "Removed consultant assignment from project.")
+
+            return redirect("dashboard:super-admin-dashboard")
+
+    # ==========================================
+    # FIELD ASSOCIATE REQUEST QUEUE (UNASSIGNED + CANCELLED)
+    # ==========================================
+    pending_associate_requests = AmbassadorAssignment.objects.filter(
+        status__in=[
+            AmbassadorAssignment.TaskStatus.UNASSIGNED,
+            AmbassadorAssignment.TaskStatus.CANCELLED
+        ]
+    ).select_related('client', 'project', 'ambassador__user').order_by('-updated_at')
+
+    # ==========================================
+    # AVAILABLE AGENTS WITH ACTIVE WORKLOADS
+    # ==========================================
+    available_associates = User.objects.filter(
+        role=UserRole.AMBASSADOR,
+        ambassador_profile__is_active_field_agent=True
+    ).annotate(
+        active_task_count=Count(
+            'ambassador_profile__assignments',
+            filter=Q(ambassador_profile__assignments__status=AmbassadorAssignment.TaskStatus.ASSIGNED)
+        )
+    ).order_by('first_name')
+
+    available_consultants = User.objects.filter(
+        role=UserRole.CONSULTANT,
+        consultant_profile__is_active_consultant=True
+    ).annotate(
+        active_case_count=Count('assigned_projects')
+    ).order_by('first_name')
+
+    # ==========================================
+    # ACTIVE ASSIGNMENTS & CLIENT PROJECTS
+    # ==========================================
+    active_associate_assignments = AmbassadorAssignment.objects.filter(
+        ambassador__isnull=False,
+        status=AmbassadorAssignment.TaskStatus.ASSIGNED
+    ).select_related('ambassador__user', 'client', 'project').order_by('-created_at')
+
+    client_projects_list = ClientProject.objects.select_related(
+        'client', 'assigned_consultant'
+    ).prefetch_related('activities').order_by('-updated_at')
+
+    # ==========================================
+    # KPI METRICS & RECENT LOGS
+    # ==========================================
+    recent_activity_logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:6]
+    today = timezone.now().date()
+
     metrics = {
-        'total_ambassadors': AmbassadorProfile.objects.count(),
-        'pending_verifications': AmbassadorProfile.objects.filter(is_active_field_agent=False).count(),
-        'active_assignments': AmbassadorAssignment.objects.filter(status='ASSIGNED').count(),
-        'unclaimed_projects': ClientProject.objects.exclude(
-            id__in=AmbassadorAssignment.objects.filter(status='ASSIGNED').values_list('project_id', flat=True)
+        'active_clients': User.objects.filter(role=UserRole.USER, is_active=True).count(),
+        'active_projects': client_projects_list.count(),
+        'unassigned_consultant_projects': client_projects_list.filter(assigned_consultant__isnull=True).count(),
+        'total_ambassadors': AmbassadorProfile.objects.filter(is_active_field_agent=True).count(),
+        'total_consultants': ConsultantProfile.objects.filter(is_active_consultant=True).count(),
+        'pending_verifications': (
+            AmbassadorProfile.objects.filter(verification_status=AmbassadorProfile.VerificationStatus.PENDING).count() +
+            ConsultantProfile.objects.filter(verification_status=ConsultantProfile.VerificationStatus.PENDING).count()
+        ),
+        'pending_documents': ClientDocument.objects.filter(status=DocumentStatus.PENDING).count(),
+        'delayed_activities': ProjectActivity.objects.filter(
+            Q(activity_status=ActivityStatus.PAUSED) | 
+            Q(activity_deadline__lt=today, activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED])
         ).count(),
+        'active_assignments': active_associate_assignments.count(),
+        'pending_associate_requests_count': pending_associate_requests.count(),
     }
-    
-    # Grab the 5 oldest unverified applications for a quick-action widget
-    recent_signups = AmbassadorProfile.objects.filter(is_active_field_agent=False).select_related('user').order_by('id')[:5]
+
+    recent_signups = AmbassadorProfile.objects.filter(
+        verification_status=AmbassadorProfile.VerificationStatus.PENDING
+    ).select_related('user').order_by('-id')[:5]
+
+    # ==========================================
+    # STAFF SCHEDULES & AVAILABILITY SLOTS
+    # ==========================================
+    consult_available = Availability.objects.filter(
+        user__role=UserRole.CONSULTANT
+    ).select_related('user').order_by('weekday', 'start_time')
+
+    associate_available = Availability.objects.filter(
+        user__role=UserRole.AMBASSADOR
+    ).select_related('user').order_by('weekday', 'start_time')
+
+    consultants_availability = defaultdict(list)
+    for slot in consult_available:
+        consultants_availability[slot.user].append(slot)
+
+    associates_availability = defaultdict(list)
+    for slot in associate_available:
+        associates_availability[slot.user].append(slot)
 
     context = {
         'metrics': metrics,
         'recent_signups': recent_signups,
+        'client_projects_list': client_projects_list,
+        'recent_projects': client_projects_list[:8],
+        'recent_activity_logs': recent_activity_logs,
+
+        # Staff Availability
+        'consultants_availability': dict(consultants_availability),
+        'associates_availability': dict(associates_availability),
+        
+        # Queues & Lists
+        'pending_associate_requests': pending_associate_requests,
+        'available_associates': available_associates,
+        'available_consultants': available_consultants,
+        'active_associate_assignments': active_associate_assignments,
     }
 
     return render(request, 'dashboards/super_admin.html', context)
@@ -397,6 +713,69 @@ def consultant_dashboard(request):
     }
 
     return render(request, "dashboards/consultant.html", context)
+
+
+
+@login_required
+@role_required([UserRole.CONSULTANT])
+def consultant_availability(request):
+    if request.method == "POST":
+        form = AvailabilityForm(request.POST)
+
+        if form.is_valid():
+            availability = form.save(commit=False)
+            availability.user = request.user
+            availability.save()
+
+            messages.success(request, "Availability added successfully.")
+            return redirect("dashboard:consultant-availability")
+    else:
+        form = AvailabilityForm()
+
+    grouped = {}
+
+    for day, label in Availability.WeekDay.choices:
+
+        grouped[label] = Availability.objects.filter(
+            user=request.user,
+            weekday=day
+        ).order_by("start_time")
+
+    context = {
+        "form": form,
+        "grouped": grouped,
+    }
+    return render(request, "dashboards/consultant_availability.html", context)
+
+
+@login_required
+@role_required([UserRole.CONSULTANT])
+@require_POST
+def edit_availability(request, pk):
+    availability = get_object_or_404(Availability, pk=pk, user=request.user)
+
+    form = AvailabilityForm(request.POST, instance=availability)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Availability updated.")
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"Update failed: {error}")
+
+    return redirect("dashboard:consultant-availability")
+
+
+@login_required
+@role_required([UserRole.CONSULTANT])
+@require_POST
+def delete_availability(request, pk):
+    availability = get_object_or_404(Availability, pk=pk, user=request.user)
+
+    availability.delete()
+    messages.success(request, "Availability removed.")
+
+    return redirect("dashboard:consultant-availability")
 
 
 @login_required
@@ -966,17 +1345,16 @@ def global_operations_boards(request):
 
 
 
-#********************************************************** AMBASSADOR DASHBOARD **************************************************#
+#********************************************************** ASSOCIATE DASHBOARD **************************************************#
 #******************************************************************************************************************************#
-# AMBASSADOR Dashboard Overview
+# ASSOCIATE Dashboard Overview
 @login_required
 @role_required([UserRole.AMBASSADOR])
 def ambassador_dashboard(request):
     """
-    Renders the operational hub for platform Ambassadors.
+    Renders the operational hub for PFS Associates.
     Swaps presentation layers dynamically based on backend verification flags.
     """
-    # 1. Safely evaluate profile instantiation states
     try:
         profile = request.user.ambassador_profile
         is_verified = profile.is_active_field_agent
@@ -984,18 +1362,16 @@ def ambassador_dashboard(request):
         profile = None
         is_verified = False
 
-    # 2. Define standard fallback metrics variables
     active_assignments = []
     available_clients = []
     completed_payouts_total = "0.00"
 
-    # 3. If verified, populate the operational datasets
     if is_verified:
         # Fetch client tracks currently managed by this ambassador agent
-        active_assignments = AmbassadorAssignment.objects.filter(
+        raw_assignments = AmbassadorAssignment.objects.filter(
             ambassador=profile, 
             status='ASSIGNED'
-        ).select_related('client')
+        ).select_related('client').prefetch_related('client__documents')
 
         # Calculate settled payouts ledger summary metrics
         payout_count = AmbassadorAssignment.objects.filter(
@@ -1005,50 +1381,81 @@ def ambassador_dashboard(request):
         ).count()
         completed_payouts_total = f"{payout_count * 150.00:.2f}"
 
-        # Define documents that constitute a "Complete Profile Submission"
-        required_types = [
-            DocumentType.BUSINESS_CERT, 
-            DocumentType.HEALTH_CARD, 
-            DocumentType.FACILITY_SKETCH
-        ]
-        
-        # 1. Gather all client IDs that are currently claimed by an active ambassador
+        # Enrich active assignments with document progress metadata
+        for assignment in raw_assignments:
+            client = assignment.client
+            client_required_types = get_required_document_types(client)
+            
+            # Exclude rejected documents from valid count
+            valid_docs = client.documents.exclude(status=DocumentStatus.REJECTED)
+            uploaded_types = set(valid_docs.values_list('document_type', flat=True))
+
+            missing_docs = []
+            for doc_type in client_required_types:
+                if doc_type not in uploaded_types:
+                    try:
+                        label = DocumentType(doc_type).label
+                    except ValueError:
+                        label = doc_type
+                    missing_docs.append({'code': doc_type, 'label': label})
+
+            total_required = len(client_required_types)
+            matching_uploaded = [dt for dt in client_required_types if dt in uploaded_types]
+            total_uploaded = len(matching_uploaded)
+
+            active_assignments.append({
+                'id': assignment.id,
+                'client': client,
+                'modality': getattr(assignment, 'modality', None),
+                'get_modality_display': assignment.get_modality_display() if hasattr(assignment, 'get_modality_display') else '',
+                'ambassador_marked_complete': getattr(assignment, 'ambassador_marked_complete', False),
+                'client_marked_complete': getattr(assignment, 'client_marked_complete', False),
+                'total_uploaded': total_uploaded,
+                'total_required': total_required,
+                'missing_types': missing_docs,
+            })
+
+        # Gather all client IDs currently claimed by an active ambassador
         claimed_client_ids = AmbassadorAssignment.objects.filter(
             status='ASSIGNED'
         ).values_list('client_id', flat=True)
 
-        # 2. Grab all users who are regular clients and NOT currently claimed
+        # Prefetch ONLY documents to eliminate N+1 queries
         open_clients = User.objects.filter(
             role=UserRole.USER
         ).exclude(
             id__in=claimed_client_ids
+        ).prefetch_related(
+            'documents'
         ).order_by('-id')
 
-        available_clients = []
-        required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
-
-        # 3. Process each client explicitly
         for client in open_clients:
-            # Querying the ClientDocument directly using the client object avoids the relationship property naming issue completely
-            client_docs = ClientDocument.objects.filter(client=client)
-            uploaded_types = list(client_docs.values_list('document_type', flat=True))
+            client_required_types = get_required_document_types(client)
             
-            total_uploaded = sum(1 for t in uploaded_types if t in required_types)
-            total_required = len(required_types)
+            valid_docs = client.documents.exclude(status=DocumentStatus.REJECTED)
+            uploaded_types = set(valid_docs.values_list('document_type', flat=True))
 
-            # If their uploads are incomplete, push them straight into the Ambassador pool
-            if total_uploaded < total_required:
-                # Safely capture their project record
-                project = ClientProject.objects.filter(client=client).first()
+            missing_docs = []
+            for doc_type in client_required_types:
+                if doc_type not in uploaded_types:
+                    try:
+                        label = DocumentType(doc_type).label
+                    except ValueError:
+                        label = doc_type
+                    missing_docs.append({'code': doc_type, 'label': label})
 
+            total_required = len(client_required_types)
+            matching_uploaded = [doc_type for doc_type in client_required_types if doc_type in uploaded_types]
+            total_uploaded = len(matching_uploaded)
+
+            if total_uploaded < total_required or total_required == 0:
                 available_clients.append({
                     'client': client,
-                    'project': project,
                     'total_uploaded': total_uploaded,
                     'total_required': total_required,
-                    'has_business_cert': DocumentType.BUSINESS_CERT in uploaded_types,
-                    'has_health_card': DocumentType.HEALTH_CARD in uploaded_types,
-                    'has_facility_sketch': DocumentType.FACILITY_SKETCH in uploaded_types,
+                    'required_types': client_required_types,
+                    'uploaded_types': uploaded_types,
+                    'missing_types': missing_docs,
                 })
 
     context = {
@@ -1063,49 +1470,68 @@ def ambassador_dashboard(request):
 
 @login_required
 @role_required([UserRole.AMBASSADOR])
-@login_required
-def ambassador_claim_client(request):
-    """Processes the claim request, creating an operational assignment block."""
-    if request.method == 'POST':
-        client_id = request.POST.get('client_id')
-        modality = request.POST.get('modality', 'REMOTE')
-        
-        # 1. Grab or fail the target client user account
-        target_client = get_object_or_404(User, id=client_id, role=UserRole.USER)
-        
-        # 2. Safety check: Ensure the ambassador has a verified active profile state
-        profile = get_object_or_404(AmbassadorProfile, user=request.user)
-        if not profile.is_active_field_agent:
-            messages.error(request, "Access Denied. Your ambassador credentials are unverified.")
-            return redirect('dashboard:ambassador-dashboard')
-            
-        # 3. Double-claim preventative safety lock check
-        already_claimed = AmbassadorAssignment.objects.filter(client=target_client, status='ASSIGNED').exists()
-        if already_claimed:
-            messages.warning(request, "This client project has already been claimed by another Ambassador.")
-            return redirect('dashboard:ambassador-dashboard')
-            
-        # 4. Initialize assignment pipeline structure records
-        project = ClientProject.objects.filter(client=target_client).first()
-        
-        AmbassadorAssignment.objects.create(
-            ambassador=profile,
-            client=target_client,
-            project=project,
-            modality=modality,
-            status='ASSIGNED'
-        )
-        
-        messages.success(request, f"Successfully paired with {target_client.email}.")
-        return redirect('dashboard:ambassador-client-workbench', client_id=target_client.id)
-        
-    return redirect('dashboard:ambassador-dashboard')
+def associate_availability(request):
+    if request.method == "POST":
+        form = AvailabilityForm(request.POST)
 
+        if form.is_valid():
+            availability = form.save(commit=False)
+            availability.user = request.user
+            availability.save()
+
+            messages.success(request, "Availability added successfully.")
+            return redirect("dashboard:associate-availability")
+    else:
+        form = AvailabilityForm()
+
+    grouped = {}
+
+    for day, label in Availability.WeekDay.choices:
+
+        grouped[label] = Availability.objects.filter(
+            user=request.user,
+            weekday=day
+        ).order_by("start_time")
+
+    context = {
+        "form": form,
+        "grouped": grouped,
+    }
+    return render(request, "dashboards/associate_availability.html", context)
 
 
 @login_required
 @role_required([UserRole.AMBASSADOR])
+@require_POST
+def associate_edit_availability(request, pk):
+    availability = get_object_or_404(Availability, pk=pk, user=request.user)
+
+    form = AvailabilityForm(request.POST, instance=availability)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Availability updated.")
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"Update failed: {error}")
+
+    return redirect("dashboard:associate-availability")
+
+
 @login_required
+@role_required([UserRole.AMBASSADOR])
+@require_POST
+def associate_delete_availability(request, pk):
+    availability = get_object_or_404(Availability, pk=pk, user=request.user)
+
+    availability.delete()
+    messages.success(request, "Availability removed.")
+
+    return redirect("dashboard:associate-availability")
+
+
+@login_required
+@role_required([UserRole.AMBASSADOR])
 def ambassador_client_workbench(request, client_id):
     """Operational management workspace layout for a specific active assignment tracking node."""
     client_user = get_object_or_404(User, id=client_id)
@@ -1125,28 +1551,50 @@ def ambassador_client_workbench(request, client_id):
         uploaded_file = request.FILES.get('document_file')
         
         if doc_type and uploaded_file:
-            ClientDocument.objects.create(
+            doc, created = ClientDocument.objects.update_or_create(
                 client=client_user,
-                uploaded_by=request.user,
                 document_type=doc_type,
-                file=uploaded_file
+                defaults={
+                    'uploaded_by': request.user,
+                    'file': uploaded_file,
+                    'status': DocumentStatus.PENDING,
+                    'cancellation_reason': '',
+                }
             )
-            messages.success(request, f"Proxy document ({doc_type}) successfully uploaded.")
+            action_text = "uploaded" if created else "re-uploaded"
+            messages.success(request, f"Proxy document ({doc.get_document_type_display()}) successfully {action_text}.")
             return redirect('dashboard:ambassador-client-workbench', client_id=client_user.id)
 
-    # Document state compilation for the workbench checklist UI
-    client_docs = ClientDocument.objects.filter(client=client_user)
-    uploaded_types = list(client_docs.values_list('document_type', flat=True))
-    required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
+    # Dynamic document state compilation
+    client_docs = ClientDocument.objects.filter(client=client_user).order_by('-uploaded_at')
+    
+    # Fetch dynamically required document codes based on client sector/package
+    required_type_codes = get_required_document_types(client_user)
+    
+    # Filter out rejected documents for requirements evaluation
+    valid_uploaded_docs = client_docs.exclude(status=DocumentStatus.REJECTED)
+    uploaded_type_codes = set(valid_uploaded_docs.values_list('document_type', flat=True))
+    
+    # Build dropdown options and progress counters dynamically
+    missing_types = []
+    for code in required_type_codes:
+        if code not in uploaded_type_codes:
+            try:
+                label = DocumentType(code).label
+            except ValueError:
+                label = code
+            missing_types.append({'code': code, 'label': label})
+            
+    total_required = len(required_type_codes)
+    total_uploaded = len([code for code in required_type_codes if code in uploaded_type_codes])
     
     context = {
         'assignment': assignment,
         'client_user': client_user,
         'client_docs': client_docs,
-        'required_types': required_types,
-        'has_business_cert': DocumentType.BUSINESS_CERT in uploaded_types,
-        'has_health_card': DocumentType.HEALTH_CARD in uploaded_types,
-        'has_facility_sketch': DocumentType.FACILITY_SKETCH in uploaded_types,
+        'missing_types': missing_types,
+        'total_uploaded': total_uploaded,
+        'total_required': total_required,
     }
     return render(request, 'dashboards/ambassador_client_workbench.html', context)
 
@@ -1254,20 +1702,21 @@ def ambassador_profile(request):
 def user_dashboard(request):
     """
     Manages the regular client dashboard workspace state.
-    Handles multi-file onboarding uploads and automatically transitions
-    the view state when the initial baseline is completed.
+    Handles multi-file onboarding uploads, associate assistance requests,
+    and automatically transitions the view state when baseline docs are complete.
     """
     required_types = get_required_document_types(request.user)
 
-    # --- PROCESS INCOMING FILE UPLOADS ---
+    # --- PROCESS INCOMING FORM SUBMISSION ---
     if request.method == 'POST':
         files_saved = 0
         
+        # Process File Uploads
         for doc_key in required_types:
             if doc_key in request.FILES:
                 uploaded_file = request.FILES[doc_key]
                 
-                Document, created = ClientDocument.objects.update_or_create(
+                ClientDocument.objects.update_or_create(
                     client=request.user,
                     document_type=doc_key,
                     defaults={
@@ -1278,27 +1727,69 @@ def user_dashboard(request):
                 )
                 files_saved += 1
 
-        if files_saved > 0:
-            messages.success(request, f"Successfully uploaded and saved {files_saved} file(s).")
+        # Process Associate Assistance Request
+        requires_associate = request.POST.get('requires_associate') == 'on'
+        modality = request.POST.get('associate_modality', AmbassadorAssignment.AssistanceModality.REMOTE)
+
+        if requires_associate:
+            # Check if an active or unassigned/pending request already exists
+            existing_assignment = AmbassadorAssignment.objects.filter(
+                client=request.user,
+                status__in=[
+                    AmbassadorAssignment.TaskStatus.UNASSIGNED,
+                    AmbassadorAssignment.TaskStatus.ASSIGNED,
+                    AmbassadorAssignment.TaskStatus.COMPLETED,
+                    AmbassadorAssignment.TaskStatus.CANCELLED,
+                ]
+            ).first()
+
+            if not existing_assignment:
+                # Get client's primary project if available
+                primary_project = request.user.projects.first()
+                
+                # Create an UNASSIGNED request so it routes to Superadmin for assignment
+                AmbassadorAssignment.objects.create(
+                    client=request.user,
+                    project=primary_project,
+                    status=AmbassadorAssignment.TaskStatus.UNASSIGNED,
+                    modality=modality,
+                )
+        
+        if files_saved > 0 or requires_associate:
+            messages.success(request, "Your onboarding details and documents have been updated.")
         else:
-            messages.error(request, "No files selected. Please choose a valid file to upload.")
+            messages.error(request, "No changes or files were selected.")
             
         return redirect('dashboard:user-dashboard')
 
     # --- EVALUATE & RENDER CURRENT VIEW STATE ---
     client_docs = request.user.documents.all()
-    
-    # Generate an easy context map lookup
     uploaded_dict = {doc.document_type: doc for doc in client_docs}
     
     total_required = len(required_types)
     total_uploaded = client_docs.filter(
         document_type__in=required_types,
         status__in=[DocumentStatus.PENDING, DocumentStatus.APPROVED]
-        ).exclude(file="").count()
+    ).exclude(file="").count()
     
-    # Safely query active tracking projects for summary presentation dashboards
     active_projects = request.user.projects.all()
+
+    # Fetch any current associate assistance request (pending or assigned)
+    existing_associate_request = AmbassadorAssignment.objects.filter(
+        client=request.user,
+        status__in=[
+            AmbassadorAssignment.TaskStatus.UNASSIGNED,
+            AmbassadorAssignment.TaskStatus.ASSIGNED,
+            AmbassadorAssignment.TaskStatus.COMPLETED,
+            AmbassadorAssignment.TaskStatus.CANCELLED,
+        ]
+    ).first()
+
+    # Fetch assigned associate
+    assignment = AmbassadorAssignment.objects.filter(
+        client=request.user,
+        status=AmbassadorAssignment.TaskStatus.ASSIGNED
+    ).select_related('ambassador').first()
 
     context = {
         'uploaded_dict': uploaded_dict,
@@ -1306,9 +1797,11 @@ def user_dashboard(request):
         'total_required': total_required,
         'active_projects': active_projects,
         'required_types': required_types,
+        'existing_associate_request': existing_associate_request,
+        'assignment': assignment,
     }
 
-    # If the user has fulfilled all baseline uploads, dynamically swap out the UI view template
+    # If all baseline uploads are complete, swap out the template
     if total_uploaded >= total_required:
         recent_activities = request.user.activities.all()[:5]
 
@@ -1316,6 +1809,7 @@ def user_dashboard(request):
             "uploaded_dict": uploaded_dict,
             "recent_activities": recent_activities,
             "active_projects": active_projects,
+            "existing_associate_request": existing_associate_request,
         }
 
         return render(request, "dashboards/user_tracking.html", context)
@@ -1535,6 +2029,33 @@ def client_project_dashboard(request, project_id):
     })
 
 
+@login_required
+@role_required([UserRole.USER])
+def assigned_associate_detail(request):
+    """
+    Displays the details of the associate assigned to the logged-in client.
+    """
+    # Fetch the active or assigned request for the logged-in client
+    associate_request = AmbassadorAssignment.objects.filter(
+        client=request.user
+    ).select_related('ambassador', 'project').order_by('-created_at').first()
+
+    # If no request exists or no associate has been assigned yet
+    if not associate_request:
+        messages.info(request, "You have not requested associate assistance.")
+        return redirect('dashboard:user-dashboard') # Update with your client dashboard URL name
+
+    if not associate_request.ambassador:
+        messages.warning(request, "Your assistance request is currently pending assignment.")
+        return redirect('dashboard:user-dashboard')
+
+    context = {
+        'assignment': associate_request,
+        'associate': associate_request.ambassador,
+    }
+    return render(request, 'dashboards/user_assigned_associate.html', context)
+
+
 # CLIENT Profile
 @login_required
 @role_required([UserRole.USER])
@@ -1565,51 +2086,65 @@ def user_profile(request):
 
 
 @login_required
-def client_confirm_verification(request):
-    """Allows the client to sign off on the documents compiled for their file."""
+@role_required([UserRole.USER])
+def user_toggle_assignment_completion(request, assignment_id):
+    """Allows client to mark the current associate assignment as complete."""
     if request.method == 'POST':
-        # Locate the active assignment for this specific logged-in client
-        assignment = get_object_or_404(
-            AmbassadorAssignment, 
-            client=request.user, 
-            status='ASSIGNED'
-        )
+        assignment = get_object_or_404(AmbassadorAssignment, id=assignment_id, client=request.user)
         
-        # Operational Check: Ensure all required documents actually exist before letting them confirm
-        client_docs = ClientDocument.objects.filter(client=request.user)
-        uploaded_types = list(client_docs.values_list('document_type', flat=True))
-        required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
-        
-        all_uploaded = all(t in uploaded_types for t in required_types)
-        
-        if not all_uploaded:
-            messages.error(request, "Cannot verify portfolio. Mandatory documents are still missing from your profile.")
-            return redirect('dashboard:user-dashboard')
-            
-        # Flip the client confirmation switch
-        assignment.client_marked_complete = True
-        assignment.save()
-        
-        # Operational Trigger: If BOTH have signed off, shift the status to complete or notify systems
-        if assignment.ambassador_marked_complete:
-            # Optional: You can change the status here or leave it as ASSIGNED while both are True,
-            # depending on how your consultant query reads 'readiness'.
-            messages.success(request, "Dual Verification Achieved! Your profile has been forwarded to consultants to initiate project.")
+        # Toggle completion status
+        if not assignment.client_marked_complete:
+            assignment.client_marked_complete = True
+            assignment.client_completed_at = timezone.now()
+            messages.success(request, "You have marked this assignment as complete. Thank you!")
         else:
-            messages.success(request, "Your verification has been recorded. Awaiting final ambassador confirmation.")
-            
-        return redirect('dashboard:user-dashboard')
+            assignment.client_marked_complete = False
+            assignment.client_completed_at = None
+            messages.info(request, "Completion status reopened.")
 
-    return redirect('dashboard:user-dashboard')
+        assignment.save()
+
+        assignment.check_and_finalize_payout()
+
+    return redirect('dashboard:assigned-associate-detail')
 
 
 @login_required
+@role_required([UserRole.USER])
+def user_request_change_associate(request, assignment_id):
+    """Allows client to cancel current associate assignment with a reason and flag for admin reassignment."""
+    if request.method == 'POST':
+        assignment = get_object_or_404(AmbassadorAssignment, id=assignment_id, client=request.user)
+        
+        # Prevent cancelling if already marked complete by client
+        if assignment.client_marked_complete:
+            messages.error(request, "Completed assignments cannot be re-assigned.")
+            return redirect('dashboard:my-associate')
+
+        reason = request.POST.get('cancellation_reason', '').strip()
+        if not reason:
+            messages.error(request, "Please provide a reason for requesting a change.")
+            return redirect('dashboard:assigned-associate-detail')
+
+        # Update assignment state
+        assignment.status = AmbassadorAssignment.TaskStatus.CANCELLED
+        assignment.cancellation_reason = reason
+        assignment.ambassador = None
+        assignment.save()
+
+        messages.success(request, "Your request has been submitted to the admin team for reassignment.")
+
+    return redirect('dashboard:assigned-associate-detail')
+
+
+@login_required
+@role_required([UserRole.USER])
 def business_profile_view(request):
     """View to display and edit client business profile metrics."""
     user = request.user
 
     if request.method == 'POST':
-        form = BusinessProfileForm(request.POST, instance=user)
+        form = BusinessProfileForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             messages.success(request, "Your business profile has been updated successfully.")

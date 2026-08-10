@@ -1,0 +1,277 @@
+{% extends "dashboards/base_consultant.html" %}
+
+{% block title %}
+Consultant Weekly Availability
+{% endblock %}
+
+{% block content %}
+<div 
+  x-data="{ 
+    editModalOpen: false, 
+    deleteModalOpen: false,
+    editActionUrl: '',
+    deleteActionUrl: '',
+    editDay: '',
+    editStartTime: '',
+    editEndTime: '',
+    
+    openEditModal(id, day, start, end) {
+    const urlPattern = '{% url 'dashboard:edit-consultant-availability' 0 %}';
+      this.editActionUrl = urlPattern.replace('0', id);
+      this.editDay = day;
+      this.editStartTime = start;
+      this.editEndTime = end;
+      this.editModalOpen = true;
+    },
+    
+    openDeleteModal(id) {
+    const urlPattern = '{% url 'dashboard:delete-consultant-availability' 0 %}';
+      this.deleteActionUrl = urlPattern.replace('0', id);
+      this.deleteModalOpen = true;
+    }
+  }"
+  class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8"
+>
+
+  <!-- Header & Primary Action -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200/80 pb-6">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900 tracking-tight">Weekly Availability</h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Set days of the week and time slots where you are open for assignments.
+      </p>
+    </div>
+  </div>
+
+  <!-- Weekly Matrix Display (7-Day Column Grid) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+    {% for day, schedules in grouped.items %}
+      <div class="bg-white rounded-2xl border {% if schedules %}border-indigo-200/80 shadow-sm{% else %}border-slate-200/60 opacity-75{% endif %} flex flex-col justify-between overflow-hidden transition-all duration-200 hover:shadow-md">
+        
+        <!-- Day Header -->
+        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between {% if schedules %}bg-indigo-50/50{% else %}bg-slate-50/50{% endif %}">
+          <span class="text-xs font-bold uppercase tracking-wider {% if schedules %}text-indigo-900{% else %}text-slate-500{% endif %}">
+            {{ day }}
+          </span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full {% if schedules %}bg-indigo-100 text-indigo-700{% else %}bg-slate-200/60 text-slate-500{% endif %}">
+            {{ schedules|length }}
+          </span>
+        </div>
+
+        <!-- Schedule Slots List -->
+        <div class="p-3 space-y-2 flex-1 min-h-[120px]">
+          {% if schedules %}
+            {% for item in schedules %}
+              <div class="group relative bg-slate-50 hover:bg-indigo-50/70 border border-slate-200/70 hover:border-indigo-200 p-2.5 rounded-xl transition-all">
+                <div class="text-xs font-semibold text-slate-800 flex items-center justify-between">
+                  <span>{{ item.start_time|time:"g:i A" }}</span>
+                  <span class="text-[10px] text-slate-400 font-normal">to</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-800">
+                  {{ item.end_time|time:"g:i A" }}
+                </div>
+
+                <!-- Hover Actions -->
+                <div class="mt-2 pt-2 border-t border-slate-200/50 flex items-center justify-end gap-2 opacity-90 group-hover:opacity-100 transition">
+                  <button 
+                    type="button" 
+                    @click="openEditModal('{{ item.id }}', '{{ item.weekday }}', '{{ item.start_time|time:'H:i' }}', '{{ item.end_time|time:'H:i' }}')"
+                    class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition"
+                  >
+                    Edit
+                  </button>
+                  <span class="text-slate-300 text-[10px]">•</span>
+                  <button 
+                    type="button" 
+                    @click="openDeleteModal('{{ item.id }}')"
+                    class="text-[11px] font-semibold text-rose-600 hover:text-rose-800 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="h-full flex items-center justify-center text-center py-6">
+              <span class="text-[11px] font-medium text-slate-400 italic">Unavailable</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Add Availability Form Card -->
+  <div id="add-availability-form" class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+    <div class="border-b border-slate-100 pb-3">
+      <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Add Availability Window</h2>
+      <p class="text-xs text-slate-500 mt-0.5">Select a day and time frame to open booking availability.</p>
+    </div>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Day of Week</label>
+          {{ form.weekday }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Start Time</label>
+          {{ form.start_time }}
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">End Time</label>
+          {{ form.end_time }}
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button 
+          type="submit" 
+          class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/20"
+        >
+          Save Time Slot
+        </button>
+      </div>
+    </form>
+  </div>
+
+
+  <!-- Alpine.js EDIT Modal -->
+  <div 
+    x-show="editModalOpen" 
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto"
+    aria-labelledby="modal-title" role="dialog" aria-modal="true"
+  >
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div 
+        x-show="editModalOpen" 
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        @click="editModalOpen = false"
+      ></div>
+
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <div 
+        x-show="editModalOpen" 
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6 border border-slate-100"
+      >
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-sm font-bold text-slate-900">Edit Time Slot</h3>
+          <button @click="editModalOpen = false" class="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+        </div>
+
+        <form :action="editActionUrl" method="post" class="mt-4 space-y-4">
+          {% csrf_token %}
+          <input type="hidden" name="weekday" :value="editDay">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Start Time</label>
+              <input type="time" name="start_time" x-model="editStartTime" class="w-full text-xs rounded-xl border-slate-200 p-2.5 focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">End Time</label>
+              <input type="time" name="end_time" x-model="editEndTime" class="w-full text-xs rounded-xl border-slate-200 p-2.5 focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button 
+              type="button" 
+              @click="editModalOpen = false" 
+              class="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-5 py-2 rounded-xl transition shadow-lg shadow-indigo-600/20"
+            >
+              Update Slot
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Alpine.js DELETE Modal -->
+  <div 
+    x-show="deleteModalOpen" 
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto"
+    aria-labelledby="modal-title" role="dialog" aria-modal="true"
+  >
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <div 
+        x-show="deleteModalOpen" 
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        @click="deleteModalOpen = false"
+      ></div>
+
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <div 
+        x-show="deleteModalOpen" 
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full p-6 border border-slate-100"
+      >
+        <div class="flex items-center gap-3 text-rose-600 mb-2">
+          <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Remove Availability Slot</h3>
+        </div>
+
+        <p class="text-xs text-slate-500 mb-6">
+          Are you sure you want to delete this availability window? Clients will no longer be able to schedule assignments during this time.
+        </p>
+
+        <form :action="deleteActionUrl" method="post" class="flex items-center justify-end gap-3">
+          {% csrf_token %}
+          <button 
+            type="button" 
+            @click="deleteModalOpen = false" 
+            class="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-50 transition"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-5 py-2 rounded-xl transition shadow-lg shadow-rose-600/20"
+          >
+            Confirm Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

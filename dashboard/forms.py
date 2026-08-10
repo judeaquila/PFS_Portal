@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import AmbassadorProfile, ConsultantProfile
+from .models import AmbassadorProfile, ConsultantProfile, Availability
+from django.forms import ModelForm, modelformset_factory
+
 
 User = get_user_model()
 
@@ -85,11 +87,15 @@ class BusinessProfileForm(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ['business_name', 'sector', 'region', 'whatsapp_number']
+        fields = ['business_name', 'company_logo', 'sector', 'region', 'whatsapp_number']
         widgets = {
             'business_name': forms.TextInput(attrs={
                 'class': 'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition',
                 'placeholder': 'e.g., Pneuma Food Scientifics'
+            }),
+            'company_logo': forms.FileInput(attrs={
+                'class': 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer',
+                'accept': 'image/*'
             }),
             'sector': forms.Select(attrs={
                 'class': 'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition bg-white'
@@ -102,3 +108,47 @@ class BusinessProfileForm(forms.ModelForm):
                 'placeholder': 'e.g., 0501234567'
             }),
         }
+
+
+# Availability Form
+class AvailabilityForm(forms.ModelForm):
+    class Meta:
+        model = Availability
+        fields = (
+            "weekday",
+            "start_time",
+            "end_time",
+        )
+
+        widgets = {
+            "weekday": forms.Select(
+                attrs={
+                    "class": "w-full rounded-lg border-slate-300"
+                }
+            ),
+            "start_time": forms.TimeInput(
+                attrs={
+                    "type": "time",
+                    "class": "w-full rounded-lg border-slate-300"
+                }
+            ),
+            "end_time": forms.TimeInput(
+                attrs={
+                    "type": "time",
+                    "class": "w-full rounded-lg border-slate-300"
+                }
+            ),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        start = cleaned.get("start_time")
+        end = cleaned.get("end_time")
+
+        if start and end and end <= start:
+            raise forms.ValidationError(
+                "End time must be later than the start time."
+            )
+
+        return cleaned

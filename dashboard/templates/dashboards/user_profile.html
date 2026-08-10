@@ -10,15 +10,6 @@
         <p class="text-sm text-slate-500 mt-1">Manage your personal contact details and review your verified corporate information.</p>
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 text-sm rounded-lg font-medium shadow-sm flex items-center gap-2">
-                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-
     <form method="POST" action="{% url 'dashboard:user-profile' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {% csrf_token %}
         
