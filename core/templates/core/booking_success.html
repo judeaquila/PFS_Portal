@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+PFS | Booking Confirmed
+{% endblock %}
+
+{% block content %}
+<!-- 5-Second HTML Meta Refresh Redirect -->
+<meta http-equiv="refresh" content="5;url={% url 'accounts:register' %}">
+
+<section class="min-h-[75vh] flex items-center justify-center bg-slate-50 py-16 px-6">
+    <div class="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-xl">
+        
+        <!-- Animated Success Icon -->
+        <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+
+        <span class="text-xs font-bold uppercase tracking-widest text-pink-600 bg-pink-50 px-3 py-1 rounded-full">
+            Payment Verified
+        </span>
+
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-4 mb-2">
+            Booking Confirmed!
+        </h1>
+
+        <p class="text-slate-600 text-sm leading-relaxed mb-6">
+            Thank you! Your business assessment meeting has been initialized. Our compliance team will review your parameters and follow up shortly.
+        </p>
+
+        {% if payment %}
+        <div class="bg-slate-50 rounded-xl p-4 text-xs text-slate-500 mb-6 space-y-1 text-left border border-slate-100">
+            <p><strong class="text-slate-700">Reference:</strong> {{ payment.ref }}</p>
+            <p><strong class="text-slate-700">Company Name:</strong> {{ payment.business_name }}</p>
+            <p><strong class="text-slate-700">Amount Paid:</strong> GHS {{ payment.amount }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Automatic Redirect Counter UI -->
+        <div class="p-3 bg-pink-50/60 border border-pink-100 rounded-xl text-xs text-pink-800 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 animate-spin text-pink-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Redirecting back to packages in <strong id="countdown" class="font-bold">5</strong> seconds...</span>
+        </div>
+
+        <div class="mt-6">
+            <a href="{% url 'accounts:register' %}" class="inline-block text-xs font-semibold text-slate-500 hover:text-slate-900 underline">
+                Click here if you are not redirected automatically
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- JavaScript Fallback Redirect Countdown -->
+<script>
+    let seconds = 5;
+    const countdownEl = document.getElementById('countdown');
+    const redirectUrl = "{% url 'accounts:register' %}";
+
+    const interval = setInterval(() => {
+        seconds--;
+        if (countdownEl) {
+            countdownEl.textContent = seconds;
+        }
+        if (seconds <= 0) {
+            clearInterval(interval);
+            window.location.href = redirectUrl;
+        }
+    }, 1000);
+</script>
+{% endblock %}

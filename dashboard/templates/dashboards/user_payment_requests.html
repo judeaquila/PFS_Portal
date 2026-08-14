@@ -1,0 +1,268 @@
+{% extends "dashboards/base_user.html" %}
+
+{% block title %}My Invoices & Payment Requests{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    activeTab: 'all',
+    selectedInvoice: null,
+    modalOpen: false,
+    openInvoiceModal(req) {
+        this.selectedInvoice = req;
+        this.modalOpen = true;
+    },
+    modalPay() {
+        if (!this.selectedInvoice) return;
+        triggerPaystack(
+            this.selectedInvoice.ref, 
+            this.selectedInvoice.amount, 
+            '{{ request.user.email|escapejs }}', 
+            this.selectedInvoice.id
+        );
+    }
+}" class="max-w-7xl mx-auto space-y-8">
+
+    <!-- Header Banner -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-2">Invoices & Payment Requests</h1>
+            <p class="text-xs text-slate-500 mt-1">Review custom service bills issued by administration and process payments securely via Paystack.</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Due</span>
+                <span class="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+            </div>
+            <div class="text-2xl font-black text-slate-900">GHS {{ total_outstanding|floatformat:2 }}</div>
+            <p class="text-[11px] text-amber-700 font-medium">{{ pending_requests|length }} pending request(s) awaiting payment</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Settled</span>
+                <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </span>
+            </div>
+            <div class="text-2xl font-black text-slate-900">GHS {{ total_paid|floatformat:2 }}</div>
+            <p class="text-[11px] text-emerald-700 font-medium">{{ paid_requests|length }} settled invoice(s)</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Invoices</span>
+                <span class="p-2 rounded-xl bg-slate-100 text-slate-600 border border-slate-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </span>
+            </div>
+            <div class="text-2xl font-black text-slate-900">{{ payment_requests|length }}</div>
+            <p class="text-[11px] text-slate-500 font-medium">All historical payment requests</p>
+        </div>
+    </div>
+
+    <!-- Main Content Table Container -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 self-start flex-wrap">
+                <button @click="activeTab = 'all'" 
+                        :class="activeTab === 'all' ? 'bg-white text-slate-900 font-bold border-b-2 border-pink-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-4 py-2 rounded-lg text-xs transition">
+                    All ({{ payment_requests|length }})
+                </button>
+
+                <button @click="activeTab = 'pending'" 
+                        :class="activeTab === 'pending' ? 'bg-white text-slate-900 font-bold border-b-2 border-pink-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-4 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+                    Pending ({{ pending_requests|length }})
+                    {% if pending_requests %}
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    {% endif %}
+                </button>
+
+                <button @click="activeTab = 'paid'" 
+                        :class="activeTab === 'paid' ? 'bg-white text-slate-900 font-bold border-b-2 border-pink-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-4 py-2 rounded-lg text-xs transition">
+                    Paid ({{ paid_requests|length }})
+                </button>
+
+                <button @click="activeTab = 'cancelled'" 
+                        :class="activeTab === 'cancelled' ? 'bg-white text-slate-900 font-bold border-b-2 border-pink-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-4 py-2 rounded-lg text-xs transition">
+                    Cancelled ({{ cancelled_requests|length }})
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase font-bold text-slate-500 tracking-wider">
+                        <th class="py-4 px-6">Service / Charge</th>
+                        <th class="py-4 px-6">Reference</th>
+                        <th class="py-4 px-6">Issued Date</th>
+                        <th class="py-4 px-6">Amount</th>
+                        <th class="py-4 px-6">Status</th>
+                        <th class="py-4 px-6 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for req in payment_requests %}
+                    <!-- Robust lowercased Alpine x-show filter -->
+                    <tr x-show="activeTab === 'all' || activeTab === '{% if req.is_paid %}paid{% elif req.is_pending %}pending{% else %}cancelled{% endif %}'" 
+                        class="hover:bg-slate-50/80 transition">
+                        
+                        <td class="py-4 px-6">
+                            <span class="font-bold text-slate-900 block text-sm">{{ req.service_name }}</span>
+                            {% if req.note %}
+                                <span class="text-slate-500 text-[11px] truncate max-w-xs block mt-0.5">{{ req.note }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 font-mono text-slate-600">{{ req.reference }}</td>
+                        <td class="py-4 px-6 text-slate-600">{{ req.created_at|date:"M d, Y" }}</td>
+                        <td class="py-4 px-6 font-black text-slate-900 text-sm">GHS {{ req.amount|floatformat:2 }}</td>
+                        <td class="py-4 px-6">
+                            {% if req.is_paid %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Paid
+                                </span>
+                            {% elif req.is_pending %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right space-x-2">
+                            <button @click="openInvoiceModal(JSON.parse(document.getElementById('invoice-data-{{ req.id }}').textContent))" 
+                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-[11px] transition border border-slate-200">
+                                Details
+                            </button>
+
+                            {% if req.is_pending %}
+                                <button onclick="triggerPaystack('{{ req.reference|escapejs }}', '{{ req.amount }}', '{{ request.user.email|escapejs }}', '{{ req.id }}')"
+                                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-[11px] shadow-sm transition inline-flex items-center gap-1">
+                                    <span>Pay Now</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </button>
+                            {% endif %}
+
+                            <!-- Safely encode object data for JS consumption -->
+                            <script id="invoice-data-{{ req.id }}" type="application/json">
+                            {
+                                "id": "{{ req.id }}",
+                                "service": "{{ req.service_name|escapejs }}",
+                                "amount": "{{ req.amount }}",
+                                "ref": "{{ req.reference|escapejs }}",
+                                "note": "{{ req.note|default:''|escapejs }}",
+                                "date": "{{ req.created_at|date:'M d, Y' }}",
+                                "status": "{% if req.is_paid %}paid{% elif req.is_pending %}pending{% else %}cancelled{% endif %}"
+                            }
+                            </script>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            No payment requests found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Invoice Details Modal -->
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+        <div @click.away="modalOpen = false" class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full overflow-hidden shadow-xl space-y-6">
+            <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-pink-700">Invoice Details</span>
+                    <h3 class="text-base font-bold text-slate-900 mt-0.5" x-text="selectedInvoice?.service"></h3>
+                </div>
+                <button @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Invoice Ref:</span>
+                        <span class="font-mono text-slate-800" x-text="selectedInvoice?.ref"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Issued On:</span>
+                        <span class="text-slate-800" x-text="selectedInvoice?.date"></span>
+                    </div>
+                    <div class="flex justify-between border-t border-slate-200 pt-2">
+                        <span class="text-slate-500">Payment Status:</span>
+                        <span class="font-bold uppercase tracking-wider" 
+                              :class="{
+                                  'text-emerald-600': selectedInvoice?.status === 'paid',
+                                  'text-amber-600': selectedInvoice?.status === 'pending',
+                                  'text-slate-500': selectedInvoice?.status === 'cancelled'
+                              }" 
+                              x-text="selectedInvoice?.status"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-slate-800 mb-1">Administration Note / Breakdown</h4>
+                    <p class="text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed" 
+                       x-text="selectedInvoice?.note || 'No specific note provided for this invoice.'"></p>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
+                    <span class="text-slate-600 font-bold">Total Payable:</span>
+                    <span class="text-xl font-black text-slate-900">
+                        GHS <span x-text="selectedInvoice ? parseFloat(selectedInvoice.amount).toFixed(2) : '0.00'"></span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+                <button @click="modalOpen = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold text-xs border border-slate-300">
+                    Close
+                </button>
+                <button x-show="selectedInvoice && selectedInvoice.status === 'pending'"
+                        @click="modalPay()" 
+                        class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-sm transition">
+                    Pay Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+  function triggerPaystack(reference, amount, email, requestId) {
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert("Invalid payment amount.");
+      return;
+    }
+
+    let handler = PaystackPop.setup({
+      key: '{{ paystack_public_key|escapejs }}',
+      email: email,
+      amount: Math.round(parsedAmount * 100),
+      currency: 'GHS',
+      ref: reference,
+      callback: function(response) {
+        window.location.href = "{% url 'dashboard:verify_custom_payment' %}?reference=" + encodeURIComponent(response.reference) + "&request_id=" + encodeURIComponent(requestId);
+      }
+    });
+    handler.openIframe();
+  }
+</script>
+{% endblock %}

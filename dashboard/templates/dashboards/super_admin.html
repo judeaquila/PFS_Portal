@@ -172,7 +172,7 @@
                                 </div>
                             </div>
                         {% empty %}
-                            <p class="text-xs text-zinc-500 italic py-4 text-center">No Consultant has set their weekly availability schedule.</p>
+                            <p class="text-xs text-zinc-500 italic py-4 text-center">No consultant has set their weekly availability schedule.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -211,7 +211,7 @@
                                 </div>
                             </div>
                         {% empty %}
-                            <p class="text-xs text-zinc-500 italic py-4 text-center">No Associate has set their weekly availability schedule.</p>
+                            <p class="text-xs text-zinc-500 italic py-4 text-center">No associate has set their weekly availability schedule.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -299,7 +299,7 @@
                     </div>
                     {% empty %}
                     <div class="py-12 text-center text-zinc-500 text-xs">
-                        No pending field associate requests needing dispatch.
+                        No pending associate requests from clients.
                     </div>
                     {% endfor %}
                 </div>
@@ -309,21 +309,24 @@
         <!-- CLIENT CONSULTANT ALLOCATION PANEL -->
         <div class="lg:col-span-7 bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col justify-between">
             <div>
+                <!-- Panel Header -->
                 <div class="flex items-center justify-between mb-3">
                     <div>
                         <h2 class="text-xs font-bold text-zinc-200 uppercase tracking-wider">Client Consultant Allocation</h2>
-                        <p class="text-[10px] text-zinc-400">Assign or re-assign consultants directly to client operational files.</p>
+                        <p class="text-[10px] text-zinc-400">Assign or re-assign consultants to active or document-complete client files.</p>
                     </div>
+                    <!-- Dynamic Count Badge matching context list length -->
                     <span class="px-2 py-0.5 text-[10px] rounded bg-indigo-500/10 text-indigo-400 font-semibold border border-indigo-500/20">
                         {{ client_projects_list|length }} Client Files
                     </span>
                 </div>
 
+                <!-- Scrollable Project List -->
                 <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                     {% for project in client_projects_list %}
-                    <div class="p-3 bg-zinc-950 rounded-lg border border-zinc-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="p-3 bg-zinc-950 rounded-lg border {% if not project.assigned_consultant %}border-amber-500/30 bg-amber-500/[0.02]{% else %}border-zinc-800/80{% endif %} flex flex-col md:flex-row md:items-center justify-between gap-3">
                         
-                        <!-- Client & Status Details -->
+                        <!-- Client & Assignment Details -->
                         <div class="space-y-1 min-w-[200px]">
                             <div class="flex items-center gap-2">
                                 <p class="text-xs font-bold text-white">
@@ -334,8 +337,8 @@
                                     Assigned
                                 </span>
                                 {% else %}
-                                <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                    Unassigned
+                                <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                                    Ready for Assignment
                                 </span>
                                 {% endif %}
                             </div>
@@ -347,7 +350,7 @@
                                 {% if project.assigned_consultant %}
                                 <span class="text-indigo-400 font-semibold">{{ project.assigned_consultant.get_full_name }}</span>
                                 {% else %}
-                                <span class="text-amber-400 italic">None</span>
+                                <span class="text-amber-400 italic font-medium">None (Pending)</span>
                                 {% endif %}
                             </p>
                         </div>
@@ -375,7 +378,7 @@
                     </div>
                     {% empty %}
                     <div class="py-12 text-center text-zinc-500 text-xs">
-                        No active client project files registered.
+                        No active or upload-complete client projects awaiting allocation.
                     </div>
                     {% endfor %}
                 </div>
@@ -441,7 +444,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="py-6 text-center text-zinc-500">No active project files found.</td>
+                        <td colspan="7" class="py-6 text-center text-zinc-500">No projects currently ongoing.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -475,7 +478,7 @@
                     </span>
                 </div>
                 {% empty %}
-                <p class="text-xs text-zinc-500 py-4 text-center">No associates currently registered.</p>
+                <p class="text-xs text-zinc-500 py-4 text-center">No associates currently active.</p>
                 {% endfor %}
             </div>
         </div>
@@ -503,7 +506,7 @@
                     </span>
                 </div>
                 {% empty %}
-                <p class="text-xs text-zinc-500 py-4 text-center">No consultants active in system.</p>
+                <p class="text-xs text-zinc-500 py-4 text-center">No consultants currently active.</p>
                 {% endfor %}
             </div>
         </div>
@@ -527,7 +530,7 @@
                         </span>
                     </div>
                     {% empty %}
-                    <p class="text-xs text-zinc-500 py-6 text-center">No pending agent verification requests.</p>
+                    <p class="text-xs text-zinc-500 py-6 text-center">No pending associate verification requests.</p>
                     {% endfor %}
                 </div>
             </div>

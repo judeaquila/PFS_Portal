@@ -16,6 +16,8 @@ urlpatterns = [
     path('super-admin/users/<int:pk>/edit/', views.admin_user_update, name='admin-user-update'),
     path('super-admin/users/<int:pk>/toggle-active/', views.admin_user_toggle_active, name='admin-user-toggle-active'),
     path('super-admin/users/<int:pk>/delete/', views.admin_user_delete, name='admin-user-delete'),
+    path('super-admin/users/payments_history/', views.admin_user_payment_history, name='admin-user-payments'),
+    path('super-admin/user/payment_requests/', views.admin_create_payment_request, name='admin-create-payment-request'),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),
 
@@ -27,7 +29,6 @@ urlpatterns = [
     path("consultant/clients/start_project/<int:client_id>/", views.initiate_client_project, name='initiate-project'),
     path("consultant/clients/project_board/<int:project_id>/", views.project_service_board, name="project-board"),
     path("consultant/clients/global_board/", views.global_operations_boards, name="global-boards"),
-   # path("consultant/clients/project_board/add/<int:project_id>/", views.add_custom_project_subitem, name="add-custom-subitem"),
     path("consultant/clients/",views.consultant_companies_list, name='companies-list'),
     path("consultant/clients/<int:client_id>/overview/",views.consultant_company_overview, name='company-overview'),
     path("consultant/profile", views.consultant_profile, name="consultant-profile"),
@@ -37,7 +38,6 @@ urlpatterns = [
 
     path("associate/", views.ambassador_dashboard, name="ambassador-dashboard"),
     path('associate/board/', views.ambassador_dashboard, name='ambassador-boards'),
-   # path('associate/claim/', views.ambassador_claim_client, name='ambassador-claim-client'),
     path('associate/clients/', views.ambassador_clients, name='ambassador-clients'),
     path('associate/clients/workbench/<int:client_id>/', views.ambassador_client_workbench, name='ambassador-client-workbench'),
     path('associate/toggle/<int:assignment_id>/', views.ambassador_toggle_complete, name='ambassador-toggle-complete'),
@@ -56,4 +56,7 @@ urlpatterns = [
     path('user/my-associate/', views.assigned_associate_detail, name='assigned-associate-detail'),
     path('user/associate/assignment/<int:assignment_id>/complete/', views.user_toggle_assignment_completion, name='user-toggle-assignment-complete'),
     path('user/associate/assignment/<int:assignment_id>/cancel/', views.user_request_change_associate, name='user-request-change-associate'),
+    path('user/payments/', views.user_payment_history, name='user-payments'),
+    path('user/payments/payment_requests/', views.user_payment_requests, name='user-payment-requests'),
+    path('user/payments/verify_payments/', views.verify_custom_payment, name='verify_custom_payment'),
 ]

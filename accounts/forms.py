@@ -130,14 +130,15 @@ class RegistrationForm(BaseUserRegistrationForm):
     assigned_role = UserRole.USER
 
     class Meta(BaseUserRegistrationForm.Meta):
-        fields = ['first_name', 'last_name', 'business_name', 'email', 'whatsapp_number', 'sector', 'region', 'password']
+        fields = ['first_name', 'last_name', 'business_name', 'email', 'alternative_number', 'location', 'whatsapp_number', 'sector', 'region', 'password']
         widgets = {
             'first_name': forms.TextInput(attrs={'placeholder': 'First Name'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Last Name'}),
             'business_name': forms.TextInput(attrs={'placeholder': 'e.g. Pneuma Food Scientifics'}),
             'email': forms.EmailInput(attrs={'placeholder': 'you@company.com'}),
             'whatsapp_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
-            'alternative_number': forms.TextInput(attrs={'placeholder': 'For calls: e.g. 0501234567'}),
+            'alternative_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
+            'location': forms.TextInput(attrs={'placeholder': 'Location'}),
             'region': forms.Select(),
             'sector': forms.Select(),
         }
@@ -148,13 +149,14 @@ class AmbassadorRegistrationForm(BaseUserRegistrationForm):
     assigned_role = UserRole.AMBASSADOR
 
     class Meta(BaseUserRegistrationForm.Meta):
-        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'region', 'password']
+        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'region', 'location', 'password']
         widgets = {
             'first_name': forms.TextInput(attrs={'placeholder': 'John'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Doe'}),
             'email': forms.EmailInput(attrs={'placeholder': 'you@company.com'}),
             'whatsapp_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
             'alternative_number': forms.TextInput(attrs={'placeholder': 'Optional alternative line'}),
+            'location': forms.TextInput(attrs={'placeholder': 'Location'}),
             'region': forms.Select(),
         }
 
@@ -165,12 +167,13 @@ class ConsultantRegistrationForm(BaseUserRegistrationForm):
     theme_focus_class = "focus:ring-emerald-600 focus:border-emerald-600"
 
     class Meta(BaseUserRegistrationForm.Meta):
-        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'region', 'password']
+        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'region', 'location', 'password']
         widgets = {
             'first_name': forms.TextInput(attrs={'placeholder': 'Jane'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Smith'}),
             'email': forms.EmailInput(attrs={'placeholder': 'expert@company.com'}),
             'whatsapp_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
             'alternative_number': forms.TextInput(attrs={'placeholder': 'Optional alternative line'}),
+            'location': forms.TextInput(attrs={'placeholder': 'Location'}),
             'region': forms.Select(),
         }

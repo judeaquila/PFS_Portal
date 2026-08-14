@@ -9,7 +9,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Welcome back, {{ request.user.first_name|default:request.user.email }}</h1>
-            <p class="text-sm text-slate-500 mt-0.5">Select a project workspace track below to manage sub-milestones, tasks and progress.</p>
+            <p class="text-sm text-slate-500 mt-0.5">Select a project workspace below to track your milestones, tasks and progress.</p>
         </div>
     </div>
 
@@ -27,7 +27,7 @@
                             <span class="inline-block text-[10px] bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded uppercase tracking-wider border border-slate-200/60">
                                 {{ proj.get_group_display }} Track
                             </span>
-                            <span class="text-[11px] text-slate-400 font-mono">#PFS-{{ proj.id }}</span>
+                            {% comment %} <span class="text-[11px] text-slate-400 font-mono">#PFS-{{ proj.id }}</span> {% endcomment %}
                         </div>
                         <h3 class="font-bold text-base text-slate-800 group-hover:text-pink-700 transition line-clamp-2">
                             {{ proj.get_client_package_display }}

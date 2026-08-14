@@ -33,7 +33,7 @@
             {% with request.resolver_match.url_name as url_name %}
             
             <a href="{% url 'dashboard:super-admin-dashboard' %}" 
-            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'superadmin-dashboard' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'super-admin-dashboard' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path>
                 </svg>
@@ -56,12 +56,31 @@
                 Manage Consultants
             </a>
 
+            <!-- User Management -->
             <a href="{% url 'dashboard:admin-user-list' %}" 
-            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if 'user' in url_name %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'admin-user-list' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0-6a3 3 0 110-6m3.343 1.1a3.343 3.343 0 110 6.686M17.657 15a8.967 8.967 0 013.343 6v1h-3.343v-1a6.882 6.882 0 00-3.343-6z"></path>
                 </svg>
                 User Management
+            </a>
+
+            <!-- Payments History -->
+            <a href="{% url 'dashboard:admin-user-payments' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'admin-user-payments' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                Payment History
+            </a>
+
+            <!-- Custom Payments Link -->
+            <a href="{% url 'dashboard:admin-create-payment-request' %}" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if url_name == 'admin-create-payment-request' %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Custom Payments
             </a>
             
             {% endwith %}

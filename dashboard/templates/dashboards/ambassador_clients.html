@@ -29,8 +29,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50/70 border-b border-slate-200 text-slate-400 font-bold text-xs uppercase tracking-wider">
-                            <th class="px-6 py-4">Business Name</th>
-                            {% comment %} <th class="px-6 py-4">Primary Contact</th> {% endcomment %}
+                            <th class="px-6 py-4">Business Info</th>
                             <th class="px-6 py-4">WhatsApp / Phone</th>
                             <th class="px-6 py-4">Joined Date</th>
                             <th class="px-6 py-4 text-right">Actions</th>
@@ -41,15 +40,12 @@
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-slate-900">
-                                        {{ client.business_name|default:"Unnamed Business" }}
+                                        {{ client.business_name|default:"Not Provided" }}
                                     </div>
                                     <div class="text-xs text-slate-400 font-normal">
-                                        {{ client.email }}
+                                        {{ client.get_full_name|default:client.first_name }}
                                     </div>
                                 </td>
-                                {% comment %} <td class="px-6 py-4 text-slate-600">
-                                    {{ client.first_name|default:"Not Provided" }}
-                                </td> {% endcomment %}
                                 <td class="px-6 py-4 text-slate-600 font-mono text-xs">
                                     <a href="https://wa.me/{{ client.whatsapp_number }}" target="_blank" class="font-bold text-emerald-600 hover:underline">
                                         {{ client.whatsapp_number }} ↗
@@ -60,7 +56,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <a href="{% url 'dashboard:ambassador-client-workbench' client.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 border border-pink-200 text-pink-700 rounded-lg text-xs font-bold hover:bg-pink-700 hover:text-white hover:border-pink-700 transition-all">
-                                        Open Case
+                                        View Details
                                     </a>
                                 </td>
                             </tr>

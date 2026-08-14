@@ -15,7 +15,7 @@
             <div class="flex flex-wrap items-center gap-3">
                 <div class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-left shadow-sm">
                     <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned Clients</span>
-                    <span class="text-lg font-extrabold text-slate-900">{{ active_assignments.count|default:0 }}</span>
+                    <span class="text-lg font-extrabold text-slate-900">{{ active_assignments|length|default:0 }}</span>
                 </div>
                 <div class="bg-emerald-50 border border-emerald-200/80 rounded-xl px-4 py-2 text-left shadow-sm">
                     <span class="block text-[10px] uppercase font-bold text-emerald-700 tracking-wider">Settled Earnings</span>
@@ -30,7 +30,7 @@
                 <button @click="currentFilter = 'all'" 
                         :class="currentFilter === 'all' ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
                         class="px-3 py-1.5 text-xs rounded-md transition-all">
-                    All Cases ({{ active_assignments|length }})
+                    All Clients ({{ active_assignments|length }})
                 </button>
                 <button @click="currentFilter = 'missing'" 
                         :class="currentFilter === 'missing' ? 'bg-white text-amber-800 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
@@ -71,7 +71,7 @@
 
                             <a href="{% url 'dashboard:ambassador-client-workbench' item.client.id %}" 
                                class="inline-flex items-center gap-1.5 text-xs font-bold text-pink-700 hover:text-pink-800 bg-pink-50 hover:bg-pink-100/80 px-3 py-2 rounded-lg transition border border-pink-100 shrink-0">
-                                Workbench ↗
+                                View Details ↗
                             </a>
                         </div>
 

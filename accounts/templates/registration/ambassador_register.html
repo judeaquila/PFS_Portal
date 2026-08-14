@@ -95,10 +95,17 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Region <span class="text-pink-600">*</span></label>
-                    {{ form.region }}
-                    <p class="text-xs text-red-500 mt-1">{{ form.region.errors.as_text }}</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Region <span class="text-pink-600">*</span></label>
+                        {{ form.region }}
+                        <p class="text-xs text-red-500 mt-1">{{ form.region.errors.as_text }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Location <span class="text-pink-600">*</span></label>
+                        {{ form.location }}
+                        <p class="text-xs text-red-500 mt-1">{{ form.location.errors.as_text }}</p>
+                    </div>
                 </div>
 
                 <div>

@@ -17,7 +17,7 @@
                 {{ client_user.business_name|default:"Unnamed Business" }}
             </h1>
             <p class="text-sm text-slate-500 mt-0.5">
-                Client: {{ client_user.get_full_name|default:client_user.email }} | Contact: {{ client_user.whatsapp_number|default:"N/A" }}
+                Representative: {{ client_user.get_full_name|default:client_user.email }} | Contact: {{ client_user.whatsapp_number|default:"N/A" }}
             </p>
         </div>
         <a href="{% url 'dashboard:ambassador-dashboard' %}" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg hover:bg-slate-50 shadow-sm transition self-start sm:self-auto">
@@ -140,11 +140,11 @@
                         <span class="font-bold text-slate-800">{{ client_user.business_name|default:"Not Provided" }}</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-slate-400 uppercase font-medium">Business Email</span>
-                        <a href="mailto:{{ client_user.email }}" class="font-semibold text-pink-700 underline">{{ client_user.email }}</a>
+                        <span class="block text-[10px] text-slate-400 uppercase font-medium">Business Representative</span>
+                        <span class="font-bold text-slate-800">{{ client_user.get_full_name|default:client_user.first_name }}</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] text-slate-400 uppercase font-medium">WhatsApp Account</span>
+                        <span class="block text-[10px] text-slate-400 uppercase font-medium">WhatsApp Number</span>
                         {% if client_user.whatsapp_number %}
                             <a href="https://wa.me/{{ client_user.whatsapp_number }}" target="_blank" class="font-bold text-emerald-600 hover:underline">
                                 {{ client_user.whatsapp_number }} ↗

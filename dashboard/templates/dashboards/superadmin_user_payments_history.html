@@ -1,0 +1,302 @@
+{% extends "dashboards/base_superadmin.html" %}
+
+{% block title %}Payment History | Superadmin Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8" x-data="{ selectedPayment: null, modalOpen: false }">
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+            </div>
+            <h1 class="text-2xl font-bold text-white tracking-tight mt-1">Transactions Log</h1>
+            <p class="text-sm text-slate-400">Monitor all client payments, verify Paystack references, and inspect receipts across the platform.</p>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Deck -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Revenue -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 shadow-md flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Revenue</p>
+                <p class="text-xl font-black text-white mt-1">GHS {{ total_revenue|floatformat:2 }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-950/50 text-emerald-400 flex items-center justify-center border border-emerald-900/50 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+
+        <!-- Verified Successful -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 shadow-md flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Verified Payments</p>
+                <p class="text-xl font-black text-white mt-1">{{ successful_count }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-950/50 text-emerald-400 flex items-center justify-center border border-emerald-900/50 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+
+        <!-- Pending Verification -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 shadow-md flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pending / Unverified</p>
+                <p class="text-xl font-black text-white mt-1">{{ pending_count }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-950/50 text-amber-400 flex items-center justify-center border border-amber-900/50 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+
+        <!-- Total Records -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800/80 shadow-md flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Records</p>
+                <p class="text-xl font-black text-white mt-1">{{ total_transactions_count }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-slate-900 text-slate-300 flex items-center justify-center border border-slate-800 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search Bar -->
+    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800/80 shadow-md">
+        <form method="GET" action="." class="flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <div class="relative w-full md:w-96">
+                <input 
+                    type="text" 
+                    name="q" 
+                    value="{{ query }}"
+                    placeholder="Search by ref, email, or company..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
+                >
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
+                <a href="?q={{ query }}" 
+                   class="px-3 py-2 rounded-xl text-xs font-semibold transition shrink-0 {% if not status_filter %}bg-pink-600 text-white{% else %}bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800{% endif %}">
+                    All
+                </a>
+                <a href="?q={{ query }}&status=success" 
+                   class="px-3 py-2 rounded-xl text-xs font-semibold transition shrink-0 {% if status_filter == 'success' %}bg-emerald-600 text-white{% else %}bg-slate-900 text-emerald-400 hover:bg-slate-800 border border-slate-800{% endif %}">
+                    Verified Successful
+                </a>
+                <a href="?q={{ query }}&status=pending" 
+                   class="px-3 py-2 rounded-xl text-xs font-semibold transition shrink-0 {% if status_filter == 'pending' %}bg-amber-600 text-white{% else %}bg-slate-900 text-amber-400 hover:bg-slate-800 border border-slate-800{% endif %}">
+                    Pending Verification
+                </a>
+
+                {% if query or status_filter %}
+                    <a href="." class="text-xs text-slate-500 hover:text-slate-300 underline ml-2 shrink-0">Clear Filters</a>
+                {% endif %}
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-md overflow-hidden">
+        <div class="p-5 border-b border-slate-800/80 flex items-center justify-between">
+            <h2 class="text-sm font-bold text-white">All Platform Transactions</h2>
+            <span class="text-xs text-slate-500 font-medium">Showing {{ payments|length }} result(s)</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-900/80 border-b border-slate-800/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider">
+                        <th class="py-3.5 px-6">Client</th>
+                        <th class="py-3.5 px-6">Business Name</th>
+                        <th class="py-3.5 px-6">Reference</th>
+                        <th class="py-3.5 px-6">Package</th>
+                        <th class="py-3.5 px-6">Amount</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 text-xs">
+                    {% for payment in payments %}
+                    <tr class="hover:bg-slate-900/50 transition">
+                        
+                        <!-- Client / User Column -->
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-900 text-pink-400 font-bold flex items-center justify-center border border-slate-800 shrink-0">
+                                    {{ payment.email|first|upper }}
+                                </div>
+                                <div class="truncate max-w-[200px]">
+                                    <p class="font-bold text-slate-100 truncate">
+                                        {% if payment.user %}
+                                            {{ payment.user.get_full_name|default:payment.user.email }}
+                                        {% else %}
+                                            {{ payment.business_name|default:"Unassigned Guest" }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-[11px] text-slate-500 truncate">{{ payment.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Business Name -->
+                        <td class="py-4 px-6 font-mono font-semibold text-slate-300">
+                            {{ payment.business_name }}
+                        </td>
+
+                        <!-- Reference -->
+                        <td class="py-4 px-6 font-mono font-semibold text-slate-300">
+                            {{ payment.ref }}
+                        </td>
+
+                        <!-- Package -->
+                        <td class="py-4 px-6 font-semibold text-slate-200">
+                            {% if payment.package %}
+                                {{ payment.package.get_package_type_display }}
+                            {% else %}
+                                {{ payment.package_type|default:"Assessment Meeting" }}
+                            {% endif %}
+                        </td>
+
+                        <!-- Amount -->
+                        <td class="py-4 px-6 font-bold text-white">
+                            GHS {{ payment.amount|floatformat:2 }}
+                        </td>
+
+                        <!-- Status Badge -->
+                        <td class="py-4 px-6">
+                            {% if payment.verified %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    Successful
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-400 border border-amber-800/60">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                    Pending
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Date -->
+                        <td class="py-4 px-6 text-slate-400 whitespace-nowrap">
+                            {{ payment.created_at|date:"M d, Y · H:i" }}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <button 
+                                type="button"
+                                @click="selectedPayment = {
+                                    ref: '{{ payment.ref }}',
+                                    package: '{% if payment.package %}{{ payment.package.get_package_type_display|escapejs }}{% else %}{{ payment.package_type|escapejs }}{% endif %}',
+                                    company: '{{ payment.business_name|escapejs }}',
+                                    email: '{{ payment.email|escapejs }}',
+                                    amount: '{{ payment.amount|floatformat:2 }}',
+                                    verified: {{ payment.verified|yesno:'true,false' }},
+                                    date: '{{ payment.created_at|date:"F d, Y · h:i A" }}',
+                                    user_linked: {{ payment.user|yesno:'true,false' }}
+                                }; modalOpen = true"
+                                class="text-pink-400 hover:text-pink-300 font-semibold text-xs hover:underline focus:outline-none">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-500">
+                            <svg class="w-10 h-10 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="font-medium text-slate-400">No matching transaction records found.</p>
+                            <p class="text-xs text-slate-500 mt-1">Try adjusting your search criteria or status filter.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Admin Payment Detail Modal -->
+    <div x-show="modalOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 max-w-md w-full overflow-hidden" 
+             @click.away="modalOpen = false">
+            
+            <div class="bg-slate-950 p-6 border-b border-slate-800 flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-pink-500 tracking-wider">Transaction Record</span>
+                    <h3 class="text-base font-bold text-white" x-text="selectedPayment?.package"></h3>
+                </div>
+                <button @click="modalOpen = false" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <div class="flex justify-between py-2 border-b border-slate-800/80">
+                    <span class="text-slate-400">Paystack Reference</span>
+                    <span class="font-mono font-bold text-slate-200" x-text="selectedPayment?.ref"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-800/80">
+                    <span class="text-slate-400">Client Email</span>
+                    <span class="text-slate-200 font-semibold" x-text="selectedPayment?.email"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-800/80">
+                    <span class="text-slate-400">Company Name</span>
+                    <span class="font-semibold text-slate-200" x-text="selectedPayment?.company"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-800/80">
+                    <span class="text-slate-400">User Account Linked?</span>
+                    <template x-if="selectedPayment?.user_linked">
+                        <span class="text-emerald-400 font-bold">Yes</span>
+                    </template>
+                    <template x-if="!selectedPayment?.user_linked">
+                        <span class="text-amber-400 font-bold">No (Guest Transaction)</span>
+                    </template>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-800/80">
+                    <span class="text-slate-400">Transaction Date</span>
+                    <span class="text-slate-200" x-text="selectedPayment?.date"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-800/80 items-center">
+                    <span class="text-slate-400">Verification Status</span>
+                    <template x-if="selectedPayment?.verified">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">VERIFIED SUCCESSFUL</span>
+                    </template>
+                    <template x-if="!selectedPayment?.verified">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800">PENDING VERIFICATION</span>
+                    </template>
+                </div>
+                <div class="flex justify-between pt-2 text-sm font-bold">
+                    <span class="text-white">Amount Charged</span>
+                    <span class="text-pink-400">GHS <span x-text="selectedPayment?.amount"></span></span>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 px-6 py-4 border-t border-slate-800 text-right">
+                <button @click="modalOpen = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition">
+                    Close Window
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

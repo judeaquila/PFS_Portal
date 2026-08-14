@@ -9,12 +9,16 @@ from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificatio
 from django.contrib import messages
 from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile, Availability, ConsultantAssignment
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Count, Max, F
+from django.db.models import Q, Count, Max, F, Sum
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from .signals import get_activities_for_package
 from collections import defaultdict
+from payments.models import Payment, PaymentRequest, AssessmentPackage, PackageType
+from django.conf import settings
+import requests
+from decimal import Decimal
 
 
 
@@ -49,172 +53,6 @@ def redirect_dashboard(request):
     raise PermissionError("You do not have a valid role assigned!")
 
 
-# SUPER ADMIN Dashboard
-# @login_required
-# @role_required([UserRole.SUPER_ADMIN])
-# def superadmin_dashboard(request):
-#     """Admin dashboard with combined unassigned/cancelled request queues & inline assignments."""
-
-#     # ==========================================
-#     # POST ACTIONS (INLINE ASSIGNMENTS)
-#     # ==========================================
-#     if request.method == "POST":
-#         action = request.POST.get("action")
-
-#         # --- ASSIGN / RE-ASSIGN FIELD ASSOCIATE ---
-#         if action == "assign_associate_request":
-#             assignment_id = request.POST.get("assignment_id")
-#             associate_id = request.POST.get("associate_id")
-
-#             if not associate_id:
-#                 messages.error(request, "Please select an associate from the list before assigning.")
-#                 return redirect("dashboard:super-admin-dashboard")
-
-#             assignment = get_object_or_404(AmbassadorAssignment, pk=assignment_id)
-#             ambassador_profile = get_object_or_404(AmbassadorProfile, user_id=associate_id)
-
-#             assignment.ambassador = ambassador_profile
-#             assignment.status = AmbassadorAssignment.TaskStatus.ASSIGNED
-#             assignment.cancellation_reason = None  # Clear reason on reassignment
-#             assignment.save(update_fields=['ambassador', 'status', 'cancellation_reason'])
-
-#             client_name = assignment.client.business_name or assignment.client.get_full_name() or assignment.client.email
-#             messages.success(
-#                 request, 
-#                 f"Successfully assigned Associate {ambassador_profile.user.get_full_name()} to {client_name}."
-#             )
-#             return redirect("dashboard:super-admin-dashboard")
-
-#         # --- ASSIGN / RE-ASSIGN CONSULTANT ---
-#         elif action == "assign_consultant_request":
-#             assignment_id = request.POST.get("assignment_id")
-#             consultant_id = request.POST.get("consultant_id")
-
-#             if not consultant_id:
-#                 messages.error(request, "Please select a consultant from the list before assigning.")
-#                 return redirect("dashboard:super-admin-dashboard")
-
-#             assignment = get_object_or_404(ConsultantAssignment, pk=assignment_id)
-#             consultant_profile = get_object_or_404(ConsultantProfile, user_id=consultant_id)
-
-#             assignment.consultant = consultant_profile
-#             assignment.status = ConsultantAssignment.TaskStatus.ASSIGNED
-#             assignment.cancellation_reason = None
-#             assignment.save(update_fields=['consultant', 'status', 'cancellation_reason'])
-
-#             client_name = assignment.client.business_name or assignment.client.get_full_name() or assignment.client.email
-#             messages.success(
-#                 request, 
-#                 f"Successfully assigned Consultant {consultant_profile.user.get_full_name()} to {client_name}."
-#             )
-#             return redirect("dashboard:super-admin-dashboard")
-
-#     # ==========================================
-#     # COMBINED UNASSIGNED + CANCELLED QUEUES
-#     # ==========================================
-#     pending_associate_requests = AmbassadorAssignment.objects.filter(
-#         status__in=[
-#             AmbassadorAssignment.TaskStatus.UNASSIGNED,
-#             AmbassadorAssignment.TaskStatus.CANCELLED
-#         ]
-#     ).select_related('client', 'project', 'ambassador__user').order_by('-updated_at')
-
-#     pending_consultant_requests = ConsultantAssignment.objects.filter(
-#         status__in=[
-#             ConsultantAssignment.TaskStatus.UNASSIGNED,
-#             ConsultantAssignment.TaskStatus.CANCELLED
-#         ]
-#     ).select_related('client', 'project', 'consultant__user').order_by('-updated_at')
-
-#     # ==========================================
-#     # AVAILABLE AGENTS WITH ACTIVE TASK COUNTS
-#     # ==========================================
-#     available_associates = User.objects.filter(
-#         role=UserRole.AMBASSADOR,
-#         ambassador_profile__is_active_field_agent=True
-#     ).annotate(
-#         active_task_count=Count(
-#             'ambassador_profile__assignments',
-#             filter=Q(ambassador_profile__assignments__status=AmbassadorAssignment.TaskStatus.ASSIGNED)
-#         )
-#     ).order_by('first_name')
-
-#     available_consultants = User.objects.filter(
-#         role=UserRole.CONSULTANT,
-#         consultant_profile__is_active_consultant=True
-#     ).annotate(
-#         active_task_count=Count(
-#             'consultant_profile__consultant_assignments',
-#             filter=Q(consultant_profile__consultant_assignments__status=ConsultantAssignment.TaskStatus.ASSIGNED)
-#         )
-#     ).order_by('first_name')
-
-#     # ==========================================
-#     # ACTIVE ASSIGNMENTS
-#     # ==========================================
-#     active_associate_assignments = AmbassadorAssignment.objects.filter(
-#         ambassador__isnull=False,
-#         status=AmbassadorAssignment.TaskStatus.ASSIGNED
-#     ).select_related('ambassador__user', 'client', 'project').order_by('-created_at')
-
-#     active_consultant_assignments = ConsultantAssignment.objects.filter(
-#         consultant__isnull=False,
-#         status=ConsultantAssignment.TaskStatus.ASSIGNED
-#     ).select_related('consultant__user', 'client', 'project').order_by('-created_at')
-
-#     # ==========================================
-#     # PROJECTS, LOGS & KPI METRICS
-#     # ==========================================
-#     recent_projects = ClientProject.objects.select_related(
-#         'client', 'assigned_consultant'
-#     ).prefetch_related('activities').order_by('-updated_at')[:8]
-
-#     recent_activity_logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:6]
-#     today = timezone.now().date()
-
-#     metrics = {
-#         'active_clients': User.objects.filter(role=UserRole.USER, is_active=True).count(),
-#         'active_projects': ClientProject.objects.count(),
-#         'total_ambassadors': AmbassadorProfile.objects.filter(is_active_field_agent=True).count(),
-#         'total_consultants': ConsultantProfile.objects.filter(is_active_consultant=True).count(),
-#         'pending_verifications': (
-#             AmbassadorProfile.objects.filter(verification_status=AmbassadorProfile.VerificationStatus.PENDING).count() +
-#             ConsultantProfile.objects.filter(verification_status=ConsultantProfile.VerificationStatus.PENDING).count()
-#         ),
-#         'pending_documents': ClientDocument.objects.filter(status=DocumentStatus.PENDING).count(),
-#         'delayed_activities': ProjectActivity.objects.filter(
-#             Q(activity_status=ActivityStatus.PAUSED) | 
-#             Q(activity_deadline__lt=today, activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED])
-#         ).count(),
-#         'active_assignments': active_associate_assignments.count(),
-#         'active_consultant_assignments': active_consultant_assignments.count(),
-#         'pending_requests_count': pending_associate_requests.count(),
-#         'pending_consultant_requests_count': pending_consultant_requests.count(),
-#     }
-
-#     recent_signups = AmbassadorProfile.objects.filter(
-#         verification_status=AmbassadorProfile.VerificationStatus.PENDING
-#     ).select_related('user').order_by('-id')[:5]
-
-#     context = {
-#         'metrics': metrics,
-#         'recent_signups': recent_signups,
-#         'recent_projects': recent_projects,
-#         'recent_activity_logs': recent_activity_logs,
-        
-#         # Combined Unassigned/Cancelled Queues
-#         'pending_associate_requests': pending_associate_requests,
-#         'pending_consultant_requests': pending_consultant_requests,
-        
-#         # Agent Lists for Inline Action Dropdowns
-#         'available_associates': available_associates,
-#         'available_consultants': available_consultants,
-        
-#         'active_associate_assignments': active_associate_assignments,
-#         'active_consultant_assignments': active_consultant_assignments,
-#     }
-
-#     return render(request, 'dashboards/super_admin.html', context)
 
 
 @login_required
@@ -315,9 +153,41 @@ def superadmin_dashboard(request):
         status=AmbassadorAssignment.TaskStatus.ASSIGNED
     ).select_related('ambassador__user', 'client', 'project').order_by('-created_at')
 
-    client_projects_list = ClientProject.objects.select_related(
+    # Query all candidate projects prefetching related client documents to eliminate N+1 queries
+    all_projects = ClientProject.objects.select_related(
         'client', 'assigned_consultant'
-    ).prefetch_related('activities').order_by('-updated_at')
+    ).prefetch_related(
+        'activities', 
+        'client__documents'
+    ).order_by('-updated_at')
+
+    # Filter projects list in-memory to include:
+    # 1. Projects already assigned to a consultant
+    # 2. Unassigned projects where all required client documents are uploaded & non-rejected
+    client_projects_list = []
+    for project in all_projects:
+        client = project.client
+        
+        # Always include if already assigned
+        if project.assigned_consultant_id:
+            client_projects_list.append(project)
+            continue
+
+        # For unassigned projects, verify document completion
+        client_required_types = set(get_required_document_types(client))
+        
+        # In-memory document evaluation (prevents extra database queries)
+        uploaded_types = {
+            doc.document_type for doc in client.documents.all()
+            if doc.status != DocumentStatus.REJECTED
+        }
+
+        total_required = len(client_required_types)
+        total_uploaded = len([code for code in client_required_types if code in uploaded_types])
+
+        # Include unassigned client if fully uploaded
+        if total_required > 0 and total_uploaded == total_required:
+            client_projects_list.append(project)
 
     # ==========================================
     # KPI METRICS & RECENT LOGS
@@ -325,10 +195,13 @@ def superadmin_dashboard(request):
     recent_activity_logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:6]
     today = timezone.now().date()
 
+    # Calculate metrics based on filtered projects
+    unassigned_count = sum(1 for p in client_projects_list if p.assigned_consultant_id is None)
+
     metrics = {
         'active_clients': User.objects.filter(role=UserRole.USER, is_active=True).count(),
-        'active_projects': client_projects_list.count(),
-        'unassigned_consultant_projects': client_projects_list.filter(assigned_consultant__isnull=True).count(),
+        'active_projects': len(client_projects_list),
+        'unassigned_consultant_projects': unassigned_count,
         'total_ambassadors': AmbassadorProfile.objects.filter(is_active_field_agent=True).count(),
         'total_consultants': ConsultantProfile.objects.filter(is_active_consultant=True).count(),
         'pending_verifications': (
@@ -386,6 +259,91 @@ def superadmin_dashboard(request):
     }
 
     return render(request, 'dashboards/super_admin.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_user_payment_history(request):
+    """
+    Superadmin view to monitor all platform transactions, filter by search query or status,
+    and review revenue aggregates.
+    """
+    query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+
+    # Base queryset with select_related for optimized queries
+    payments = Payment.objects.select_related('user', 'package').all().order_by('-created_at')
+
+    # Apply search filter across reference, email, company, or user name
+    if query:
+        payments = payments.filter(
+            Q(ref__icontains=query) |
+            Q(email__icontains=query) |
+            Q(business_name__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query)
+        )
+
+    # Apply status filter using the 'verified' boolean field
+    if status_filter:
+        if status_filter.lower() == 'success':
+            payments = payments.filter(verified=True)
+        elif status_filter.lower() == 'pending':
+            payments = payments.filter(verified=False)
+
+    # Aggregate key metrics across all records
+    all_payments = Payment.objects.all()
+    
+    total_revenue = all_payments.filter(verified=True).aggregate(total=Sum('amount'))['total'] or 0.00
+    successful_count = all_payments.filter(verified=True).count()
+    pending_count = all_payments.filter(verified=False).count()
+
+    context = {
+        'payments': payments,
+        'query': query,
+        'status_filter': status_filter,
+        'total_revenue': total_revenue,
+        'successful_count': successful_count,
+        'pending_count': pending_count,
+        'total_transactions_count': all_payments.count(),
+    }
+    return render(request, 'dashboards/superadmin_user_payments_history.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_create_payment_request(request):
+    """View for superadmin to create and monitor custom client payment requests."""
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        service_name = request.POST.get('service_name', '').strip()
+        amount = request.POST.get('amount')
+        note = request.POST.get('note', '').strip()
+
+        if user_id and service_name and amount:
+            client = get_object_or_404(User, id=user_id)
+            PaymentRequest.objects.create(
+                user=client,
+                service_name=service_name,
+                amount=amount,
+                note=note,
+                created_by=request.user
+            )
+            messages.success(request, f"Payment request of GHS {amount} issued to {client.get_full_name() or client.email}.")
+            return redirect('dashboard:admin-create-payment-request')
+        else:
+            messages.error(request, "Please fill in all required fields.")
+
+    # Fetch all clients to populate the selection dropdown
+    clients = User.objects.filter(role=UserRole.USER).order_by('first_name', 'email')
+    payment_requests = PaymentRequest.objects.select_related('user', 'created_by').all()
+
+    context = {
+        'clients': clients,
+        'payment_requests': payment_requests,
+    }
+    return render(request, 'dashboards/superadmin_create_payment_request.html', context)
+
 
 
 @login_required
@@ -645,15 +603,13 @@ def supervisor_dashboard(request):
 def consultant_dashboard(request):
     """
     High-level operational overview desk for PFS consultants.
-    Computes accurate performance metrics dynamically without relying on static
-    project status fields, and isolates urgent document action queues.
+    Computes accurate performance metrics dynamically and isolates document action
+    queues ONLY for clients assigned to the logged-in consultant.
     """
-    from django.contrib.auth import get_user_model
     User = get_user_model()
     consultant = request.user
 
     # 1. Optimize Client Project Footprint using ORM Annotations
-    # Evaluates total activities vs. completed activities at the database level.
     annotated_projects = ClientProject.objects.filter(
         assigned_consultant=consultant
     ).annotate(
@@ -661,26 +617,22 @@ def consultant_dashboard(request):
         completed_activities=Count('activities', filter=Q(activities__activity_status=ActivityStatus.COMPLETED))
     )
 
-    # 2. Derive Progress Metrics on ClientProject via Automated Progress Logic
-    # Completed Vaults: Total activities > 0 and total equals completed counts
+    # 2. Derive Progress Metrics on ClientProject
     completed_projects_qs = annotated_projects.filter(
         total_activities__gt=0, 
         total_activities=F('completed_activities')
     )
     completed_vaults_count = completed_projects_qs.count()
 
-    # Active Projects: The inversion of completed workflows
     active_projects_qs = annotated_projects.exclude(
         total_activities__gt=0, 
         total_activities=F('completed_activities')
     )
     total_active_projects_count = active_projects_qs.count()
 
-    # Onboarding Files: Active projects where absolutely no tasks are done yet
     active_onboarding_count = active_projects_qs.filter(completed_activities=0).count()
 
-    # 3. Handle Step Phase Routing Counts based on Activity Names
-    # Counts active projects containing specific critical milestone descriptors
+    # 3. Step Phase Routing Counts
     facility_phase_count = active_projects_qs.filter(
         activities__activity_name__icontains="Facility",
         activities__activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED, ActivityStatus.CLIENT_TASK]
@@ -691,25 +643,30 @@ def consultant_dashboard(request):
         activities__activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED, ActivityStatus.CLIENT_TASK]
     ).distinct().count()
 
-    # 4. Assembled Corrected Context Architecture
+    # 4. Strictly scoped Pending Documents Query for the assigned consultant
+    pending_assigned_documents = ClientDocument.objects.filter(
+        client__projects__assigned_consultant=consultant,
+        status=DocumentStatus.PENDING
+    ).distinct()
+
+    # 5. Assembled Context Architecture
     context = {
         "metrics": {
-            "total_clients": User.objects.filter(role="USER").count(),
+            "total_clients": User.objects.filter(
+                role="USER", 
+                projects__assigned_consultant=consultant
+            ).distinct().count(),
             "total_active_projects": total_active_projects_count,
             "active_onboarding": active_onboarding_count,
-            "urgent_attention": ClientDocument.objects.filter(
-            # Captures documents if assigned to you OR if the file hasn't been locked to a project setup yet
-            Q(client__projects__assigned_consultant=consultant) | Q(client__projects__isnull=True),
-            status=DocumentStatus.PENDING
-            ).distinct().count(),
+            "urgent_attention": pending_assigned_documents.count(),
             "completed_vaults": completed_vaults_count,
             "facility_phase_count": facility_phase_count,
             "label_phase_count": label_phase_count,
         },
-        "recent_pending_uploads": ClientDocument.objects.filter(
-        Q(client__projects__assigned_consultant=consultant) | Q(client__projects__isnull=True),
-        status=DocumentStatus.PENDING
-        ).select_related('client').order_by("-updated_at").distinct()[:5]
+        "recent_pending_uploads": (
+            pending_assigned_documents.select_related('client')
+            .order_by("-updated_at")[:5]
+        )
     }
 
     return render(request, "dashboards/consultant.html", context)
@@ -946,11 +903,20 @@ def process_audit_action(request, doc_id):
 @role_required([UserRole.CONSULTANT])
 def consultant_companies_list(request):
     """
-    Master searchable directory of all registered client companies.
+    Master searchable directory of registered client companies assigned to the logged-in consultant.
+    Dynamically computes completion rates based on sector-specific mandatory documents.
     """
+    User = get_user_model()
+    consultant = request.user
     search_query = request.GET.get('search', '').strip()
-    clients_qs = User.objects.filter(role='USER')
-    
+
+    # 1. Filter clients strictly assigned to this consultant via active projects
+    clients_qs = User.objects.filter(
+        role='USER',
+        projects__assigned_consultant=consultant
+    ).distinct()
+
+    # 2. Apply search parameters if present
     if search_query:
         clients_qs = clients_qs.filter(
             Q(business_name__icontains=search_query) | 
@@ -958,29 +924,37 @@ def consultant_companies_list(request):
             Q(last_name__icontains=search_query) | 
             Q(email__icontains=search_query)
         )
-    
+
+    # 3. Annotate high-level document stats and prefetch related documents to prevent N+1 queries
     clients_qs = clients_qs.annotate(
         total_docs=Count('documents'),
         latest_upload=Max('documents__updated_at')
-    ).order_by('business_name', '-id')
+    ).prefetch_related('documents').order_by('business_name', '-id')
 
-    required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
-    required_count = len(required_types)
-    
     companies_data = []
+
+    # 4. Evaluate dynamic sector-specific document requirements per client
     for client in clients_qs:
-        approved_core = client.documents.filter(
-            document_type__in=required_types,
-            status=DocumentStatus.APPROVED
-        ).count()
+        required_types = get_required_document_types(client)
+        required_count = len(required_types)
+
+        # Evaluate in-memory using prefetched related objects
+        client_docs = client.documents.all()
+
+        approved_core = sum(
+            1 for doc in client_docs 
+            if doc.document_type in required_types and doc.status == DocumentStatus.APPROVED
+        )
+
+        submitted_core = sum(
+            1 for doc in client_docs 
+            if doc.document_type in required_types and doc.file
+        )
+
+        has_pending = any(doc.status == DocumentStatus.PENDING for doc in client_docs)
         
-        submitted_core = client.documents.filter(
-            document_type__in=required_types
-        ).exclude(file="").count()
-        
-        has_pending = client.documents.filter(status=DocumentStatus.PENDING).exists()
         completion_rate = int((approved_core / required_count) * 100) if required_count > 0 else 0
-        
+
         companies_data.append({
             'client': client,
             'completion_rate': completion_rate,
@@ -995,6 +969,7 @@ def consultant_companies_list(request):
         'companies_data': companies_data,
         'search_query': search_query,
     }
+
     return render(request, "dashboards/consultant_companies_list.html", context)
 
 
@@ -1313,35 +1288,6 @@ def global_operations_boards(request):
     }
     return render(request, "dashboards/global_boards.html", context)
 
-
-# # ADD PROJECT SUB-ITEMS
-# @login_required
-# def add_custom_project_subitem(request, project_id):
-#     """
-#     POST-only action endpoint allowing account consultants to instantly append 
-#     ad-hoc project subitems to an active operational roadmap.
-#     """
-#     if request.method == "POST":
-#         project = get_object_or_404(ClientProject, id=project_id)
-#         activity_name = request.POST.get("activity_name", "").strip()
-#         activity_deadline = request.POST.get("activity_deadline")
-        
-#         if not activity_name:
-#             messages.error(request, "Operational subitem addition aborted. A valid task execution title must be provided.")
-#             return redirect("dashboard:project-board", project_id=project.id)
-            
-#         ProjectActivity.objects.create(
-#             project=project,
-#             activity_name=activity_name,
-#             activity_deadline=activity_deadline if activity_deadline else None,
-#             payment_status=PaymentStatus.NOT_PAID,
-#             activity_status=ActivityStatus.NOT_STARTED
-#         )
-        
-#         messages.success(request, f"Successfully appended custom task subitem: '{activity_name}'.")
-#         return redirect("dashboard:project-board", project_id=project.id)
-        
-#     return redirect("dashboard:global-boards")
 
 
 
@@ -1818,6 +1764,121 @@ def user_dashboard(request):
 
 
 
+
+@login_required
+@role_required([UserRole.USER])
+def user_payment_requests(request):
+    """Full dedicated view for clients to review and pay custom payment requests."""
+    user_requests = PaymentRequest.objects.filter(user=request.user)
+
+    # Filter using enum choice values directly from model
+    pending_requests = [
+        r for r in user_requests 
+        if r.status == PaymentRequest.StatusType.PENDING
+    ]
+    paid_requests = [
+        r for r in user_requests 
+        if r.status == PaymentRequest.StatusType.PAID
+    ]
+    cancelled_requests = [
+        r for r in user_requests
+        if not r.status == PaymentRequest.StatusType.PENDING and not r.status == PaymentRequest.StatusType.PAID
+    ]
+
+    total_outstanding = (
+        user_requests.filter(
+            status=PaymentRequest.StatusType.PENDING
+        ).aggregate(
+            total=Sum("amount")
+        )["total"] or Decimal("0.00")
+    )
+
+    total_paid = (
+        user_requests.filter(
+            status=PaymentRequest.StatusType.PAID
+        ).aggregate(
+            total=Sum("amount")
+        )["total"] or Decimal("0.00")
+    )
+
+    context = {
+        "payment_requests": user_requests,
+        "pending_requests": pending_requests,
+        "paid_requests": paid_requests,
+        "cancelled_requests": cancelled_requests,
+        "total_outstanding": total_outstanding,
+        "total_paid": total_paid,
+        "paystack_public_key": settings.PAYSTACK_PUBLIC_KEY,
+    }
+    return render(request, "dashboards/user_payment_requests.html", context)
+
+
+@login_required
+@role_required([UserRole.USER])
+def verify_custom_payment(request):
+    reference = request.GET.get('reference')
+    request_id = request.GET.get('request_id')
+
+    if not reference or not request_id:
+        messages.error(request, "Invalid payment verification parameters.")
+        return redirect('dashboard:user-dashboard')
+
+    payment_req = get_object_or_404(
+        PaymentRequest, 
+        id=request_id, 
+        reference=reference, 
+        user=request.user
+    )
+
+    # Idempotency check: if already processed, inform user and return early
+    if payment_req.status == 'paid':
+        messages.info(request, f"Payment for '{payment_req.service_name}' has already been verified.")
+        return redirect('dashboard:user-dashboard')
+
+    # Verify transaction with Paystack API
+    url = f"https://api.paystack.co/transaction/verify/{reference}"
+    headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+    except requests.RequestException:
+        messages.error(request, "Unable to reach the payment gateway. Please try again or contact support.")
+        return redirect('dashboard:user-dashboard')
+    
+    if response.status_code == 200:
+        res_data = response.json()
+        if res_data.get('data', {}).get('status') == 'success':
+            payment_req.status = PaymentRequest.StatusType.PAID
+            payment_req.save()
+
+            # Create the ad-hoc AssessmentPackage instance
+            package_instance = AssessmentPackage.objects.create(
+                package_type=PackageType.CUSTOM,
+                custom_title=payment_req.service_name,
+                custom_price=payment_req.amount
+            )
+
+            # 3. Create or update the Payment record with the model instance
+            Payment.objects.get_or_create(
+                ref=reference,
+                defaults={
+                    'user': payment_req.user,
+                    'amount': payment_req.amount,
+                    'email': payment_req.user.email,
+                    'verified': True,
+                    'package': package_instance,
+                    'business_name': payment_req.user.business_name,
+                }
+            )
+
+            messages.success(request, f"Payment for '{payment_req.service_name}' verified successfully!")
+            return redirect('dashboard:user-dashboard')
+
+    messages.error(request, "Payment verification failed or pending. Please contact support.")
+    return redirect('dashboard:user-dashboard')
+
+
+
 @login_required
 @role_required([UserRole.USER])
 @mandatory_docs_required
@@ -2083,6 +2144,20 @@ def user_profile(request):
         "form": form,
     }
     return render(request, "dashboards/user_profile.html", context)
+
+
+@login_required
+@role_required([UserRole.USER])
+def user_payment_history(request):
+    # Retrieve payments associated directly with user OR by matching email
+    payments = Payment.objects.filter(
+        Q(user=request.user) | Q(email__iexact=request.user.email)
+    ).order_by('-created_at')
+
+    context = {
+        'payments': payments,
+    }
+    return render(request, 'dashboards/user_payment_history.html', context)
 
 
 @login_required

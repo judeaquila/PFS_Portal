@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'common',
     'core',
     'dashboard',
+    'payments',
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -134,3 +135,8 @@ STATIC_URL = 'static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# PAYSTACK CONFIGURATION
+PAYSTACK_PUBLIC_KEY = 'pk_test_2a96e35ea12a7a83ea8607172860eec5516732fe'
+PAYSTACK_SECRET_KEY = 'sk_test_5be9ed1ac411d8784b620af067c168289c74c3c4'

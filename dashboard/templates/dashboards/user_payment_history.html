@@ -1,0 +1,189 @@
+{% extends "dashboards/base_user.html" %}
+
+{% block title %}Payment History | PFS Online Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8" x-data="{ selectedPayment: null, modalOpen: false }">
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Payment History</h1>
+            <p class="text-sm text-slate-500 mt-1">Review your past package bookings, Paystack references, and payment statuses.</p>
+        </div>
+        <div>
+            <a href="{% url 'core:pricing' %}#packages" 
+               class="inline-flex items-center gap-2 bg-pink-700 hover:bg-pink-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Book New Package
+            </a>
+        </div>
+    </div>
+
+    <!-- Payments Table Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900">Transactions Log</h2>
+            <span class="text-xs text-slate-400 font-medium">Total Records: {{ payments|length }}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100 text-[11px] uppercase font-bold text-slate-400 tracking-wider">
+                        <th class="py-3.5 px-6">Reference</th>
+                        <th class="py-3.5 px-6">Package</th>
+                        <th class="py-3.5 px-6">Business Name</th>
+                        <th class="py-3.5 px-6">Amount</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6 text-right">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    {% for payment in payments %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <!-- Reference -->
+                        <td class="py-4 px-6 font-mono font-semibold text-slate-700">
+                            {{ payment.ref }}
+                        </td>
+
+                        <!-- Package Name -->
+                        <td class="py-4 px-6 font-semibold text-slate-900">
+                            {% if payment.package %}
+                                {{ payment.package.get_package_type_display }}
+                            {% else %}
+                                {{ payment.package_type|default:"Assessment Meeting" }}
+                            {% endif %}
+                        </td>
+
+                        <!-- Business Name -->
+                        <td class="py-4 px-6 text-slate-600">
+                            {{ payment.business_name|default:"--" }}
+                        </td>
+
+                        <!-- Amount -->
+                        <td class="py-4 px-6 font-bold text-slate-900">
+                            GHS {{ payment.amount|floatformat:2 }}
+                        </td>
+
+                        <!-- Status Badge -->
+                        <td class="py-4 px-6">
+                            {% if payment.verified %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Successful
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    Pending
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Date -->
+                        <td class="py-4 px-6 text-slate-500">
+                            {{ payment.created_at|date:"M d, Y · H:i" }}
+                        </td>
+
+                        <!-- Action -->
+                        <td class="py-4 px-6 text-right">
+                            <button 
+                                type="button"
+                                @click="selectedPayment = {
+                                    ref: '{{ payment.ref }}',
+                                    package: '{% if payment.package %}{{ payment.package.get_package_type_display|escapejs }}{% else %}{{ payment.package_type|escapejs }}{% endif %}',
+                                    company: '{{ payment.business_name|escapejs }}',
+                                    email: '{{ payment.email|escapejs }}',
+                                    amount: '{{ payment.amount|floatformat:2 }}',
+                                    verified: {{ payment.verified|yesno:'true,false' }},
+                                    date: '{{ payment.created_at|date:"F d, Y · h:i A" }}'
+                                }; modalOpen = true"
+                                class="text-pink-600 hover:text-pink-800 font-semibold text-xs hover:underline focus:outline-none">
+                                View Receipt
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400">
+                            <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="font-medium">No payment records found.</p>
+                            <p class="text-xs text-slate-400 mt-1">Book an assessment package to view transaction history here.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Receipt Details Modal -->
+    <div x-show="modalOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden" 
+             @click.away="modalOpen = false">
+            
+            <div class="bg-slate-900 text-white p-6 flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-pink-500 tracking-wider">Payment Receipt</span>
+                    <h3 class="text-lg font-bold" x-text="selectedPayment?.package"></h3>
+                </div>
+                <button @click="modalOpen = false" class="text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-slate-400">Reference ID</span>
+                    <span class="font-mono font-bold text-slate-800" x-text="selectedPayment?.ref"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-slate-400">Business Name</span>
+                    <span class="font-semibold text-slate-800" x-text="selectedPayment?.company"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-slate-400">Email Address</span>
+                    <span class="text-slate-800" x-text="selectedPayment?.email"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-slate-400">Date Paid</span>
+                    <span class="text-slate-800" x-text="selectedPayment?.date"></span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-100 items-center">
+                    <span class="text-slate-400">Status</span>
+                    <template x-if="selectedPayment?.verified">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">SUCCESSFUL</span>
+                    </template>
+                    <template x-if="!selectedPayment?.verified">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">PENDING</span>
+                    </template>
+                </div>
+                <div class="flex justify-between pt-2 text-sm font-bold">
+                    <span class="text-slate-900">Total Amount Paid</span>
+                    <span class="text-pink-600">GHS <span x-text="selectedPayment?.amount"></span></span>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 text-right">
+                <button @click="modalOpen = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg text-xs transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
