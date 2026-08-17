@@ -48,7 +48,7 @@
             <div class="hidden lg:flex items-center gap-5 text-sm">
                 {% if user.is_authenticated %}
                     <!-- Dashboard Quick Button -->
-                    <a href="{% url 'dashboard:user-dashboard' %}"
+                    <a href="{% if user.is_super_admin %} {% url 'dashboard:super-admin-dashboard' %} {% elif user.is_supervisor %} {% url 'dashboard:supervisor-dashboard' %} {% elif user.is_consultant %} {% url 'dashboard:user-dashboard' %} {% elif user.is_ambassador %} {% url 'dashboard:ambassador-dashboard' %} {% elif user.is_regular_user %} {% url 'dashboard:user-dashboard' %} {% endif %}"
                        class="inline-flex items-center justify-center font-bold text-white bg-pink-700 hover:bg-pink-800 active:scale-[0.98] px-4 py-2.5 rounded-xl transition-all duration-200 tracking-tight shadow-md shadow-pink-700/20 focus:outline-none focus:ring-2 focus:ring-pink-600 focus:ring-offset-2 gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
@@ -82,7 +82,7 @@
                                 <p class="font-bold text-slate-800 truncate">{{ user.get_full_name|default:user.email }}</p>
                                 <p class="text-xs text-slate-400 truncate">{{ user.email }}</p>
                             </div>
-
+                            {% if user.is_regular_user %}
                             <a href="{% url 'dashboard:user-dashboard' %}" class="block px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-pink-700 font-medium transition-colors">
                                 Dashboard Overview
                             </a>
@@ -90,9 +90,11 @@
                                 Payment History
                             </a>
 
-                            {% if user.is_staff or user.is_superuser %}
+                            {% endif %}
+
+                            {% if user.is_super_admin %}
                                 <div class="border-t border-slate-100 my-1"></div>
-                                <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-pink-600 hover:bg-pink-50 font-semibold transition-colors">
+                                <a href="{% url 'dashboard:super-admin-dashboard' %}" class="block px-4 py-2 text-pink-600 hover:bg-pink-50 font-semibold transition-colors">
                                     Admin Panel
                                 </a>
                             {% endif %}

@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from accounts.models import UserRole
+from accounts.forms import AdminClientCreationForm
 from common.decorators import role_required, mandatory_docs_required
 from common.utils import get_required_document_types
 from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificationForm, ConsultantVerificationForm, AdminUserManagementForm, BusinessProfileForm, AvailabilityForm
@@ -50,7 +51,7 @@ def redirect_dashboard(request):
     elif role == UserRole.USER:
         return redirect("dashboard:user-dashboard")
     
-    raise PermissionError("You do not have a valid role assigned!")
+    raise PermissionError("You do not have permission to access this page!")
 
 
 
@@ -440,6 +441,78 @@ def superadmin_consultant_verification(request, profile_id, action):
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
+def admin_create_client_view(request):
+    """Allows Superadmin to manually onboard a client and generate verified payment records."""
+    
+    if request.method == "POST":
+        form = AdminClientCreationForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                # Save User Account
+                user = form.save()
+                raw_password = form.raw_password
+                
+                # Create AssessmentPackage Record
+                package_type = form.cleaned_data.get('package_type')
+                custom_amount = form.cleaned_data.get('custom_amount')
+                
+                package = AssessmentPackage.objects.create(
+                    package_type=package_type,
+                    custom_price=custom_amount if custom_amount else None
+                )
+
+                # Create Verified Payment Record
+                payment = Payment.objects.create(
+                    user=user,
+                    package=package,
+                    business_name=user.business_name or f"{user.get_full_name()}'s Business",
+                    amount=package.price,
+                    email=user.email,
+                    verified=True
+                )
+
+            # Store credentials in session for single-view retrieval
+            request.session['created_client_info'] = {
+                'email': user.email,
+                'password': raw_password,
+                'full_name': user.get_full_name(),
+                'business_name': user.business_name,
+                'package_title': package.title,
+                'amount_paid': f"GHS {payment.amount}",
+                'payment_ref': payment.ref
+            }
+
+            messages.success(request, f"Client account created successfully for {user.get_full_name()}!")
+            return redirect("dashboard:admin-client-created-success")
+    else:
+        form = AdminClientCreationForm()
+
+    context = {
+        "form": form,
+        "title": "Add New Client"
+    }
+    return render(request, "dashboards/superadmin_create_client.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_client_created_success_view(request):
+    """Displays temporary account credentials immediately after manual client creation."""
+    client_info = request.session.pop('created_client_info', None)
+    
+    if not client_info:
+        return redirect("dashboard:admin-create-client")
+
+    context = {
+        "client_info": client_info,
+    }
+        
+    return render(request, "dashboards/superadmin_client_success.html", context)
+
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
 def admin_user_list(request):
     """Lists all users with search by name/email/phone and filter by role."""
     query = request.GET.get('q', '').strip()
@@ -494,12 +567,12 @@ def admin_user_update(request, pk):
         request.FILES or None, 
         instance=target_user
     )
-    
+
     consultant_form = None
     ambassador_form = None
     profile_form = None
 
-    # Load matching verification form based on user role
+
     if target_user.role == UserRole.AMBASSADOR:
         profile_instance, _ = AmbassadorProfile.objects.get_or_create(user=target_user)
         ambassador_form = AmbassadorVerificationForm(
@@ -1504,7 +1577,7 @@ def ambassador_client_workbench(request, client_id):
                     'uploaded_by': request.user,
                     'file': uploaded_file,
                     'status': DocumentStatus.PENDING,
-                    'cancellation_reason': '',
+                    'rejection_reason': '',
                 }
             )
             action_text = "uploaded" if created else "re-uploaded"
@@ -2144,6 +2217,7 @@ def user_profile(request):
         "form": form,
     }
     return render(request, "dashboards/user_profile.html", context)
+
 
 
 @login_required

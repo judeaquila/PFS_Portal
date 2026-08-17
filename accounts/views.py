@@ -5,8 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from payments.models import Payment
+from common.decorators import anonymous_required
 
 
+@anonymous_required
 def register_view(request):
     """
     Handles user registration for paid users.
@@ -15,7 +17,7 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect("dashboard:redirect-dashboard")
 
-    # 1. Enforce access restriction via session payment reference
+    # Enforce access restriction via session payment reference
     payment_ref = request.session.get("paid_payment_ref")
 
     if not payment_ref:
@@ -25,7 +27,7 @@ def register_view(request):
         )
         return redirect("core:pricing")
 
-    # 2. Retrieve verified payment record awaiting account link
+    # Retrieve verified payment record awaiting account link
     payment = Payment.objects.filter(
         ref=payment_ref, verified=True, user__isnull=True
     ).first()
@@ -38,7 +40,7 @@ def register_view(request):
         )
         return redirect("core:pricing")
 
-    # 3. Handle Form Submission
+    # Handle Form Submission
     if request.method == "POST":
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -66,6 +68,12 @@ def register_view(request):
             }
         )
 
+    if payment:
+        for field in ["email", "business_name"]:
+            form.fields[field].widget.attrs["readonly"] = True
+            existing_css = form.fields[field].widget.attrs.get("class", "")
+            form.fields[field].widget.attrs["class"] = f"{existing_css} bg-slate-100 text-slate-500 cursor-not-allowed"
+
     context = {
         "form": form,
         "payment": payment,
@@ -74,7 +82,7 @@ def register_view(request):
     return render(request, "registration/register.html", context)
 
 
-
+@anonymous_required
 def login_view(request):
     """
     Handles secure client and staff login using the custom LoginForm.
@@ -105,6 +113,7 @@ def login_view(request):
 
     return render(request, "registration/login.html", context)
 
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def logout_view(request):
@@ -115,6 +124,7 @@ def logout_view(request):
     return redirect("core:home")
 
 
+@anonymous_required
 def ambassador_register(request):
     """
     Handles Ambassador registration. Automatically enforces the 'AMBASSADOR' role
@@ -139,6 +149,7 @@ def ambassador_register(request):
     return render(request, 'registration/ambassador_register.html', context)
 
 
+@anonymous_required
 def consultant_register(request):
     """
     Handles Consultant registration. Automatically maps the secure 

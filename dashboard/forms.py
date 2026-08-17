@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from .models import AmbassadorProfile, ConsultantProfile, Availability
-from django.forms import ModelForm, modelformset_factory
+
 
 
 User = get_user_model()
@@ -28,7 +28,7 @@ class BaseUserProfileForm(TailwindFormMixin, forms.ModelForm):
     """Base form for updating standard contact details across user roles."""
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'whatsapp_number', 'alternative_number']
+        fields = ['first_name', 'last_name', 'whatsapp_number', 'alternative_number', 'location', 'region']
         widgets = {
             'whatsapp_number': forms.TextInput(attrs={'placeholder': '+233...'}),
             'alternative_number': forms.TextInput(attrs={'placeholder': 'Optional line'}),
@@ -47,7 +47,7 @@ class AmbassadorVerificationForm(TailwindFormMixin, forms.ModelForm):
     """Handles verification media upload requirements for Ambassadors."""
     class Meta:
         model = AmbassadorProfile
-        fields = ['id_card', 'verification_selfie', 'bio']
+        fields = ['avatar', 'id_card', 'verification_selfie', 'bio']
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Tell us briefly about your experience...'}),
         }
@@ -67,9 +67,10 @@ class AdminUserManagementForm(TailwindFormMixin, forms.ModelForm):
     """Allows Superadmin/Admin to update core credentials, role, and active status."""
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'role', 'is_active', 'is_staff']
+        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'role', 'is_active', 'is_staff', 'company_logo']
         widgets = {
-            'whatsapp_number': forms.TextInput(attrs={'placeholder': '+233...'}),
+            'whatsapp_number': forms.TextInput(attrs={'placeholder': '02441234567'}),
+            'alternative_number': forms.TextInput(attrs={'placeholder': '02441234567'}),
         }
 
     def clean_email(self):
@@ -84,7 +85,6 @@ class AdminUserManagementForm(TailwindFormMixin, forms.ModelForm):
 
 class BusinessProfileForm(forms.ModelForm):
     """Form to allow clients to update their company and sector details."""
-    
     class Meta:
         model = User
         fields = ['business_name', 'company_logo', 'sector', 'region', 'whatsapp_number']
@@ -114,30 +114,12 @@ class BusinessProfileForm(forms.ModelForm):
 class AvailabilityForm(forms.ModelForm):
     class Meta:
         model = Availability
-        fields = (
-            "weekday",
-            "start_time",
-            "end_time",
-        )
+        fields = ("weekday", "start_time", "end_time",)
 
         widgets = {
-            "weekday": forms.Select(
-                attrs={
-                    "class": "w-full rounded-lg border-slate-300"
-                }
-            ),
-            "start_time": forms.TimeInput(
-                attrs={
-                    "type": "time",
-                    "class": "w-full rounded-lg border-slate-300"
-                }
-            ),
-            "end_time": forms.TimeInput(
-                attrs={
-                    "type": "time",
-                    "class": "w-full rounded-lg border-slate-300"
-                }
-            ),
+            "weekday": forms.Select(attrs={"class": "w-full rounded-lg border-slate-300"}),
+            "start_time": forms.TimeInput(attrs={"type": "time", "class": "w-full rounded-lg border-slate-300"}),
+            "end_time": forms.TimeInput(attrs={"type": "time", "class": "w-full rounded-lg border-slate-300"}),
         }
 
     def clean(self):

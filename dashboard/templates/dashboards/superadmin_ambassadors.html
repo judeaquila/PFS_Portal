@@ -41,8 +41,16 @@
                         <!-- Identity Column -->
                         <td class="p-4">
                             <div class="flex items-start gap-3">
-                                <a href="{% url 'dashboard:admin-user-detail' pk=account.id %}" class="w-9 h-9 bg-slate-800 border border-slate-700/60 hover:border-pink-500/50 rounded-xl flex items-center justify-center font-bold text-pink-400 text-xs uppercase flex-shrink-0 shadow-inner transition">
-                                    {{ account.first_name|slice:":1" }}{{ account.last_name|slice:":1" }}
+                                <a href="{% url 'dashboard:admin-user-detail' pk=account.id %}" class="w-9 h-9 bg-slate-800 border border-slate-700/60 hover:border-pink-500/50 rounded-xl flex items-center justify-center font-bold text-pink-400 text-xs uppercase shrink-0 shadow-inner transition overflow-hidden">
+                                    {% if account.ambassador_profile.avatar %}
+                                        <img src="{{ account.ambassador_profile.avatar.url }}" alt="{{ account.get_full_name|default:account.email }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        {% if account.first_name or account.last_name %}
+                                            {{ account.first_name|slice:":1" }}{{ account.last_name|slice:":1" }}
+                                        {% else %}
+                                            {{ account.email|slice:":2" }}
+                                        {% endif %}
+                                    {% endif %}
                                 </a>
                                 <div>
                                     <div class="font-bold text-slate-100 text-sm hover:text-pink-400 transition">

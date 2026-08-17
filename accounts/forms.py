@@ -1,7 +1,9 @@
+import secrets
 from django import forms
 from django.contrib.auth import authenticate, get_user_model
 from django.core.exceptions import ValidationError
 from .models import UserRole
+from payments.models import PackageType
 
 User = get_user_model()
 
@@ -177,3 +179,68 @@ class ConsultantRegistrationForm(BaseUserRegistrationForm):
             'location': forms.TextInput(attrs={'placeholder': 'Location'}),
             'region': forms.Select(),
         }
+
+
+
+
+class AdminClientCreationForm(forms.ModelForm):
+    """Superadmin form to manually onboard clients and attach verified offline payments."""
+    
+    package_type = forms.ChoiceField(
+        choices=PackageType.choices,
+        initial=PackageType.STANDARD,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text="Select the package the client paid for."
+    )
+    
+    custom_amount = forms.DecimalField(
+        required=False,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'placeholder': 'e.g. 200.00'}),
+        help_text="Optional: Override standard package price."
+    )
+
+    password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Leave blank to auto-generate',
+            'autocomplete': 'new-password'
+        }),
+        help_text="If left blank, a secure random temporary password will be generated."
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name', 'last_name', 'business_name', 'email', 
+            'whatsapp_number', 'alternative_number', 'location', 
+            'region', 'sector', 'password'
+        ]
+        widgets = {
+            'first_name': forms.TextInput(attrs={'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Last Name'}),
+            'business_name': forms.TextInput(attrs={'placeholder': 'e.g. Pneuma Food Scientifics'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'client@company.com'}),
+            'whatsapp_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
+            'alternative_number': forms.TextInput(attrs={'placeholder': 'e.g. 0501234567'}),
+            'location': forms.TextInput(attrs={'placeholder': 'City / Town'}),
+            'region': forms.Select(),
+            'sector': forms.Select(),
+        }
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.role = UserRole.USER
+        
+        # Check or auto-generate password
+        password = self.cleaned_data.get('password')
+        if not password:
+            password = secrets.token_urlsafe(8)
+        
+        user.set_password(password)
+        self.raw_password = password
+        
+        if commit:
+            user.save()
+        return user

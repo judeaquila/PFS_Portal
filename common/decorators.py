@@ -5,6 +5,8 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from dashboard.models import DocumentType, DocumentStatus
 from .utils import get_required_document_types
+from accounts.models import UserRole
+
 
 # CUSTOM ROLES
 def role_required(allowed_roles=None):
@@ -25,6 +27,39 @@ def role_required(allowed_roles=None):
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
+
+
+
+# CONTROL FRONTEND ACCESS
+def restrict_to_regular_users(view_func):
+    """
+    Redirects logged-in non-regular users to the dashboard dispatcher.
+    Allows unauthenticated visitors and regular users through.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            if str(request.user.role) != UserRole.USER:
+                return redirect('dashboard:redirect-dashboard')
+        
+        return view_func(request, *args, **kwargs)
+    
+    return _wrapped_view
+
+
+# RESTRICT ACCESS TO LOGIN & REGISTRATION PAGES
+def anonymous_required(view_func):
+    """
+    Prevents authenticated users from accessing login/registration pages.
+    Redirects them to the dashboard dispatcher instead.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('dashboard:redirect-dashboard')
+        return view_func(request, *args, **kwargs)
+    
+    return _wrapped_view
 
 
 # CHECK MANDATORY FILES UPLOADED

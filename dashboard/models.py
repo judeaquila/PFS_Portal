@@ -41,6 +41,18 @@ class ConsultantProfile(models.Model):
     is_active_consultant = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def is_approved(self):
+        return self.verification_status == self.VerificationStatus.APPROVED
+
+    @property
+    def is_declined(self):
+        return self.verification_status == self.VerificationStatus.DECLINED
+
+    @property
+    def is_pending(self):
+        return self.verification_status == self.VerificationStatus.PENDING
+
     def __str__(self):
         return f"Consultant: {self.user.get_full_name() or self.user.first_name} ({self.verification_status})"
 

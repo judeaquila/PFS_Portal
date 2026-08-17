@@ -27,26 +27,16 @@
             <form method="POST" action="{% url 'dashboard:admin-user-toggle-active' target_user.pk %}">
                 {% csrf_token %}
                 {% if target_user.is_active %}
-                    <button
-                        type="submit"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-900/60 text-xs font-semibold rounded-xl transition"
-                    >
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-900/60 text-xs font-semibold rounded-xl transition">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
-                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                         </svg>
                         <span>Deactivate User</span>
                     </button>
                 {% else %}
-                    <button
-                        type="submit"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/60 text-xs font-semibold rounded-xl transition"
-                    >
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/60 text-xs font-semibold rounded-xl transition">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
-                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <span>Activate User</span>
                     </button>
@@ -78,10 +68,12 @@
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 text-center space-y-4 backdrop-blur-sm">
                 <!-- Avatar -->
                 <div class="relative inline-block">
-                    {% if target_user.role == 'CONSULTANT' and target_user.consultant_profile.avatar %}
+                    {% if target_user.is_consultant and target_user.consultant_profile.avatar %}
                         <img src="{{ target_user.consultant_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-700 shadow-xl mx-auto">
-                    {% elif target_user.role == 'AMBASSADOR' and target_user.ambassador_profile.avatar %}
+                    {% elif target_user.is_ambassador and target_user.ambassador_profile.avatar %}
                         <img src="{{ target_user.ambassador_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-700 shadow-xl mx-auto">
+                    {% elif target_user.is_regular_user and target_user.company_logo %}
+                        <img src="{{ target_user.company_logo.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-700 shadow-xl mx-auto">
                     {% else %}
                         <div class="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-2xl font-black text-pink-400 mx-auto">
                             {{ target_user.first_name|default:target_user.email|slice:":1"|upper }}
@@ -97,12 +89,12 @@
                 <!-- Role Badge -->
                 <div>
                     <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold tracking-wider border
-                        {% if target_user.role == 'SUPER_ADMIN' or target_user.is_superuser %}bg-purple-950/60 text-purple-300 border-purple-800/60
-                        {% elif target_user.role == 'SUPERVISOR' %}bg-indigo-950/60 text-indigo-300 border-indigo-800/60
-                        {% elif target_user.role == 'CONSULTANT' %}bg-sky-950/60 text-sky-300 border-sky-800/60
-                        {% elif target_user.role == 'AMBASSADOR' %}bg-pink-950/60 text-pink-300 border-pink-800/60
+                        {% if target_user.is_superuser %}bg-purple-950/60 text-purple-300 border-purple-800/60
+                        {% elif target_user.is_supervisor %}bg-indigo-950/60 text-indigo-300 border-indigo-800/60
+                        {% elif target_user.is_consultant %}bg-sky-950/60 text-sky-300 border-sky-800/60
+                        {% elif target_user.is_ambassador %}bg-pink-950/60 text-pink-300 border-pink-800/60
                         {% else %}bg-slate-800 text-slate-300 border-slate-700{% endif %}">
-                        {{ target_user.get_role_display|default:"User / Client" }}
+                        {{ target_user.get_role_display|default:"Client" }}
                     </span>
                 </div>
 
@@ -123,7 +115,7 @@
             </div>
 
             <!-- Profile Overview & Contact Details -->
-            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-5 space-y-3">
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-5 space-y-3 backdrop-blur-sm">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact & Location</h3>
                 
                 <div class="space-y-2 text-xs">
@@ -155,8 +147,8 @@
         <div class="lg:col-span-8 space-y-6">
 
             <!-- 1. STANDARD CLIENT / BUSINESS DETAILS SECTION -->
-            {% if target_user.role == 'USER' or not target_user.role %}
-            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5">
+            {% if target_user.is_regular_user or not target_user.role %}
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                     <h3 class="text-sm font-bold text-white">Client & Business Details</h3>
                     <span class="px-2.5 py-1 rounded-lg text-xs font-bold border bg-slate-800 text-slate-300 border-slate-700">
@@ -175,15 +167,52 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 1B. PAYMENTS & ASSESSMENT PACKAGES SECTION -->
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span>Payment & Package Subscriptions</span>
+                    </h3>
+                    <span class="text-xs text-slate-400 font-mono">{{ target_user.payments.count }} Record(s)</span>
+                </div>
+
+                {% if target_user.payments.all %}
+                    <div class="space-y-3">
+                        {% for payment in target_user.payments.all %}
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-white text-sm">{{ payment.package.title|default:"Assessment Package" }}</span>
+                                    {% if payment.verified %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">VERIFIED</span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60">PENDING</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-slate-400 text-[11px] font-mono">REF: {{ payment.ref }} • Created {{ payment.created_at|date:"M d, Y" }}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-base font-black text-emerald-400">GHS {{ payment.amount }}</span>
+                                <span class="block text-[10px] text-slate-500 uppercase tracking-wider">{{ payment.package.get_package_type_display|default:"Package Tier" }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-slate-900/40 p-6 rounded-xl border border-slate-800/50 text-center">
+                        <p class="text-xs text-slate-500">No payment records or package subscriptions found for this account.</p>
+                    </div>
+                {% endif %}
+            </div>
             {% endif %}
 
             <!-- 2. CONSULTANT PROFILE SECTION -->
-            {% if target_user.role == 'CONSULTANT' and target_user.consultant_profile %}
-            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5">
+            {% if target_user.is_consultant and target_user.consultant_profile %}
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <span>Consultant Details</span>
-                    </h3>
+                    <h3 class="text-sm font-bold text-white">Consultant Details</h3>
                     <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
                         {% if target_user.consultant_profile.verification_status == 'APPROVED' %}bg-emerald-950/60 text-emerald-400 border-emerald-800/60
                         {% elif target_user.consultant_profile.verification_status == 'DECLINED' %}bg-rose-950/60 text-rose-400 border-rose-800/60
@@ -276,8 +305,8 @@
             {% endif %}
 
             <!-- 3. ASSOCIATE / AMBASSADOR PROFILE SECTION -->
-            {% if target_user.role == 'AMBASSADOR' and target_user.ambassador_profile %}
-            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5">
+            {% if target_user.is_ambassador and target_user.ambassador_profile %}
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                     <h3 class="text-sm font-bold text-white">Associate Details</h3>
                     <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
@@ -357,32 +386,12 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Assignments -->
-                {% if target_user.ambassador_assignments.all %}
-                <div class="pt-3 border-t border-slate-800/80">
-                    <h4 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Field Assignments History</h4>
-                    <div class="space-y-2">
-                        {% for assign in target_user.ambassador_assignments.all %}
-                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs">
-                            <div>
-                                <span class="text-white font-medium block">{{ assign.title|default:"Field Project" }}</span>
-                                <span class="text-slate-500 text-[11px]">Assigned on {{ assign.created_at|date:"M d, Y" }}</span>
-                            </div>
-                            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-slate-300">
-                                {{ assign.status|default:"ACTIVE" }}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
             </div>
             {% endif %}
 
             <!-- 4. ADMINISTRATIVE / SUPERVISOR SECTION -->
-            {% if target_user.role == 'SUPER_ADMIN' or target_user.role == 'SUPERVISOR' %}
-            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-4">
+            {% if target_user.is_super_admin or target_user.is_supervisor %}
+            <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-4 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                     <h3 class="text-sm font-bold text-white">Administrative Access</h3>
                     <span class="px-2.5 py-1 rounded-lg text-xs font-bold border bg-purple-950/60 text-purple-300 border-purple-800/60">

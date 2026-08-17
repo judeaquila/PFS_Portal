@@ -66,8 +66,19 @@
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-950/40 p-5 rounded-2xl border border-slate-800/80 backdrop-blur-sm">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 flex items-center justify-center font-bold text-lg text-pink-400 font-mono">
-                {{ target_user.email|slice:":2"|upper }}
+            <!-- Dynamic Header Avatar Display -->
+            <div class="relative shrink-0">
+                {% if target_user.consultant_profile.avatar %}
+                    <img src="{{ target_user.consultant_profile.avatar.url }}" alt="{{ target_user.email }}" class="w-14 h-14 rounded-2xl object-cover border border-pink-500/30 shadow-lg shadow-pink-500/10">
+                {% elif target_user.ambassador_profile.avatar %}
+                    <img src="{{ target_user.ambassador_profile.avatar.url }}" alt="{{ target_user.email }}" class="w-14 h-14 rounded-2xl object-cover border border-pink-500/30 shadow-lg shadow-pink-500/10">
+                {% elif target_user.company_logo %}
+                    <img src="{{ target_user.company_logo.url }}" alt="{{ target_user.email }}" class="w-14 h-14 rounded-2xl object-cover border border-pink-500/30 shadow-lg shadow-pink-500/10">
+                {% else %}
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 flex items-center justify-center font-bold text-xl text-pink-400 font-mono shadow-lg shadow-pink-500/10">
+                        {{ target_user.email|slice:":2"|upper }}
+                    </div>
+                {% endif %}
             </div>
             <div>
                 <div class="flex items-center gap-2">
@@ -240,13 +251,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     
                     <!-- Avatar Upload Card -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" 
+                         x-data="{ fileName: '', previewUrl: {% if target_user.consultant_profile.avatar %}'{{ target_user.consultant_profile.avatar.url }}'{% else %}null{% endif %} }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">Avatar Photo</label>
                             {% if target_user.consultant_profile.avatar %}
-                                <a href="{{ target_user.consultant_profile.avatar.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.consultant_profile.avatar.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View File</a>
                             {% endif %}
                         </div>
+
+                        <!-- Image Preview Box -->
+                        <div x-show="previewUrl" class="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <img :src="previewUrl" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="text-[10px] font-semibold text-white bg-slate-900/80 px-2 py-1 rounded-md border border-slate-700">Image Preview</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ consultant_form.avatar.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -254,7 +275,16 @@
                             <span class="text-xs text-slate-400 truncate" x-text="fileName || 'No new file chosen'"></span>
                         </div>
                         <div class="hidden">
-                            <input type="file" name="{{ consultant_form.avatar.name }}" id="{{ consultant_form.avatar.id_for_label }}" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                            <input type="file" name="{{ consultant_form.avatar.name }}" id="{{ consultant_form.avatar.id_for_label }}" 
+                                   @change="
+                                       const file = $event.target.files[0];
+                                       if (file) {
+                                           fileName = file.name;
+                                           if (file.type.startsWith('image/')) {
+                                               previewUrl = URL.createObjectURL(file);
+                                           }
+                                       }
+                                   ">
                         </div>
                         {% if consultant_form.avatar.errors %}
                             <p class="text-xs text-rose-400 mt-1">{{ consultant_form.avatar.errors.0 }}</p>
@@ -262,13 +292,26 @@
                     </div>
 
                     <!-- CV Upload Card -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" x-data="{ fileName: '' }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">Curriculum Vitae (CV)</label>
                             {% if target_user.consultant_profile.cv %}
-                                <a href="{{ target_user.consultant_profile.cv.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.consultant_profile.cv.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current Document</a>
                             {% endif %}
                         </div>
+
+                        <!-- Non-Image File Status Box -->
+                        <div class="w-full h-28 bg-slate-950 rounded-lg border border-slate-800 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+                            <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span class="text-[11px] text-slate-400 truncate max-w-[200px]">
+                                {% if target_user.consultant_profile.cv %}
+                                    {{ target_user.consultant_profile.cv.name }}
+                                {% else %}
+                                    No CV uploaded
+                                {% endif %}
+                            </span>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ consultant_form.cv.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -284,13 +327,23 @@
                     </div>
 
                     <!-- ID Card Upload Card -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" 
+                         x-data="{ fileName: '', previewUrl: {% if target_user.consultant_profile.id_card %}'{{ target_user.consultant_profile.id_card.url }}'{% else %}null{% endif %} }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">Government ID Card</label>
                             {% if target_user.consultant_profile.id_card %}
-                                <a href="{{ target_user.consultant_profile.id_card.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.consultant_profile.id_card.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View File</a>
                             {% endif %}
                         </div>
+
+                        <!-- Image Preview Box -->
+                        <div x-show="previewUrl" class="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <img :src="previewUrl" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="text-[10px] font-semibold text-white bg-slate-900/80 px-2 py-1 rounded-md border border-slate-700">Image Preview</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ consultant_form.id_card.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -298,7 +351,16 @@
                             <span class="text-xs text-slate-400 truncate" x-text="fileName || 'No new file chosen'"></span>
                         </div>
                         <div class="hidden">
-                            <input type="file" name="{{ consultant_form.id_card.name }}" id="{{ consultant_form.id_card.id_for_label }}" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                            <input type="file" name="{{ consultant_form.id_card.name }}" id="{{ consultant_form.id_card.id_for_label }}" 
+                                   @change="
+                                       const file = $event.target.files[0];
+                                       if (file) {
+                                           fileName = file.name;
+                                           if (file.type.startsWith('image/')) {
+                                               previewUrl = URL.createObjectURL(file);
+                                           }
+                                       }
+                                   ">
                         </div>
                         {% if consultant_form.id_card.errors %}
                             <p class="text-xs text-rose-400 mt-1">{{ consultant_form.id_card.errors.0 }}</p>
@@ -306,13 +368,23 @@
                     </div>
 
                     <!-- Verification Selfie Card -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" 
+                         x-data="{ fileName: '', previewUrl: {% if target_user.consultant_profile.verification_selfie %}'{{ target_user.consultant_profile.verification_selfie.url }}'{% else %}null{% endif %} }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">Verification Selfie</label>
                             {% if target_user.consultant_profile.verification_selfie %}
-                                <a href="{{ target_user.consultant_profile.verification_selfie.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.consultant_profile.verification_selfie.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View File</a>
                             {% endif %}
                         </div>
+
+                        <!-- Image Preview Box -->
+                        <div x-show="previewUrl" class="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <img :src="previewUrl" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="text-[10px] font-semibold text-white bg-slate-900/80 px-2 py-1 rounded-md border border-slate-700">Image Preview</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ consultant_form.verification_selfie.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -320,7 +392,16 @@
                             <span class="text-xs text-slate-400 truncate" x-text="fileName || 'No new file chosen'"></span>
                         </div>
                         <div class="hidden">
-                            <input type="file" name="{{ consultant_form.verification_selfie.name }}" id="{{ consultant_form.verification_selfie.id_for_label }}" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                            <input type="file" name="{{ consultant_form.verification_selfie.name }}" id="{{ consultant_form.verification_selfie.id_for_label }}" 
+                                   @change="
+                                       const file = $event.target.files[0];
+                                       if (file) {
+                                           fileName = file.name;
+                                           if (file.type.startsWith('image/')) {
+                                               previewUrl = URL.createObjectURL(file);
+                                           }
+                                       }
+                                   ">
                         </div>
                         {% if consultant_form.verification_selfie.errors %}
                             <p class="text-xs text-rose-400 mt-1">{{ consultant_form.verification_selfie.errors.0 }}</p>
@@ -374,13 +455,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                     
                     <!-- Avatar Photo -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" 
+                         x-data="{ fileName: '', previewUrl: {% if target_user.ambassador_profile.avatar %}'{{ target_user.ambassador_profile.avatar.url }}'{% else %}null{% endif %} }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">Avatar Photo</label>
                             {% if target_user.ambassador_profile.avatar %}
-                                <a href="{{ target_user.ambassador_profile.avatar.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.ambassador_profile.avatar.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View File</a>
                             {% endif %}
                         </div>
+
+                        <!-- Image Preview Box -->
+                        <div x-show="previewUrl" class="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <img :src="previewUrl" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="text-[10px] font-semibold text-white bg-slate-900/80 px-2 py-1 rounded-md border border-slate-700">Image Preview</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ ambassador_form.avatar.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -388,7 +479,16 @@
                             <span class="text-xs text-slate-400 truncate" x-text="fileName || 'No file chosen'"></span>
                         </div>
                         <div class="hidden">
-                            <input type="file" name="{{ ambassador_form.avatar.name }}" id="{{ ambassador_form.avatar.id_for_label }}" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                            <input type="file" name="{{ ambassador_form.avatar.name }}" id="{{ ambassador_form.avatar.id_for_label }}" 
+                                   @change="
+                                       const file = $event.target.files[0];
+                                       if (file) {
+                                           fileName = file.name;
+                                           if (file.type.startsWith('image/')) {
+                                               previewUrl = URL.createObjectURL(file);
+                                           }
+                                       }
+                                   ">
                         </div>
                         {% if ambassador_form.avatar.errors %}
                             <p class="text-xs text-rose-400 mt-1">{{ ambassador_form.avatar.errors.0 }}</p>
@@ -396,13 +496,23 @@
                     </div>
 
                     <!-- National ID Card -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" 
+                         x-data="{ fileName: '', previewUrl: {% if target_user.ambassador_profile.id_card %}'{{ target_user.ambassador_profile.id_card.url }}'{% else %}null{% endif %} }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">National ID Card</label>
                             {% if target_user.ambassador_profile.id_card %}
-                                <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View File</a>
                             {% endif %}
                         </div>
+
+                        <!-- Image Preview Box -->
+                        <div x-show="previewUrl" class="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <img :src="previewUrl" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="text-[10px] font-semibold text-white bg-slate-900/80 px-2 py-1 rounded-md border border-slate-700">Image Preview</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ ambassador_form.id_card.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -410,7 +520,16 @@
                             <span class="text-xs text-slate-400 truncate" x-text="fileName || 'No file chosen'"></span>
                         </div>
                         <div class="hidden">
-                            <input type="file" name="{{ ambassador_form.id_card.name }}" id="{{ ambassador_form.id_card.id_for_label }}" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                            <input type="file" name="{{ ambassador_form.id_card.name }}" id="{{ ambassador_form.id_card.id_for_label }}" 
+                                   @change="
+                                       const file = $event.target.files[0];
+                                       if (file) {
+                                           fileName = file.name;
+                                           if (file.type.startsWith('image/')) {
+                                               previewUrl = URL.createObjectURL(file);
+                                           }
+                                       }
+                                   ">
                         </div>
                         {% if ambassador_form.id_card.errors %}
                             <p class="text-xs text-rose-400 mt-1">{{ ambassador_form.id_card.errors.0 }}</p>
@@ -418,13 +537,23 @@
                     </div>
 
                     <!-- Verification Selfie -->
-                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2 custom-file-input-wrapper" x-data="{ fileName: '' }">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-3 custom-file-input-wrapper" 
+                         x-data="{ fileName: '', previewUrl: {% if target_user.ambassador_profile.verification_selfie %}'{{ target_user.ambassador_profile.verification_selfie.url }}'{% else %}null{% endif %} }">
                         <div class="flex items-center justify-between">
                             <label class="font-semibold text-slate-200">Verification Selfie</label>
                             {% if target_user.ambassador_profile.verification_selfie %}
-                                <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View Current</a>
+                                <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="text-[11px] text-pink-400 hover:text-pink-300 underline font-mono">View File</a>
                             {% endif %}
                         </div>
+
+                        <!-- Image Preview Box -->
+                        <div x-show="previewUrl" class="relative w-full h-28 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <img :src="previewUrl" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="text-[10px] font-semibold text-white bg-slate-900/80 px-2 py-1 rounded-md border border-slate-700">Image Preview</span>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <label for="{{ ambassador_form.verification_selfie.id_for_label }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition shrink-0">
                                 Choose File
@@ -432,7 +561,16 @@
                             <span class="text-xs text-slate-400 truncate" x-text="fileName || 'No file chosen'"></span>
                         </div>
                         <div class="hidden">
-                            <input type="file" name="{{ ambassador_form.verification_selfie.name }}" id="{{ ambassador_form.verification_selfie.id_for_label }}" @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                            <input type="file" name="{{ ambassador_form.verification_selfie.name }}" id="{{ ambassador_form.verification_selfie.id_for_label }}" 
+                                   @change="
+                                       const file = $event.target.files[0];
+                                       if (file) {
+                                           fileName = file.name;
+                                           if (file.type.startsWith('image/')) {
+                                               previewUrl = URL.createObjectURL(file);
+                                           }
+                                       }
+                                   ">
                         </div>
                         {% if ambassador_form.verification_selfie.errors %}
                             <p class="text-xs text-rose-400 mt-1">{{ ambassador_form.verification_selfie.errors.0 }}</p>

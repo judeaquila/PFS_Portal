@@ -6,7 +6,7 @@ from dashboard.models import ProductCategory
 
 # User Roles
 class UserRole(models.TextChoices):
-    USER = "USER", "User"
+    USER = "USER", "Client"
     AMBASSADOR = "AMBASSADOR", "Associate"
     CONSULTANT = "CONSULTANT", "Consultant"
     SUPERVISOR = "SUPERVISOR", "Supervisor"

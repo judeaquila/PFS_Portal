@@ -15,22 +15,20 @@ def initiate_package_payment(request, package_code):
         return redirect("core:pricing")
 
     if request.method == "POST":
+        posted_business_name = request.POST.get("business_name", "").strip()
+
         if request.user.is_authenticated:
             email = request.user.email
-            # Fetch company name from past payment or user business attribute
-            last_payment = Payment.objects.filter(user=request.user).last()
+            # Check last payment, then user model, then fallback to POST field
+            last_payment = Payment.objects.filter(user=request.user).exclude(business_name="").last()
             business_name = (
-                last_payment.business_name
-                if last_payment
-                else getattr(
-                    request.user,
-                    "business_name",
-                    getattr(request.user, "business_name", ""),
-                )
+                (last_payment.business_name if last_payment else None)
+                or getattr(request.user, "business_name", None)
+                or posted_business_name
             )
         else:
             email = request.POST.get("email", "").strip()
-            business_name = request.POST.get("business_name", "").strip()
+            business_name = posted_business_name
 
         if not email or not business_name:
             messages.error(
@@ -38,9 +36,7 @@ def initiate_package_payment(request, package_code):
             )
             return redirect("core:pricing")
 
-        package, _ = AssessmentPackage.objects.get_or_create(
-            package_type=package_code
-        )
+        package = get_object_or_404(AssessmentPackage, package_type=package_code)
         user = request.user if request.user.is_authenticated else None
 
         # Create pending payment record
@@ -64,22 +60,27 @@ def initiate_package_payment(request, package_code):
     return redirect("core:pricing")
 
 
-
 def verify_payment(request, ref):
     """Verifies payment with Paystack and handles redirect flows for guest vs logged-in users."""
     payment = get_object_or_404(Payment, ref=ref)
 
-    # 1. Define package-specific redirection URLs or views
     STANDARD_BOOKING_URL = getattr(
         settings, "STANDARD_PACKAGE_BOOKING_URL", "https://calendar.app.google/uMsT9pQZG86KmfSR6"
     )
 
-    # Helper function to evaluate standard package check
+    PROD_DEV_BOOKING_URL = getattr(
+        settings, "PROD_DEV_PACKAGE_BOOKING_URL", "https://calendar.app.google/uMsT9pQZG86KmfSR6"
+    )
+
     is_standard_package = (
         payment.package and payment.package.package_type == PackageType.STANDARD
     )
 
-    # 2. Handle already verified payment edge case
+    is_prod_dev_package = (
+        payment.package and payment.package.package_type == PackageType.PROD_DEV
+    )
+
+    # Handle already verified payment edge case
     if payment.verified:
         messages.info(request, "This payment has already been verified.")
         if request.user.is_authenticated:
@@ -88,43 +89,53 @@ def verify_payment(request, ref):
         # Guest user re-accessing an already verified payment link
         if is_standard_package:
             return redirect(STANDARD_BOOKING_URL)
+        elif is_prod_dev_package:
+            return redirect(PROD_DEV_BOOKING_URL)
 
         return redirect("accounts:register")
 
-    # 3. Verify payment with Paystack
+    # Verify payment with Paystack
     paystack = Paystack()
     status, result = paystack.verify_payment(ref)
 
     if status and result.get("status") == "success":
         amount_paid = result.get("amount")
 
-        if amount_paid == payment.amount_value():
+        # Safely cast both sides to integer (subunits / kobo / pesewas) for comparison
+        if amount_paid is not None and int(amount_paid) == int(payment.amount_value()):
             payment.verified = True
 
-            # Flow A: User is already logged in
+            # User is already logged in
             if request.user.is_authenticated:
                 payment.user = request.user
                 payment.save()
                 messages.success(
-                    request, "Payment successful! Your booking is confirmed."
+                    request, "Payment successful! Please confirm your booking."
                 )
 
-                # If logged in standard user also goes to booking or success page:
                 if is_standard_package:
                     return redirect(STANDARD_BOOKING_URL)
+                elif is_prod_dev_package:
+                    return redirect(PROD_DEV_BOOKING_URL)
 
                 return redirect("payments:booking-success")
 
-            # Flow B: Guest User (Not Authenticated)
+            # Guest User (Not Authenticated)
             payment.save()
 
-            # Special Flow for STANDARD (GHS 200) Package
             if is_standard_package:
                 messages.success(
                     request,
                     "Payment verified! Please pick a time slot for your assessment session.",
                 )
                 return redirect(STANDARD_BOOKING_URL)
+
+            if is_prod_dev_package:
+                messages.success(
+                    request,
+                    "Payment verified! Please pick a time slot for your assessment session.",
+                )
+                return redirect(PROD_DEV_BOOKING_URL)
 
             # Standard Guest Flow for higher tier packages -> Registration
             request.session["paid_payment_ref"] = payment.ref
@@ -140,7 +151,7 @@ def verify_payment(request, ref):
             )
             return redirect("core:pricing")
 
-    error_message = result.get("message", "Payment verification failed.")
+    error_message = result.get("message", "Payment verification failed.") if isinstance(result, dict) else "Payment verification failed."
     messages.error(request, f"Verification failed: {error_message}")
     return redirect("core:pricing")
 
@@ -151,9 +162,9 @@ def booking_success(request):
     )
     payment = None
 
-    if payment_id and request.user.is_authenticated:
+    if payment_id and str(payment_id).isdigit() and request.user.is_authenticated:
         payment = Payment.objects.filter(
-            id=payment_id, user=request.user
+            id=int(payment_id), user=request.user
         ).first()
 
     return render(request, "core/booking_success.html", {"payment": payment})

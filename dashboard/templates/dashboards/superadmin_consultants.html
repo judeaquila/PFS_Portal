@@ -41,9 +41,17 @@
                         <!-- Identity Info -->
                         <td class="p-4">
                             <div class="flex items-start gap-3">
-                                <div class="w-9 h-9 bg-slate-800 border border-slate-700 rounded-lg flex items-center justify-center font-bold text-indigo-400 text-xs uppercase flex-shrink-0">
-                                    {{ account.first_name|slice:":1"|default:account.last_name|slice:":1" }}
-                                </div>
+                                <a href="{% url 'dashboard:admin-user-detail' pk=account.id %}" class="w-9 h-9 bg-slate-800 border border-slate-700/60 hover:border-indigo-500/50 rounded-xl flex items-center justify-center font-bold text-indigo-400 text-xs uppercase shrink-0 shadow-inner transition overflow-hidden">
+                                    {% if account.consultant_profile.avatar %}
+                                        <img src="{{ account.consultant_profile.avatar.url }}" alt="{{ account.get_full_name|default:account.email }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        {% if account.first_name or account.last_name %}
+                                            {{ account.first_name|slice:":1" }}{{ account.last_name|slice:":1" }}
+                                        {% else %}
+                                            {{ account.email|slice:":2" }}
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
                                 <div>
                                     <div class="font-bold text-slate-100 text-sm">
                                         {{ account.get_full_name|default:account.email }}

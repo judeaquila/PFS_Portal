@@ -1,125 +1,361 @@
 {% extends 'dashboards/base_ambassador.html' %}
+{% load static %}
 
 {% block title %}Associate Profile Settings | PFS Online Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-6">
+<div x-data="{ 
+    editModalOpen: {% if user_form.errors or profile_form.errors %}true{% else %}false{% endif %},
+    avatarPreview: '{% if profile.avatar %}{{ profile.avatar.url }}{% endif %}',
+    idCardPreview: '{% if profile.id_card %}{{ profile.id_card.url }}{% endif %}',
+    selfiePreview: '{% if profile.verification_selfie %}{{ profile.verification_selfie.url }}{% endif %}',
+    handleFilePreview(event, target) {
+        const file = event.target.files[0];
+        if (file) {
+            this[target] = URL.createObjectURL(file);
+        }
+    }
+}" class="max-w-4xl mx-auto space-y-8">
 
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900">Profile Settings</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Keep your primary contact info and verification assets updated so operations clear smoothly.</p>
+    <!-- Page Header & Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Profile & Verification</h1>
+            <p class="text-sm text-slate-500 mt-1">Manage your identity, field agent details, location, and credentials.</p>
+        </div>
+        <div>
+            <button @click="editModalOpen = true" class="inline-flex items-center gap-2 px-5 py-2.5 bg-pink-700 hover:bg-pink-800 text-white font-medium rounded-xl transition-all shadow-md shadow-pink-700/10 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                Edit Profile Settings
+            </button>
+        </div>
     </div>
 
-    <div class="p-4 rounded-xl border flex items-center justify-between text-sm font-medium {% if profile.verification_status == 'APPROVED' %}bg-emerald-50 border-emerald-200 text-emerald-800{% elif profile.verification_status == 'DECLINED' %}bg-rose-50 border-rose-200 text-rose-800{% else %}bg-amber-50 border-amber-200 text-amber-800{% endif %}">
-        <div class="flex items-center gap-2">
-            <span>Verification Profile Check:</span>
-            <span class="underline uppercase tracking-wider font-bold">{{ profile.get_verification_status_display }}</span>
+    <!-- Status Clearance Banner -->
+    <div class="p-5 rounded-2xl border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 {% if profile.verification_status == 'APPROVED' %}bg-emerald-50/80 border-emerald-200 text-emerald-900{% elif profile.verification_status == 'DECLINED' %}bg-rose-50/80 border-rose-200 text-rose-900{% else %}bg-amber-50/80 border-amber-200 text-amber-900{% endif %}">
+        <div class="flex items-center gap-3">
+            <div class="p-2 rounded-xl {% if profile.verification_status == 'APPROVED' %}bg-emerald-100 text-emerald-700{% elif profile.verification_status == 'DECLINED' %}bg-rose-100 text-rose-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                {% if profile.verification_status == 'APPROVED' %}
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {% elif profile.verification_status == 'DECLINED' %}
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {% else %}
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {% endif %}
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider font-bold opacity-75">Verification Clearance</p>
+                <p class="text-base font-bold">{{ profile.get_verification_status_display }}</p>
+            </div>
         </div>
-        <div class="text-xs font-normal">
+        <div class="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-white/80 border border-current/10 backdrop-blur-sm self-start sm:self-auto">
             {% if profile.is_active_field_agent %}
-                ● Available for Active Assignments
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Active Field Agent</span>
             {% else %}
-                ○ No Active Assignments Yet
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                <span>Inactive Field Agent</span>
             {% endif %}
         </div>
     </div>
 
+    <!-- READONLY PROFILE DISPLAY -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-6 bg-slate-50/70 border-b border-slate-200">
-            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Account Credentials & Verification Information</h2>
-        </div>
         
-        <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
-            {% csrf_token %}
+        <!-- Header: Avatar, Name, Email, Region & Location -->
+        <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+            <div class="relative">
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" alt="{{ request.user.get_full_name }}" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-white shadow-md">
+                {% else %}
+                    <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-600 to-slate-800 text-white font-bold text-3xl flex items-center justify-center ring-4 ring-white shadow-md uppercase">
+                        {{ request.user.first_name|first }}{{ request.user.last_name|first }}
+                    </div>
+                {% endif %}
+            </div>
 
-            {% if user_form.non_field_errors or profile_form.non_field_errors %}
-                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm space-y-1">
-                    {{ user_form.non_field_errors }}
-                    {{ profile_form.non_field_errors }}
+            <div class="space-y-1.5">
+                <h2 class="text-xl font-bold text-slate-900">{{ request.user.get_full_name|default:request.user.first_name }}</h2>
+                <p class="text-sm font-medium text-pink-700">{{ request.user.email }}</p>
+                
+                <!-- Location & Region Badges -->
+                <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1 text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-200/70 text-slate-700 rounded-lg font-medium">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                        <strong>Location:</strong> {{ request.user.location|default:"Not specified" }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-pink-50 text-pink-700 rounded-lg font-medium border border-pink-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h65l2 2h2a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                        <strong>Region:</strong> {{ request.user.get_region_display|default:request.user.region|default:"Not specified" }}
+                    </span>
                 </div>
-            {% endif %}
+            </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">First Name</label>
-                    {{ user_form.first_name }}
-                    {% if user_form.first_name.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.first_name.errors.0 }}</p>{% endif %}
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Last Name</label>
-                    {{ user_form.last_name }}
-                    {% if user_form.last_name.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.last_name.errors.0 }}</p>{% endif %}
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Primary WhatsApp Number</label>
-                    {{ user_form.whatsapp_number }}
-                    {% if user_form.whatsapp_number.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.whatsapp_number.errors.0 }}</p>{% endif %}
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Alternative Contact Number</label>
-                    {{ user_form.alternative_number }}
-                    {% if user_form.alternative_number.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.alternative_number.errors.0 }}</p>{% endif %}
+        <!-- Contact & Bio Details -->
+        <div class="p-6 md:p-8 space-y-8">
+            
+            <!-- Contact Numbers -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Contact Details</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
+                        <span class="block text-[11px] font-semibold text-slate-400 uppercase">Primary WhatsApp</span>
+                        <span class="text-sm font-semibold text-slate-800">{{ request.user.whatsapp_number|default:"—" }}</span>
+                    </div>
+                    <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
+                        <span class="block text-[11px] font-semibold text-slate-400 uppercase">Alternative Phone</span>
+                        <span class="text-sm font-semibold text-slate-800">{{ request.user.alternative_number|default:"—" }}</span>
+                    </div>
+                    <div class="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 sm:col-span-2 md:col-span-1">
+                        <span class="block text-[11px] font-semibold text-slate-400 uppercase">Last Profile Update</span>
+                        <span class="text-sm font-semibold text-slate-800">{{ profile.updated_at|date:"M d, Y" }}</span>
+                    </div>
                 </div>
             </div>
 
-            <hr class="border-slate-100">
+            <!-- Bio -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Bio & Professional Background</h3>
+                <div class="bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-sm text-slate-600 leading-relaxed">
+                    {% if profile.bio %}
+                        {{ profile.bio }}
+                    {% else %}
+                        <span class="text-slate-400 italic">No bio summary provided yet. Click "Edit Profile Settings" to add one.</span>
+                    {% endif %}
+                </div>
+            </div>
 
-            <div class="space-y-6">
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Required Documents</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        <div class="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">National ID Card / Passport <span class="text-pink-600">*</span></label>
-                            {{ profile_form.id_card }}
-                            <p class="text-[10px] text-slate-400">{{ profile_form.id_card.help_text }}</p>
+            <!-- Verification Document Cards -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Verification Assets</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    
+                    <!-- ID Card Preview -->
+                    <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Government ID Card</span>
                             {% if profile.id_card %}
-                                <div class="mt-2 pt-2 border-t border-slate-200">
-                                    <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Current Uploaded File:</span>
-                                    <a href="{{ profile.id_card.url }}" target="_blank" class="text-xs font-medium text-pink-700 hover:underline inline-flex items-center gap-1">
-                                        View Uploaded ID Document →
-                                    </a>
+                                <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Uploaded</span>
+                            {% else %}
+                                <span class="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full">Missing</span>
+                            {% endif %}
+                        </div>
+                        <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300/80 group flex items-center justify-center">
+                            {% if profile.id_card %}
+                                <img src="{{ profile.id_card.url }}" alt="National ID" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                <a href="{{ profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    View Full Document
+                                </a>
+                            {% else %}
+                                <div class="text-center p-4 text-slate-400 space-y-1">
+                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6"></path></svg>
+                                    <span class="text-xs font-medium block">No ID uploaded</span>
                                 </div>
                             {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Verification Selfie Preview -->
+                    <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Selfie</span>
+                            {% if profile.verification_selfie %}
+                                <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Uploaded</span>
+                            {% else %}
+                                <span class="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full">Missing</span>
+                            {% endif %}
+                        </div>
+                        <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300/80 group flex items-center justify-center">
+                            {% if profile.verification_selfie %}
+                                <img src="{{ profile.verification_selfie.url }}" alt="Verification Selfie" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                <a href="{{ profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    View Full Selfie
+                                </a>
+                            {% else %}
+                                <div class="text-center p-4 text-slate-400 space-y-1">
+                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                    <span class="text-xs font-medium block">No selfie uploaded</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div x-show="editModalOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center"
+         x-cloak>
+        
+        <div @click.away="editModalOpen = false" 
+             class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Update Profile Settings</h3>
+                    <p class="text-xs text-slate-500">Edit personal details, location, and upload verification files.</p>
+                </div>
+                <button @click="editModalOpen = false" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-200/60 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Form Scrollable Content -->
+            <form method="POST" enctype="multipart/form-data" class="overflow-y-auto p-6 space-y-6 flex-grow">
+                {% csrf_token %}
+
+                {% if user_form.non_field_errors or profile_form.non_field_errors %}
+                    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs space-y-1">
+                        {{ user_form.non_field_errors }}
+                        {{ profile_form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <!-- SECTION 1: AVATAR / PROFILE PHOTO -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Profile Photo / Avatar</h4>
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <template x-if="avatarPreview">
+                            <img :src="avatarPreview" class="w-16 h-16 rounded-xl object-cover ring-2 ring-white shadow-sm shrink-0">
+                        </template>
+                        <template x-if="!avatarPreview">
+                            <div class="w-16 h-16 rounded-xl bg-pink-700 text-white font-bold text-xl flex items-center justify-center shrink-0 uppercase">
+                                {{ request.user.first_name|first }}{{ request.user.last_name|first }}
+                            </div>
+                        </template>
+                        <div class="space-y-1 text-xs flex-grow">
+                            <label class="block font-bold text-slate-700">Choose Profile Picture</label>
+                            <input type="file" name="{{ profile_form.avatar.name }}" id="{{ profile_form.avatar.id_for_label }}" @change="handleFilePreview($event, 'avatarPreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 transition cursor-pointer">
+                            {% if profile_form.avatar.errors %}<p class="text-xs text-rose-600 mt-1">{{ profile_form.avatar.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- SECTION 2: PERSONAL & CONTACT INFORMATION -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Personal & Contact Info</h4>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">First Name</label>
+                            {{ user_form.first_name }}
+                            {% if user_form.first_name.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.first_name.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Last Name</label>
+                            {{ user_form.last_name }}
+                            {% if user_form.last_name.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.last_name.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Primary WhatsApp</label>
+                            {{ user_form.whatsapp_number }}
+                            {% if user_form.whatsapp_number.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.whatsapp_number.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Alternative Phone</label>
+                            {{ user_form.alternative_number }}
+                            {% if user_form.alternative_number.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.alternative_number.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- SECTION 3: LOCATION & REGION -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Location Details</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Location / City</label>
+                            {{ user_form.location }}
+                            {% if user_form.location.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.location.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Region</label>
+                            {{ user_form.region }}
+                            {% if user_form.region.errors %}<p class="text-xs text-rose-600 mt-1">{{ user_form.region.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- SECTION 4: VERIFICATION DOCUMENTS -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Verification Documents</h4>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        
+                        <!-- ID Card Field -->
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">National ID / Passport</label>
+                            
+                            <template x-if="idCardPreview">
+                                <div class="aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300/60">
+                                    <img :src="idCardPreview" class="w-full h-full object-cover">
+                                </div>
+                            </template>
+                            
+                            <input type="file" name="{{ profile_form.id_card.name }}" id="{{ profile_form.id_card.id_for_label }}" @change="handleFilePreview($event, 'idCardPreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 transition cursor-pointer">
                             {% if profile_form.id_card.errors %}<p class="text-xs text-rose-600 mt-1">{{ profile_form.id_card.errors.0 }}</p>{% endif %}
                         </div>
 
-                        <div class="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Snapshot (Selfie) <span class="text-pink-600">*</span></label>
-                            {{ profile_form.verification_selfie }}
-                            <p class="text-[10px] text-slate-400">{{ profile_form.verification_selfie.help_text }}</p>
-                            {% if profile.verification_selfie %}
-                                <div class="mt-2 pt-2 border-t border-slate-200">
-                                    <span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Current Uploaded File:</span>
-                                    <a href="{{ profile.verification_selfie.url }}" target="_blank" class="text-xs font-medium text-pink-700 hover:underline inline-flex items-center gap-1">
-                                        View Uploaded Selfie →
-                                    </a>
+                        <!-- Selfie Field -->
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Selfie</label>
+                            
+                            <template x-if="selfiePreview">
+                                <div class="aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300/60">
+                                    <img :src="selfiePreview" class="w-full h-full object-cover">
                                 </div>
-                            {% endif %}
+                            </template>
+
+                            <input type="file" name="{{ profile_form.verification_selfie.name }}" id="{{ profile_form.verification_selfie.id_for_label }}" @change="handleFilePreview($event, 'selfiePreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 transition cursor-pointer">
                             {% if profile_form.verification_selfie.errors %}<p class="text-xs text-rose-600 mt-1">{{ profile_form.verification_selfie.errors.0 }}</p>{% endif %}
                         </div>
 
                     </div>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Bio Statements Summary</label>
+                <hr class="border-slate-100">
+
+                <!-- SECTION 5: BIO SUMMARY -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Bio & Experience Summary</label>
                     {{ profile_form.bio }}
                     {% if profile_form.bio.errors %}<p class="text-xs text-rose-600 mt-1">{{ profile_form.bio.errors.0 }}</p>{% endif %}
                 </div>
-            </div>
 
-            <hr class="border-slate-100 my-2">
-
-            <div class="flex justify-end pt-2">
-                <button type="submit" class="px-6 py-2.5 bg-pink-700 text-white font-medium rounded-xl hover:bg-pink-800 transition-all shadow-md shadow-pink-700/10 hover:shadow-lg focus:ring-4 focus:ring-pink-700/20 outline-none text-sm">
-                    Save Changes & Re-submit Profile
-                </button>
-            </div>
-        </form>
+                <!-- Footer Buttons -->
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 shrink-0">
+                    <button type="button" @click="editModalOpen = false" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-xs hover:bg-slate-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 bg-pink-700 text-white font-medium rounded-xl hover:bg-pink-800 transition text-xs shadow-md shadow-pink-700/10">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>
