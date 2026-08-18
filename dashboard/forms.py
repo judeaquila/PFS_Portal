@@ -67,7 +67,7 @@ class AdminUserManagementForm(TailwindFormMixin, forms.ModelForm):
     """Allows Superadmin/Admin to update core credentials, role, and active status."""
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'role', 'is_active', 'is_staff', 'company_logo']
+        fields = ['first_name', 'last_name', 'email', 'whatsapp_number', 'alternative_number', 'role', 'is_active', 'is_staff', 'company_logo', 'business_name', 'sector', 'region', 'location']
         widgets = {
             'whatsapp_number': forms.TextInput(attrs={'placeholder': '02441234567'}),
             'alternative_number': forms.TextInput(attrs={'placeholder': '02441234567'}),

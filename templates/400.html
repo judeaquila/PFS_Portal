@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="10; url='{% url 'core:home' %}'">
+    <title>400 - Bad Request</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 min-h-screen flex items-center justify-center p-4 font-sans text-slate-100">
+    <div class="text-center max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+        <div class="w-16 h-16 rounded-2xl bg-slate-900 text-slate-400 border border-slate-800 flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <i class="fa-solid fa-bug text-2xl"></i>
+        </div>
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Error 400</span>
+        <h1 class="text-3xl font-black text-white tracking-tight mt-1">Bad Request</h1>
+        <p class="text-xs text-slate-400 mt-3 leading-relaxed">
+            The server could not process your request due to invalid parameters or corrupted data.
+        </p>
+
+        <div class="mt-6 p-3 bg-slate-950 border border-slate-800/80 rounded-xl text-[11px] text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-spinner fa-spin text-slate-400"></i>
+            Redirecting to home in <span id="timer" class="font-bold text-white">10</span> seconds...
+        </div>
+
+        <div class="mt-6">
+            <a href="/" class="w-full py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-pink-600/20 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-house"></i> Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let seconds = 10;
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            seconds--;
+            if (timerEl) timerEl.textContent = seconds;
+            if (seconds <= 0) clearInterval(interval);
+        }, 1000);
+    </script>
+</body>
+</html>

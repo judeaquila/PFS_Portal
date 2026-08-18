@@ -20,6 +20,7 @@ from payments.models import Payment, PaymentRequest, AssessmentPackage, PackageT
 from django.conf import settings
 import requests
 from decimal import Decimal
+from payments.forms import HistoricalPaymentRequestForm
 
 
 
@@ -496,6 +497,32 @@ def admin_create_client_view(request):
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
+def admin_add_historical_payment_view(request, user_id):
+    """Log past/historical payments for an existing user account."""
+    target_user = get_object_or_404(User, id=user_id)
+    
+    if request.method == "POST":
+        form = HistoricalPaymentRequestForm(request.POST)
+        if form.is_valid():
+            payment_req = form.save(user=target_user, created_by=request.user)
+            messages.success(
+                request, 
+                f"Historical payment of GHS {payment_req.amount} logged for {target_user.get_full_name()}."
+            )
+            return redirect("dashboard:admin-user-detail", pk=target_user.pk)
+    else:
+        form = HistoricalPaymentRequestForm()
+
+    context = {
+        "form": form,
+        "target_user": target_user,
+        "title": f"Log Historical Payment - {target_user.get_full_name()}"
+    }
+    return render(request, "dashboards/superadmin_add_historical_payment.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
 def admin_client_created_success_view(request):
     """Displays temporary account credentials immediately after manual client creation."""
     client_info = request.session.pop('created_client_info', None)
@@ -542,13 +569,21 @@ def admin_user_list(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def admin_user_detail(request, pk):
-    """Shows full account profile including attached Consultant/Ambassador profiles."""
+    """Shows full account profile including attached profiles and payment history."""
     target_user = get_object_or_404(User, pk=pk)
+    
+    # Check related manager dynamically and optimize related package lookups
+    payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
+    onboarding_payments = payments_manager.select_related('package').all() if payments_manager else []
+    
+    custom_payments = PaymentRequest.objects.filter(user=target_user).order_by('-created_at')
     
     context = {
         'target_user': target_user,
         'ambassador_profile': getattr(target_user, 'ambassadorprofile', None),
         'consultant_profile': getattr(target_user, 'consultantprofile', None),
+        'onboarding_payments': onboarding_payments,
+        'custom_payments': custom_payments,
     }
     return render(request, 'dashboards/superadmin_user_detail.html', context)
 

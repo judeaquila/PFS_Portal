@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment, AssessmentPackage
+from .models import Payment, AssessmentPackage, PaymentRequest
 
 
 class PaymentAdmin(admin.ModelAdmin):
@@ -9,3 +9,4 @@ class PaymentAdmin(admin.ModelAdmin):
 
 admin.site.register(Payment, PaymentAdmin)
 admin.site.register(AssessmentPackage)
+admin.site.register(PaymentRequest)

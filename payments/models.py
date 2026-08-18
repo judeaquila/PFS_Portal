@@ -13,6 +13,14 @@ class PackageType(models.TextChoices):
     CUSTOM = 'CUSTOM', 'Custom / Ad-Hoc Charge'
 
 
+class PaymentMethod(models.TextChoices):
+    PAYSTACK = 'PAYSTACK', 'Paystack'
+    BANK_TRANSFER = 'BANK_TRANSFER', 'Bank Transfer'
+    MOBILE_MONEY = 'MOBILE_MONEY', 'Mobile Money'
+    CASH = 'CASH', 'Cash'
+    CHEQUE = 'CHEQUE', 'Cheque'
+
+
 class AssessmentPackage(models.Model):
     """Stores bookings or orders for specific package types."""
     
@@ -71,6 +79,22 @@ class Payment(models.Model):
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    payment_method = models.CharField(
+        max_length=30, 
+        choices=PaymentMethod.choices, 
+        default=PaymentMethod.PAYSTACK
+    )
+    payment_date = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        help_text="Actual date payment occurred. Leave blank to use system created timestamp."
+    )
+    notes = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Internal admin notes (e.g., 'Paid via Fidelity Bank Wire prior to platform launch')"
+    )
+
     class Meta:
         ordering = ("-created_at",)
 
@@ -93,6 +117,12 @@ class Payment(models.Model):
     def status_color(self):
         """Returns Tailwind color key based on status."""
         return "emerald" if self.verified else "amber"
+
+    @property
+    def effective_date(self):
+        """Returns actual transaction date or creation date as fallback."""
+        return self.payment_date or self.created_at
+    
 
     def __str__(self):
         email = getattr(self.user, 'email', 'No User')
@@ -126,6 +156,18 @@ class PaymentRequest(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    paid_at = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        help_text="When the request was settled (backdate field for historical payments)"
+    )
+    payment_method = models.CharField(
+        max_length=30, 
+        choices=PaymentMethod.choices, 
+        default=PaymentMethod.PAYSTACK
+    )
+    admin_notes = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']

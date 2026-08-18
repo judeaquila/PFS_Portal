@@ -89,7 +89,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=ClientRegion.choices,
         default=ClientRegion.AHAFO
     )
-    location = models.CharField(max_length=100, default='Not Set')
+    location = models.CharField(max_length=255, default='Not Set')
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

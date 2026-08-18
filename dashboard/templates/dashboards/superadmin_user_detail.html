@@ -5,7 +5,6 @@
 {% block content %}
 <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- Header / Quick Actions -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
             <a href="{% url 'dashboard:admin-user-list' %}" class="p-2.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition">
@@ -23,7 +22,6 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
-            <!-- Toggle Active State Form -->
             <form method="POST" action="{% url 'dashboard:admin-user-toggle-active' target_user.pk %}">
                 {% csrf_token %}
                 {% if target_user.is_active %}
@@ -43,13 +41,11 @@
                 {% endif %}
             </form>
 
-            <!-- Edit User -->
             <a href="{% url 'dashboard:admin-user-update' target_user.pk %}" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 Edit User
             </a>
 
-            <!-- Delete User Form -->
             <form method="POST" action="{% url 'dashboard:admin-user-delete' target_user.pk %}" onsubmit="return confirm('Are you sure you want to delete this account? This action cannot be undone.');">
                 {% csrf_token %}
                 <button type="submit" class="px-4 py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/60 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
@@ -60,13 +56,10 @@
         </div>
     </div>
 
-    <!-- Main Content Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Left Column: Primary User Card & Quick Details -->
         <div class="lg:col-span-4 space-y-6">
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 text-center space-y-4 backdrop-blur-sm">
-                <!-- Avatar -->
                 <div class="relative inline-block">
                     {% if target_user.is_consultant and target_user.consultant_profile.avatar %}
                         <img src="{{ target_user.consultant_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-700 shadow-xl mx-auto">
@@ -86,7 +79,6 @@
                     <p class="text-xs text-slate-400 mt-1 font-mono">{{ target_user.email }}</p>
                 </div>
 
-                <!-- Role Badge -->
                 <div>
                     <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold tracking-wider border
                         {% if target_user.is_superuser %}bg-purple-950/60 text-purple-300 border-purple-800/60
@@ -114,7 +106,6 @@
                 </div>
             </div>
 
-            <!-- Profile Overview & Contact Details -->
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-5 space-y-3 backdrop-blur-sm">
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact & Location</h3>
                 
@@ -143,10 +134,8 @@
             </div>
         </div>
 
-        <!-- Right Column: Role Profiles & Verification Actions -->
         <div class="lg:col-span-8 space-y-6">
 
-            <!-- 1. STANDARD CLIENT / BUSINESS DETAILS SECTION -->
             {% if target_user.is_regular_user or not target_user.role %}
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
@@ -168,47 +157,99 @@
                 </div>
             </div>
 
-            <!-- 1B. PAYMENTS & ASSESSMENT PACKAGES SECTION -->
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
-                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        <span>Payment & Package Subscriptions</span>
-                    </h3>
-                    <span class="text-xs text-slate-400 font-mono">{{ target_user.payments.count }} Record(s)</span>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <span>Payment & Service Billing History</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Package subscriptions & custom historical payments</p>
+                    </div>
+                    
+                    <a href="{% url 'dashboard:admin-add-historical-payment' target_user.pk %}" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-pink-400 hover:text-pink-300 border border-slate-800 text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Log Past Payment
+                    </a>
                 </div>
 
-                {% if target_user.payments.all %}
+                {% if onboarding_payments or custom_payments %}
                     <div class="space-y-3">
-                        {% for payment in target_user.payments.all %}
+                        
+                        {% for payment in onboarding_payments %}
                         <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                             <div class="space-y-1">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-bold text-white text-sm">{{ payment.package.title|default:"Assessment Package" }}</span>
+                                    
                                     {% if payment.verified %}
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">VERIFIED</span>
                                     {% else %}
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60">PENDING</span>
                                     {% endif %}
+
+                                    {% if payment.payment_method %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                            {{ payment.get_payment_method_display|default:payment.payment_method }}
+                                        </span>
+                                    {% endif %}
                                 </div>
-                                <p class="text-slate-400 text-[11px] font-mono">REF: {{ payment.ref }} • Created {{ payment.created_at|date:"M d, Y" }}</p>
+                                <p class="text-slate-400 text-[11px] font-mono">
+                                    REF: {{ payment.ref }} • Date: {% firstof payment.paid_at|date:"M d, Y" payment.created_at|date:"M d, Y" %}
+                                </p>
+                                {% if payment.notes %}
+                                    <p class="text-slate-400 text-[11px] italic mt-1">Note: {{ payment.notes }}</p>
+                                {% endif %}
                             </div>
-                            <div class="text-right">
+                            <div class="text-right sm:text-right text-left">
                                 <span class="text-base font-black text-emerald-400">GHS {{ payment.amount }}</span>
                                 <span class="block text-[10px] text-slate-500 uppercase tracking-wider">{{ payment.package.get_package_type_display|default:"Package Tier" }}</span>
                             </div>
                         </div>
                         {% endfor %}
+
+                        {% for req in custom_payments %}
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-white text-sm">{{ req.service_name|default:"Custom Service Payment" }}</span>
+                                    
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
+                                        {{ req.get_status_display|default:req.status|upper }}
+                                    </span>
+
+                                    {% if req.payment_method %}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                            {{ req.get_payment_method_display|default:req.payment_method }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-slate-400 text-[11px] font-mono">
+                                    Date: {{ req.paid_at|default:req.created_at|date:"M d, Y" }}
+                                </p>
+                                {% if req.note %}
+                                    <p class="text-slate-400 text-[11px] italic mt-0.5">Note: {{ req.note }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="text-right sm:text-right text-left">
+                                <span class="text-base font-black text-emerald-400">GHS {{ req.amount }}</span>
+                                <span class="block text-[10px] text-slate-500 uppercase tracking-wider">Custom Charge</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+
                     </div>
                 {% else %}
-                    <div class="bg-slate-900/40 p-6 rounded-xl border border-slate-800/50 text-center">
+                    <div class="bg-slate-900/40 p-6 rounded-xl border border-slate-800/50 text-center space-y-2">
                         <p class="text-xs text-slate-500">No payment records or package subscriptions found for this account.</p>
+                        <a href="{% url 'dashboard:admin-add-historical-payment' target_user.pk %}" class="inline-block text-xs text-pink-400 hover:underline font-medium">
+                            + Add a historical/past payment
+                        </a>
                     </div>
                 {% endif %}
             </div>
             {% endif %}
 
-            <!-- 2. CONSULTANT PROFILE SECTION -->
             {% if target_user.is_consultant and target_user.consultant_profile %}
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
@@ -221,7 +262,6 @@
                     </span>
                 </div>
 
-                <!-- Verification Quick Actions Bar -->
                 <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <span class="text-xs font-semibold text-slate-300 block">Verification Status</span>
@@ -263,7 +303,6 @@
                     </div>
                 </div>
 
-                <!-- Verification Files -->
                 <div class="pt-2">
                     <h4 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Uploaded Verification Files</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -304,7 +343,6 @@
             </div>
             {% endif %}
 
-            <!-- 3. ASSOCIATE / AMBASSADOR PROFILE SECTION -->
             {% if target_user.is_ambassador and target_user.ambassador_profile %}
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-5 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
@@ -317,7 +355,6 @@
                     </span>
                 </div>
 
-                <!-- Verification Quick Actions Bar -->
                 <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <span class="text-xs font-semibold text-slate-300 block">Verification Status</span>
@@ -359,7 +396,6 @@
                     </div>
                 </div>
 
-                <!-- Documents -->
                 <div>
                     <h4 class="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider">Uploaded Verification Files</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -389,7 +425,6 @@
             </div>
             {% endif %}
 
-            <!-- 4. ADMINISTRATIVE / SUPERVISOR SECTION -->
             {% if target_user.is_super_admin or target_user.is_supervisor %}
             <div class="bg-slate-950/60 rounded-2xl border border-slate-800/80 p-6 space-y-4 backdrop-blur-sm">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">

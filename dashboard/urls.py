@@ -20,6 +20,7 @@ urlpatterns = [
     path('super-admin/users/<int:pk>/delete/', views.admin_user_delete, name='admin-user-delete'),
     path('super-admin/users/payments_history/', views.admin_user_payment_history, name='admin-user-payments'),
     path('super-admin/user/payment_requests/', views.admin_create_payment_request, name='admin-create-payment-request'),
+    path('super-admin/user/historical_payments/<int:user_id>/', views.admin_add_historical_payment_view, name='admin-add-historical-payment'),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),
 

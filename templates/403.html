@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="10; url='{% url 'core:home' %}'">
+    <title>403 - Access Denied</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 min-h-screen flex items-center justify-center p-4 font-sans text-slate-100">
+    <div class="text-center max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+        <div class="w-16 h-16 rounded-2xl bg-amber-950/40 text-amber-500 border border-amber-900/50 flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <i class="fa-solid fa-shield-halved text-2xl"></i>
+        </div>
+        <span class="text-xs font-bold uppercase tracking-widest text-amber-500">Error 403</span>
+        <h1 class="text-3xl font-black text-white tracking-tight mt-1">Access Forbidden</h1>
+        <p class="text-xs text-slate-400 mt-3 leading-relaxed">
+            You don't have the required permissions or credentials to access this protected area.
+        </p>
+
+        <div class="mt-6 p-3 bg-slate-950 border border-slate-800/80 rounded-xl text-[11px] text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-spinner fa-spin text-amber-500"></i>
+            Redirecting to home in <span id="timer" class="font-bold text-white">10</span> seconds...
+        </div>
+
+        <div class="mt-6">
+            <a href="{% url 'core:home' %}" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-house"></i> Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let seconds = 10;
+        const timerEl = document.getElementById('timer');
+        const interval = setInterval(() => {
+            seconds--;
+            if (timerEl) timerEl.textContent = seconds;
+            if (seconds <= 0) clearInterval(interval);
+        }, 1000);
+    </script>
+</body>
+</html>
