@@ -98,10 +98,18 @@
                             {{ form.package_type }}
                         </div>
                     </div>
+                    
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Custom Price Override (GHS)</label>
-                        <input type="number" step="0.01" name="custom_amount" value="{{ form.custom_amount.value|default:'' }}" placeholder="Leave blank for selected package price" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20 transition">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Package Price (GHS)</label>
+                        <input type="number" step="0.01" id="id_custom_amount" name="custom_amount" value="{{ form.custom_amount.value|default:'' }}" placeholder="Preset package price" class="w-full rounded-xl px-3.5 py-2.5 text-xs border border-slate-800 focus:outline-none transition">
                     </div>
+
+                    <!-- Custom Charge Title (Visible only when CUSTOM package is selected) -->
+                    <div id="custom-title-wrapper" class="hidden sm:col-span-2">
+                        <label class="block text-xs font-semibold text-pink-400 mb-1.5">Custom Charge Title <span class="text-pink-500">*</span></label>
+                        <input type="text" id="id_custom_title" name="custom_title" value="{{ form.custom_title.value|default:'' }}" placeholder="e.g. Top Up Fee for Product Development Consultation" class="w-full bg-slate-900/90 border border-pink-500/50 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20 transition">
+                    </div>
+
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Temporary Account Password</label>
                         <input type="password" name="password" autocomplete="new-password" placeholder="Leave blank to auto-generate secure password" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20 transition">
@@ -124,9 +132,64 @@
 </div>
 
 <script>
-    // Apply styling to raw Django select widgets dynamically
-    document.querySelectorAll('select').forEach(select => {
-        select.classList.add('w-full', 'bg-slate-900/90', 'border', 'border-slate-800', 'rounded-xl', 'px-3.5', 'py-2.5', 'text-xs', 'text-slate-200', 'focus:outline-none', 'focus:border-pink-500', 'focus:ring-1', 'focus:ring-pink-500/20', 'transition');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply base styling to select widgets
+        document.querySelectorAll('select').forEach(select => {
+            select.classList.add('w-full', 'bg-slate-900/90', 'border', 'border-slate-800', 'rounded-xl', 'px-3.5', 'py-2.5', 'text-xs', 'text-slate-200', 'focus:outline-none', 'focus:border-pink-500', 'focus:ring-1', 'focus:ring-pink-500/20', 'transition');
+        });
+
+        const packageSelect = document.querySelector('select[name="package_type"]');
+        const customAmountInput = document.getElementById('id_custom_amount');
+        const customTitleWrapper = document.getElementById('custom-title-wrapper');
+        const customTitleInput = document.getElementById('id_custom_title');
+
+        // Preset prices map matching AssessmentPackage model definition
+        const packagePrices = {
+            'STANDARD': '200.00',
+            'PROD_DEV': '300.00',
+            'BUDGET_TECH': '500.00',
+            'FULL_COSTING': '1000.00',
+            'BUSINESS_PLAN': '3000.00'
+        };
+
+        function togglePackageFields() {
+            if (!packageSelect || !customAmountInput) return;
+
+            const selectedValue = packageSelect.value;
+
+            if (selectedValue === 'CUSTOM') {
+                // Unlock custom amount field
+                customAmountInput.readOnly = false;
+                customAmountInput.classList.remove('bg-slate-900/40', 'text-slate-400', 'cursor-not-allowed');
+                customAmountInput.classList.add('bg-slate-900/90', 'text-slate-200', 'focus:border-pink-500', 'focus:ring-1', 'focus:ring-pink-500/20');
+                customAmountInput.placeholder = "Enter custom GHS amount";
+                
+                // Show custom title field
+                if (customTitleWrapper) customTitleWrapper.classList.remove('hidden');
+                if (customTitleInput) customTitleInput.required = true;
+            } else {
+                // Set price automatically and set field to readonly
+                if (packagePrices[selectedValue]) {
+                    customAmountInput.value = packagePrices[selectedValue];
+                }
+                customAmountInput.readOnly = true;
+                customAmountInput.classList.remove('bg-slate-900/90', 'text-slate-200', 'focus:border-pink-500', 'focus:ring-1', 'focus:ring-pink-500/20');
+                customAmountInput.classList.add('bg-slate-900/40', 'text-slate-400', 'cursor-not-allowed');
+                customAmountInput.placeholder = "Preset package price";
+
+                // Hide custom title field
+                if (customTitleWrapper) customTitleWrapper.classList.add('hidden');
+                if (customTitleInput) {
+                    customTitleInput.required = false;
+                    customTitleInput.value = '';
+                }
+            }
+        }
+
+        if (packageSelect) {
+            packageSelect.addEventListener('change', togglePackageFields);
+            togglePackageFields(); // Run on initial page load
+        }
     });
 </script>
 {% endblock %}

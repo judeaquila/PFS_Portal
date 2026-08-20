@@ -29,9 +29,12 @@ class HistoricalPaymentRequestForm(forms.ModelForm):
         # Combine selected date with current time for accurate DateTime field
         paid_date = self.cleaned_data.get('paid_date')
         if paid_date:
-            instance.paid_at = timezone.make_aware(
-                timezone.datetime.combine(paid_date, timezone.datetime.now().time())
-            )
+            # Gets current local time safely
+            current_time = timezone.localtime().time()
+            
+            # Combines date + time as a naive datetime, then makes it aware
+            naive_dt = timezone.datetime.combine(paid_date, current_time)
+            instance.paid_at = timezone.make_aware(naive_dt, timezone.get_current_timezone())
         
         if commit:
             instance.save()

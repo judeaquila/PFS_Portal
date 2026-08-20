@@ -66,7 +66,7 @@ class AssessmentPackage(models.Model):
         return self.get_package_type_display()
 
     def __str__(self):
-        return f"Package #{self.id} - {self.get_package_type_display()}"
+        return f"Package #{self.id} - {self.get_package_type_display()} - Created on {self.created_at}."
 
 
 class Payment(models.Model):

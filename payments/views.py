@@ -36,7 +36,17 @@ def initiate_package_payment(request, package_code):
             )
             return redirect("core:pricing")
 
-        package = get_object_or_404(AssessmentPackage, package_type=package_code)
+        # FIX: Query standard packages filtered by null custom fields to prevent MultipleObjectsReturned
+        package = AssessmentPackage.objects.filter(
+            package_type=package_code,
+            custom_price__isnull=True,
+            custom_title__isnull=True
+        ).order_by('created_at').first()
+
+        # If no standard package exists in the database yet, initialize it
+        if not package:
+            package = AssessmentPackage.objects.create(package_type=package_code)
+
         user = request.user if request.user.is_authenticated else None
 
         # Create pending payment record

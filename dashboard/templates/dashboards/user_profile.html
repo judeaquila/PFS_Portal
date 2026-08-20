@@ -3,125 +3,257 @@
 {% block title %}My Profile & Settings | PFS Online Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-8">
+<div class="max-w-4xl mx-auto space-y-8" x-data="{ showRequestModal: false, targetField: '' }">
     
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900">Account Settings</h1>
-        <p class="text-sm text-slate-500 mt-1">Manage your personal contact details and review your verified corporate information.</p>
+    <!-- Page Header & Global Banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Account Settings & Profile</h1>
+            <p class="text-sm text-slate-500 mt-1">Review your contact, personal, and business registration records.</p>
+        </div>
+        <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-2 rounded-xl text-xs font-medium">
+            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span>Profile locked. Changes require Technical Support approval.</span>
+        </div>
     </div>
 
-    <form method="POST" action="{% url 'dashboard:user-profile' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        {% csrf_token %}
-        
-        <div class="p-6 border-b border-slate-200 bg-slate-50/50">
-            <h3 class="font-bold text-slate-800">Contact Information</h3>
-            <p class="text-xs text-slate-500 mt-0.5">You can update these details at any time to keep your communication lines open.</p>
-        </div>
-
-        <div class="p-6 space-y-5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">First Name</label>
-                    <input type="text" name="first_name" value="{{ user.first_name }}" required 
-                           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-600 focus:border-pink-600 outline-none transition">
-                    {% if form.first_name.errors %}
-                        <p class="text-xs text-red-500 mt-1">{{ form.first_name.errors.as_text }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Last Name</label>
-                    <input type="text" name="last_name" value="{{ user.last_name }}" required 
-                           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-600 focus:border-pink-600 outline-none transition">
-                    {% if form.last_name.errors %}
-                        <p class="text-xs text-red-500 mt-1">{{ form.last_name.errors.as_text }}</p>
-                    {% endif %}
-                </div>
-            </div>
-            
+    <!-- Section 1: Contact & Personal Details -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50/60 flex items-center justify-between">
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">WhatsApp Notification Number</label>
-                <div class="relative">
-                    <input type="tel" name="whatsapp_number" value="{{ user.whatsapp_number|default:'' }}" required 
-                           placeholder="e.g. 0501234567"
-                           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-600 focus:border-pink-600 outline-none transition pl-10">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-400 mt-1.5">Used by our team to ping you instantly when lab results or certifications drop.</p>
-                {% if form.whatsapp_number.errors %}
-                    <p class="text-xs text-red-500 mt-1">{{ form.whatsapp_number.errors.as_text }}</p>
-                {% endif %}
+                <h3 class="font-bold text-slate-800 text-base">Contact & Personal Profile</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Personal identification and communication lines.</p>
             </div>
-        </div>
-
-        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-            <button type="submit" class="bg-pink-700 text-white px-6 py-2 rounded-lg font-bold hover:bg-pink-800 transition shadow-sm text-sm">
-                Save Contact Changes
+            <button @click="showRequestModal = true; targetField = 'Personal & Contact Details'" 
+                    class="text-xs font-bold text-pink-700 hover:text-pink-800 border border-pink-200 hover:border-pink-300 bg-pink-50/50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-2xs">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Request Change
             </button>
         </div>
-    </form>
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        
-        <div class="p-6 border-b border-slate-200 bg-slate-50/50">
-            <h3 class="font-bold text-slate-800">Verified Corporate Profile</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Locked fields used explicitly for generating official FDA application structures.</p>
-        </div>
-
-        <div class="divide-y divide-slate-100">
-            
-            <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="space-y-0.5">
-                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Registered Business Name</span>
-                    <div class="text-base font-bold text-slate-800 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        {{ user.business_name|default:"Not Provided" }}
-                    </div>
-                </div>
-                <button onclick="alert('Verification Workflow Trigger:\nThis will open a modal or modal text block where users can submit a name correction request directly to their assigned consultant.')" 
-                        class="self-start sm:self-center text-xs font-bold text-pink-700 hover:text-pink-800 border border-pink-200 hover:border-pink-300 bg-pink-50/30 px-3 py-1.5 rounded transition">
-                    Request Change
-                </button>
-            </div>
-
-            <div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="space-y-0.5">
-                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Secure Login Identifier (Email)</span>
-                    <div class="text-base font-medium text-slate-600 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        {{ user.email }}
-                    </div>
-                </div>
-                <button onclick="alert('Email Update Safety Notification:\nChanging a primary authentication email identifier breaks open connections. A support ticket template will launch here.')" 
-                        class="self-start sm:self-center text-xs font-bold text-pink-700 hover:text-pink-800 border border-pink-200 hover:border-pink-300 bg-pink-50/30 px-3 py-1.5 rounded transition">
-                    Request Change
-                </button>
-            </div>
-
-            <div class="p-6 bg-slate-50/30 grid grid-cols-2 gap-4">
-                <div>
-                    <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Account Creation Date
-                    </span>
-
-                    <span class="text-sm font-medium text-slate-700 mt-1 block">
-                        {{ user.created_at|date:"l, M d, Y" }}
-                    </span>
-                </div>
-
-                <div>
-                    <span class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Last Profile Update
-                    </span>
-
-                    <span class="text-sm font-medium text-slate-700 mt-1 block">
-                        {{ user.updated_at|date:"l, M d, Y - H:i" }} GMT
-                    </span>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">First Name</label>
+                <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{{ user.first_name|default:"Not Provided" }}</span>
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
             </div>
 
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Last Name</label>
+                <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{{ user.last_name|default:"Not Provided" }}</span>
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+                <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{{ user.email }}</span>
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">WhatsApp Number</label>
+                <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        {{ user.whatsapp_number|default:"Not Provided" }}
+                    </span>
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Phone Number</label>
+                <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                    <span>{{ user.alternative_number|default:"Not Provided" }}</span>
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Section 2: Corporate & Business Profile -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50/60 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-slate-800 text-base">Business Profile</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Official business records used for regulatory submissions and documentation.</p>
+            </div>
+            <button @click="showRequestModal = true; targetField = 'Corporate & Business Profile'" 
+                    class="text-xs font-bold text-pink-700 hover:text-pink-800 border border-pink-200 hover:border-pink-300 bg-pink-50/50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-2xs">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Request Change
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <!-- Company Logo Display -->
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Company Logo</label>
+                <div class="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    {% if user.company_logo %}
+                        <img src="{% if user.company_logo %}{{ user.company_logo.url }}{% else %}{{ user.brand_logo.url }}{% endif %}" 
+                             alt="Company Logo" class="w-16 h-16 object-contain rounded-lg border border-slate-200 bg-white p-1">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-700">Official Company Logo</p>
+                            <a href="{% if user.company_logo %}{{ user.company_logo.url }}{% else %}{{ user.brand_logo.url }}{% endif %}" target="_blank" class="text-xs text-pink-700 hover:underline font-medium mt-0.5 inline-block">View High-Res File</a>
+                        </div>
+                    {% else %}
+                        <div class="w-16 h-16 rounded-lg border border-dashed border-slate-300 bg-slate-100 flex items-center justify-center text-slate-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-600">No company logo uploaded</p>
+                            <p class="text-xs text-slate-400">Submit a request to upload your official company logo.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Brand Logo Display -->
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Brand Logo</label>
+                <div class="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    {% if user.brand_logo %}
+                        <img src="{% if user.brand_logo %}{{ user.brand_logo.url }}{% else %}{{ user.company_logo.url }}{% endif %}" 
+                             alt="Brand Logo" class="w-16 h-16 object-contain rounded-lg border border-slate-200 bg-white p-1">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-700">Official Brand Logo</p>
+                            <a href="{% if user.brand_logo %}{{ user.brand_logo.url }}{% else %}{{ user.company_logo.url }}{% endif %}" target="_blank" class="text-xs text-pink-700 hover:underline font-medium mt-0.5 inline-block">View High-Res File</a>
+                        </div>
+                    {% else %}
+                        <div class="w-16 h-16 rounded-lg border border-dashed border-slate-300 bg-slate-100 flex items-center justify-center text-slate-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-600">No brand logo uploaded</p>
+                            <p class="text-xs text-slate-400">Submit a request to upload your official brand logo.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Business Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Registered Business Name</label>
+                    <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                        <span>{{ user.business_name|default:"Not Provided" }}</span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Industry Sector</label>
+                    <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                        <span>{{ user.get_sector_display|default:"Not Provided" }}</span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Location</label>
+                    <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                        <span>{{ user.location|default:"Not Provided" }}</span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Region</label>
+                    <div class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 flex items-center justify-between">
+                        <span>{{ user.get_region_display|default:"Not Provided" }}</span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Account System Metadata -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50/60">
+            <h3 class="font-bold text-slate-800 text-base">System Settings</h3>
+            <p class="text-xs text-slate-500 mt-0.5">System records on date you joined PFS, and account last update date.</p>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/30">
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Role</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-pink-100 text-pink-800 border border-pink-200 uppercase">
+                    {{ user.get_role_display|default:"Client" }}
+                </span>
+            </div>
+
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Creation Date</span>
+                <span class="text-sm font-semibold text-slate-700 block">
+                    {{ user.created_at|date:"l, M d, Y" }}
+                </span>
+            </div>
+
+            <div>
+                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Last Profile Update</span>
+                <span class="text-sm font-semibold text-slate-700 block">
+                    {{ user.updated_at|date:"M d, Y - H:i" }} GMT
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Change Modal (Alpine.js) -->
+    <div x-show="showRequestModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden" @click.away="showRequestModal = false">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Request Profile Modification</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Submit a change request ticket to Technical Support Team.</p>
+                </div>
+                <button @click="showRequestModal = false" class="text-slate-400 hover:text-slate-600 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form method="POST" action="#" class="p-6 space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="section_name" :value="targetField">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Profile Section</label>
+                    <input type="text" readonly :value="targetField" class="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Requested Corrections / Details</label>
+                    <textarea name="change_reason" rows="4" required placeholder="Specify the field(s) you wish to update and provide the new values..." 
+                              class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-pink-600 focus:border-pink-600 outline-none transition"></textarea>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+                    <button type="button" @click="showRequestModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-pink-700 hover:bg-pink-800 rounded-lg transition shadow-sm">
+                        Submit Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

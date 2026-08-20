@@ -453,14 +453,21 @@ def admin_create_client_view(request):
                 user = form.save()
                 raw_password = form.raw_password
                 
-                # Create AssessmentPackage Record
                 package_type = form.cleaned_data.get('package_type')
                 custom_amount = form.cleaned_data.get('custom_amount')
                 
-                package = AssessmentPackage.objects.create(
-                    package_type=package_type,
-                    custom_price=custom_amount if custom_amount else None
-                )
+                # PERPETUAL FIX: Reuse standard packages; only create new records for custom overrides
+                if custom_amount or package_type == PackageType.CUSTOM:
+                    package = AssessmentPackage.objects.create(
+                        package_type=package_type,
+                        custom_price=custom_amount if custom_amount else None
+                    )
+                else:
+                    package, _ = AssessmentPackage.objects.get_or_create(
+                        package_type=package_type,
+                        custom_price__isnull=True,
+                        custom_title__isnull=True
+                    )
 
                 # Create Verified Payment Record
                 payment = Payment.objects.create(
@@ -493,7 +500,6 @@ def admin_create_client_view(request):
         "title": "Add New Client"
     }
     return render(request, "dashboards/superadmin_create_client.html", context)
-
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
