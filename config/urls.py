@@ -20,12 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('core.urls')),
     path('accounts/', include('accounts.urls')),
+    path('', include('core.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('common/', include('common.urls')),
     path('payments/', include('payments.urls')),
+    path('admin/', admin.site.urls),
 ]
 
 if settings.DEBUG:

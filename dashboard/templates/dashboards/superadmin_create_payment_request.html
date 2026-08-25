@@ -1,9 +1,9 @@
 {% extends "dashboards/base_superadmin.html" %}
 
-{% block title %}Issue Payment Request | Superadmin{% endblock %}
+{% block title %}Issue Payment Request | Superadmin Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-8" x-data="{ modalOpen: false }">
+<div class="max-w-7xl mx-auto space-y-8" x-data="{ modalOpen: false, detailsModalOpen: false, selectedRequest: null }">
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -12,45 +12,52 @@
             <p class="text-sm text-slate-400">Issue custom service charges directly to client dashboards for instant Paystack checkout.</p>
         </div>
         <button @click="modalOpen = true" 
-                class="inline-flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-pink-600/20 transition">
+                class="inline-flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-pink-600/20 transition shrink-0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Issue New Request
         </button>
     </div>
 
-    <!-- Recent Requests Table -->
+    <!-- Recent Requests Table Wrapper -->
     <div class="bg-slate-950 rounded-2xl border border-slate-800/80 shadow-md overflow-hidden">
-        <div class="p-5 border-b border-slate-800/80">
+        <div class="p-5 border-b border-slate-800/80 flex items-center justify-between gap-4">
             <h2 class="text-sm font-bold text-white">All Issued Payment Requests</h2>
+            <span class="text-[11px] text-slate-500 font-medium md:hidden flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                Scroll horizontally
+            </span>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+
+        <!-- Horizontal Scroll Container -->
+        <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            <table class="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                     <tr class="bg-slate-900/80 border-b border-slate-800/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider">
-                        <th class="py-3.5 px-6">Client</th>
-                        <th class="py-3.5 px-6">Service</th>
-                        <th class="py-3.5 px-6">Reference</th>
-                        <th class="py-3.5 px-6">Amount</th>
-                        <th class="py-3.5 px-6">Status</th>
-                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Client</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Service</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Reference</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Amount</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Status</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Date</th>
+                        <th class="py-3.5 px-6 text-right whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60 text-xs">
                     {% for pr in payment_requests %}
                     <tr class="hover:bg-slate-900/50 transition">
-                        <td class="py-4 px-6 font-bold text-slate-200">
+                        <td class="py-4 px-6 font-bold text-slate-200 whitespace-nowrap">
                             {{ pr.user.get_full_name|default:pr.user.email }}
                             <span class="block text-[11px] font-normal text-slate-500">{{ pr.user.email }}</span>
                         </td>
-                        <td class="py-4 px-6 font-semibold text-slate-300">
+                        <td class="py-4 px-6 font-semibold text-slate-300 min-w-[200px]">
                             {{ pr.service_name }}
                             {% if pr.note %}
                                 <span class="block text-[11px] font-normal text-slate-500 truncate max-w-xs">{{ pr.note }}</span>
                             {% endif %}
                         </td>
-                        <td class="py-4 px-6 font-mono text-slate-400">{{ pr.reference }}</td>
-                        <td class="py-4 px-6 font-bold text-white">GHS {{ pr.amount|floatformat:2 }}</td>
-                        <td class="py-4 px-6">
+                        <td class="py-4 px-6 font-mono text-slate-400 whitespace-nowrap">{{ pr.reference }}</td>
+                        <td class="py-4 px-6 font-bold text-white whitespace-nowrap">GHS {{ pr.amount|floatformat:2 }}</td>
+                        <td class="py-4 px-6 whitespace-nowrap">
                             {% if pr.is_paid %}
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
                                     Paid
@@ -65,11 +72,32 @@
                                 </span>
                             {% endif %}
                         </td>
-                        <td class="py-4 px-6 text-slate-400">{{ pr.created_at|date:"M d, Y" }}</td>
+                        <td class="py-4 px-6 text-slate-400 whitespace-nowrap">{{ pr.created_at|date:"M d, Y" }}</td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <button @click="selectedRequest = {
+                                client: '{{ pr.user.get_full_name|default:pr.user.email|escapejs }}',
+                                email: '{{ pr.user.email|escapejs }}',
+                                service: '{{ pr.service_name|escapejs }}',
+                                reference: '{{ pr.reference|escapejs }}',
+                                amount: '{{ pr.amount|floatformat:2 }}',
+                                status: '{% if pr.is_paid %}Paid{% elif pr.is_pending %}Pending Payment{% else %}Cancelled{% endif %}',
+                                statusClass: '{% if pr.is_paid %}bg-emerald-950 text-emerald-400 border-emerald-800{% elif pr.is_pending %}bg-amber-950 text-amber-400 border-amber-800{% else %}bg-slate-900 text-slate-400 border-slate-800{% endif %}',
+                                date: '{{ pr.created_at|date:"M d, Y H:i" }}',
+                                note: '{{ pr.note|default:""|escapejs }}'
+                            }; detailsModalOpen = true;" 
+                            class="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition inline-flex items-center gap-1.5"
+                            title="View Details">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span class="hidden md:inline text-[11px] font-semibold">View</span>
+                            </button>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="py-12 text-center text-slate-500">No payment requests issued yet.</td>
+                        <td colspan="7" class="py-12 text-center text-slate-500">No payment requests issued yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -121,6 +149,68 @@
                     <button type="submit" class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-bold shadow-lg shadow-pink-600/20">Send Request</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div x-show="detailsModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 max-w-lg w-full overflow-hidden shadow-2xl" @click.away="detailsModalOpen = false">
+            <div class="bg-slate-950 p-6 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-base font-bold text-white">Payment Request Details</h3>
+                <button @click="detailsModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            
+            <div class="p-6 space-y-4 text-xs" x-if="selectedRequest">
+                <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-800/80">
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Client Name</span>
+                        <p class="text-sm font-bold text-slate-200 mt-0.5" x-text="selectedRequest.client"></p>
+                        <p class="text-[11px] text-slate-400" x-text="selectedRequest.email"></p>
+                    </div>
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</span>
+                        <div class="mt-1">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border" 
+                                  :class="selectedRequest.statusClass" 
+                                  x-text="selectedRequest.status">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-800/80">
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Service Title</span>
+                        <p class="text-sm font-semibold text-slate-200 mt-0.5" x-text="selectedRequest.service"></p>
+                    </div>
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Amount Billed</span>
+                        <p class="text-sm font-bold text-white mt-0.5">GHS <span x-text="selectedRequest.amount"></span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-800/80">
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Reference Code</span>
+                        <p class="text-xs font-mono text-slate-300 mt-0.5" x-text="selectedRequest.reference"></p>
+                    </div>
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date Issued</span>
+                        <p class="text-xs text-slate-300 mt-0.5" x-text="selectedRequest.date"></p>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Note / Instructions</span>
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-300 leading-relaxed whitespace-pre-wrap" 
+                         x-text="selectedRequest.note || 'No notes provided for this request.'">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end">
+                    <button type="button" @click="detailsModalOpen = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-semibold transition">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 

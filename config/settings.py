@@ -25,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ijjw8g(nju_%nn5t@h3)3=ctq&7g5g8=a+dz^#=3uvpchzj(in'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
+DEBUG = True
 
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
-DEBUG = False
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# DEBUG = False
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -145,3 +145,32 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # PAYSTACK CONFIGURATION
 PAYSTACK_PUBLIC_KEY = 'pk_test_2a96e35ea12a7a83ea8607172860eec5516732fe'
 PAYSTACK_SECRET_KEY = 'sk_test_5be9ed1ac411d8784b620af067c168289c74c3c4'
+
+
+# # Default email sender display
+# DEFAULT_FROM_EMAIL = "PFS Online Portal <noreply@yourdomain.com>"
+# SERVER_EMAIL = "PFS System Errors <errors@yourdomain.com>"
+
+# # Mail Server Credentials
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_USE_SSL = False
+# EMAIL_HOST_USER = "noreply@yourdomain.com"
+# EMAIL_HOST_PASSWORD = "your-actual-smtp-password"
+
+# # Timeout settings to prevent hanging server threads (in seconds)
+# EMAIL_TIMEOUT = 10
+
+# Gmail SMTP Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'hologramdigitalx@gmail.com'
+EMAIL_HOST_PASSWORD = 'pikh ydbj uvdy lmds'
+DEFAULT_FROM_EMAIL = 'PFS Online Portal <hologramdigitalx@gmail.com>'
+
+SITE_DOMAIN = 'https://portal.pfsgh.com'

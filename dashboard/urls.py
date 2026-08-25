@@ -23,6 +23,18 @@ urlpatterns = [
     path('super-admin/user/historical_payments/<int:user_id>/', views.admin_add_historical_payment_view, name='admin-add-historical-payment'),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),
+    path('supervisor/associates/', views.supervisor_associates, name='supervisor-associates'),
+    path('supervisor/associates/verify/<int:profile_id>/<str:action>/', views.supervisor_process_verification, name='supervisor-process-verification'),
+    path('supervisor/users/<int:pk>/', views.supervisor_user_detail, name='supervisor-user-detail'),
+    path("supervisor/payments/", views.supervisor_client_payments, name="supervisor-client-payments"),
+    path("supervisor/schedules/", views.supervisor_staff_schedules, name="supervisor-staff-schedules"),
+    path("supervisor/verifications/", views.supervisor_verifications_list, name="supervisor-verifications"),
+    path("supervisor/verifications/ambassador/<int:profile_id>/<str:action>/", views.supervisor_process_ambassador_verification, name="supervisor-process-ambassador-verification"),
+    path("supervisor/verifications/consultant/<int:profile_id>/<str:action>/", views.supervisor_process_consultant_verification, name="supervisor-process-consultant-verification"),
+    path("supervisor/reassign-associate/<int:assignment_id>/", views.supervisor_reassign_associate, name="supervisor-reassign-associate"),
+    path("supervisor/project-oversight/", views.supervisor_project_oversight, name="supervisor-project-oversight"),
+    path("supervisor/payout-audit/", views.supervisor_payout_audit_queue, name="supervisor-payout-audit"),
+    path("supervisor/staff-activity-logs/", views.supervisor_staff_activity_logs, name="supervisor-staff-activity-logs"),
 
     path("consultant/", views.consultant_dashboard, name="consultant-dashboard"),
     path("consultant/submissions/", views.consultant_client_submissions, name="client-submissions"),

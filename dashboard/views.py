@@ -501,6 +501,8 @@ def admin_create_client_view(request):
     }
     return render(request, "dashboards/superadmin_create_client.html", context)
 
+
+
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def admin_add_historical_payment_view(request, user_id):
@@ -701,11 +703,473 @@ def admin_user_delete(request, pk):
 
 
 
-# SUPERVISOR Dashboard
+
+# ****************************************************** SUPERVISOR DASHBOARD ************************************************** #
+# ****************************************************************************************************************************** #
+
+
+# List of supervisory administrative roles that can access these views
+SUPERVISORY_ROLES = [UserRole.SUPER_ADMIN, UserRole.SUPERVISOR]
+
+
 @login_required
 @role_required([UserRole.SUPERVISOR])
 def supervisor_dashboard(request):
-    return render(request, "dashboards/supervisor.html")
+    """
+    Supervisor operational dashboard.
+    Handles field associate assignments and displays high-level team metrics.
+    """
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "assign_associate_request":
+            assignment_id = request.POST.get("assignment_id")
+            associate_id = request.POST.get("associate_id")
+
+            if not associate_id:
+                messages.error(request, "Please select an associate before assigning.")
+                return redirect("dashboard:supervisor-dashboard")
+
+            assignment = get_object_or_404(AmbassadorAssignment, pk=assignment_id)
+            ambassador_profile = get_object_or_404(AmbassadorProfile, user_id=associate_id)
+
+            assignment.ambassador = ambassador_profile
+            assignment.status = AmbassadorAssignment.TaskStatus.ASSIGNED
+            assignment.cancellation_reason = None
+            assignment.save(update_fields=['ambassador', 'status', 'cancellation_reason'])
+
+            client_name = (
+                assignment.client.business_name
+                or assignment.client.get_full_name()
+                or assignment.client.email
+            )
+            messages.success(
+                request,
+                f"Assigned Associate {ambassador_profile.user.get_full_name()} to {client_name}."
+            )
+            return redirect("dashboard:supervisor-dashboard")
+
+    # Queue of requests needing assignment
+    pending_associate_requests = AmbassadorAssignment.objects.filter(
+        status__in=[
+            AmbassadorAssignment.TaskStatus.UNASSIGNED,
+            AmbassadorAssignment.TaskStatus.CANCELLED,
+        ]
+    ).select_related('client', 'project', 'ambassador__user').order_by('-updated_at')
+
+    # Available agents and current workloads
+    available_associates = User.objects.filter(
+        role=UserRole.AMBASSADOR,
+        ambassador_profile__is_active_field_agent=True
+    ).annotate(
+        active_task_count=Count(
+            'ambassador_profile__assignments',
+            filter=Q(ambassador_profile__assignments__status=AmbassadorAssignment.TaskStatus.ASSIGNED)
+        )
+    ).order_by('first_name')
+
+    active_associate_assignments = AmbassadorAssignment.objects.filter(
+        ambassador__isnull=False,
+        status=AmbassadorAssignment.TaskStatus.ASSIGNED
+    ).select_related('ambassador__user', 'client', 'project').order_by('-created_at')
+
+    metrics = {
+        'total_ambassadors': AmbassadorProfile.objects.filter(is_active_field_agent=True).count(),
+        'total_consultants': ConsultantProfile.objects.filter(is_active_consultant=True).count(),
+        'pending_verifications': (
+            AmbassadorProfile.objects.filter(verification_status=AmbassadorProfile.VerificationStatus.PENDING).count() +
+            ConsultantProfile.objects.filter(verification_status=ConsultantProfile.VerificationStatus.PENDING).count()
+        ),
+        'active_assignments': active_associate_assignments.count(),
+        'pending_associate_requests_count': pending_associate_requests.count(),
+    }
+
+    context = {
+        'metrics': metrics,
+        'pending_associate_requests': pending_associate_requests,
+        'available_associates': available_associates,
+        'active_associate_assignments': active_associate_assignments,
+    }
+    return render(request, "dashboards/supervisor.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_associates(request):
+    """Renders comprehensive directory table managing all platform associate profiles."""
+    ambassadors_users = User.objects.filter(role=UserRole.AMBASSADOR).select_related(
+        'ambassador_profile'
+    ).annotate(
+        assignment_count=Count('ambassador_profile__assignments')
+    ).order_by('-id')
+
+    context = {
+        'ambassadors': ambassadors_users
+    }
+
+    return render(request, 'dashboards/supervisor_associates_list.html', context)
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_process_verification(request, profile_id, action):
+    """Processes verification assets against explicit design parameters."""
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, id=profile_id)
+        profile = get_object_or_404(AmbassadorProfile, user=target_user)
+        
+        # Enforce that documents exist before letting action execute
+        if not profile.id_card or not profile.verification_selfie:
+            messages.error(request, f"Cannot process verification: Associate {target_user.email} hasn't uploaded all files.")
+            return redirect('dashboard:supervisor-associates')
+            
+        if action == 'verify':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.APPROVED
+            profile.is_active_field_agent = True
+            profile.save()
+            messages.success(request, f"Successfully verified account and authorized Associate {target_user.email}.")
+            
+        elif action == 'decline':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.DECLINED
+            profile.is_active_field_agent = False
+            profile.save()
+            messages.warning(request, f"Declined verification credentials for {target_user.email}.")
+            
+    return redirect('dashboard:supervisor-associates')
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_user_detail(request, pk):
+    """Shows full account profile including attached profiles and payment history."""
+    target_user = get_object_or_404(User, pk=pk)
+    
+    # Check related manager dynamically and optimize related package lookups
+    payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
+    onboarding_payments = payments_manager.select_related('package').all() if payments_manager else []
+    
+    custom_payments = PaymentRequest.objects.filter(user=target_user).order_by('-created_at')
+    
+    context = {
+        'target_user': target_user,
+        'ambassador_profile': getattr(target_user, 'ambassadorprofile', None),
+        'consultant_profile': getattr(target_user, 'consultantprofile', None),
+        'onboarding_payments': onboarding_payments,
+        'custom_payments': custom_payments,
+    }
+    return render(request, 'dashboards/supervisor_user_detail.html', context)
+
+
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_client_payments(request):
+    """
+    Allows supervisors to view client transaction records and filter payments.
+    """
+    query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+
+    payments = Payment.objects.select_related('user', 'package').all().order_by('-created_at')
+
+    if query:
+        payments = payments.filter(
+            Q(ref__icontains=query) |
+            Q(email__icontains=query) |
+            Q(business_name__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query)
+        )
+
+    if status_filter:
+        if status_filter.lower() == 'success':
+            payments = payments.filter(verified=True)
+        elif status_filter.lower() == 'pending':
+            payments = payments.filter(verified=False)
+
+    all_payments = Payment.objects.all()
+    total_revenue = all_payments.filter(verified=True).aggregate(total=Sum('amount'))['total'] or 0.00
+
+    context = {
+        'payments': payments,
+        'query': query,
+        'status_filter': status_filter,
+        'total_revenue': total_revenue,
+        'successful_count': all_payments.filter(verified=True).count(),
+        'pending_count': all_payments.filter(verified=False).count(),
+    }
+    return render(request, 'dashboards/supervisor_client_payments.html', context)
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_staff_schedules(request):
+    """
+    Displays weekly availability schedules for Consultants and Associates.
+    """
+    consult_available = Availability.objects.filter(
+        user__role=UserRole.CONSULTANT
+    ).select_related('user').order_by('weekday', 'start_time')
+
+    associate_available = Availability.objects.filter(
+        user__role=UserRole.AMBASSADOR
+    ).select_related('user').order_by('weekday', 'start_time')
+
+    consultants_availability = defaultdict(list)
+    for slot in consult_available:
+        consultants_availability[slot.user].append(slot)
+
+    associates_availability = defaultdict(list)
+    for slot in associate_available:
+        associates_availability[slot.user].append(slot)
+
+    context = {
+        'consultants_availability': dict(consultants_availability),
+        'associates_availability': dict(associates_availability),
+    }
+    return render(request, 'dashboards/supervisor_staff_schedules.html', context)
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_verifications_list(request):
+    """
+    Lists pending, approved, and declined verifications for Associates and Consultants.
+    """
+    pending_associates = AmbassadorProfile.objects.select_related('user').order_by('-id')
+    pending_consultants = ConsultantProfile.objects.select_related('user').order_by('-id')
+
+    context = {
+        'associates': pending_associates,
+        'consultants': pending_consultants,
+    }
+    return render(request, 'dashboards/supervisor_verifications.html', context)
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_process_ambassador_verification(request, profile_id, action):
+    """
+    Approves or declines verification assets submitted by an Associate.
+    """
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, id=profile_id)
+        profile = get_object_or_404(AmbassadorProfile, user=target_user)
+
+        if not profile.id_card or not profile.verification_selfie:
+            messages.error(request, f"Cannot process verification: Associate {target_user.email} hasn't uploaded all files.")
+            return redirect('dashboard:supervisor-verifications')
+
+        if action == 'verify':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.APPROVED
+            profile.is_active_field_agent = True
+            profile.save()
+            messages.success(request, f"Successfully verified Associate {target_user.email}.")
+        elif action == 'decline':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.DECLINED
+            profile.is_active_field_agent = False
+            profile.save()
+            messages.warning(request, f"Declined verification credentials for {target_user.email}.")
+
+    return redirect('dashboard:supervisor-verifications')
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_process_consultant_verification(request, profile_id, action):
+    """
+    Approves or declines verification assets submitted by a Consultant.
+    """
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, id=profile_id)
+        profile = get_object_or_404(ConsultantProfile, user=target_user)
+
+        if not profile.id_card or not profile.verification_selfie:
+            messages.error(request, f"Cannot process verification: Consultant {target_user.email} hasn't uploaded all files.")
+            return redirect('dashboard:supervisor-verifications')
+
+        if action == 'verify':
+            profile.verification_status = ConsultantProfile.VerificationStatus.APPROVED
+            profile.is_active_consultant = True
+            profile.save()
+            messages.success(request, f"Successfully verified Consultant {target_user.email}.")
+        elif action == 'decline':
+            profile.verification_status = AmbassadorProfile.VerificationStatus.DECLINED
+            profile.is_active_consultant = False
+            profile.save()
+            messages.warning(request, f"Declined verification credentials for {target_user.email}.")
+
+    return redirect('dashboard:supervisor-verifications')
+
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_reassign_associate(request, assignment_id):
+    """
+    Override and reassign an active or cancelled field associate assignment to another agent.
+    """
+    assignment = get_object_or_404(AmbassadorAssignment, pk=assignment_id)
+
+    if request.method == "POST":
+        new_associate_id = request.POST.get("associate_id")
+        reason = request.POST.get("reassignment_reason", "").strip()
+
+        if not new_associate_id:
+            messages.error(request, "Please select a valid associate to complete the reassignment.")
+            return redirect("dashboard:supervisor-dashboard")
+
+        ambassador_profile = get_object_or_404(AmbassadorProfile, user_id=new_associate_id)
+        previous_agent = assignment.ambassador.user.get_full_name() if assignment.ambassador else "Unassigned"
+
+        assignment.ambassador = ambassador_profile
+        assignment.status = AmbassadorAssignment.TaskStatus.ASSIGNED
+        assignment.cancellation_reason = None
+        assignment.save(update_fields=['ambassador', 'status', 'cancellation_reason'])
+
+        create_activity_log(
+            user=request.user,
+            category=LogCategory.SYSTEM,
+            description=f"Supervisor reassigned client task #{assignment.id} from {previous_agent} to {ambassador_profile.user.get_full_name()}. Reason: {reason or 'N/A'}"
+        )
+
+        messages.success(request, f"Successfully reassigned task to {ambassador_profile.user.get_full_name()}.")
+
+    return redirect("dashboard:supervisor-dashboard")
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_project_oversight(request):
+    """
+    Read-only global operational overview monitoring all active client project boards
+    and flagging delayed or paused activities.
+    """
+    today = timezone.now().date()
+    
+    projects = ClientProject.objects.select_related(
+        'client', 'assigned_consultant'
+    ).prefetch_related('activities').order_by('-updated_at')
+
+    # Flag projects containing delayed or paused tasks
+    flagged_projects = []
+    for project in projects:
+        delayed_tasks = project.activities.filter(
+            Q(activity_status=ActivityStatus.PAUSED) | 
+            Q(activity_deadline__lt=today, activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED])
+        )
+        if delayed_tasks.exists():
+            flagged_projects.append({
+                'project': project,
+                'delayed_count': delayed_tasks.count(),
+                'delayed_tasks': delayed_tasks
+            })
+
+    context = {
+        'projects': projects,
+        'flagged_projects': flagged_projects,
+        'total_projects_count': projects.count(),
+    }
+    return render(request, "dashboards/supervisor_project_oversight.html", context)
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_payout_audit_queue(request):
+    """
+    Review and audit field assignment completion sign-offs before marking payouts 
+    ready for Superadmin financial settlement.
+    """
+    if request.method == "POST":
+        assignment_id = request.POST.get("assignment_id")
+        action = request.POST.get("action")
+        assignment = get_object_or_404(AmbassadorAssignment, pk=assignment_id)
+
+        if action == "approve_payout":
+            assignment.status = AmbassadorAssignment.TaskStatus.COMPLETED
+            assignment.payout_processed = True
+            assignment.save(update_fields=['status', 'payout_processed'])
+            
+            create_activity_log(
+                user=request.user,
+                category=LogCategory.SYSTEM,
+                description=f"Supervisor approved payout clearance for assignment #{assignment.id} (Associate: {assignment.ambassador.user.email})."
+            )
+            messages.success(request, f"Payout for assignment #{assignment.id} approved for settlement.")
+            
+        elif action == "reject_payout":
+            note = request.POST.get("audit_note", "").strip()
+            assignment.ambassador_marked_complete = False
+            assignment.save(update_fields=['ambassador_marked_complete'])
+            
+            create_activity_log(
+                user=request.user,
+                category=LogCategory.SYSTEM,
+                description=f"Supervisor flagged assignment #{assignment.id} payout submission. Note: {note}"
+            )
+            messages.warning(request, f"Reopened assignment #{assignment.id} for associate revision.")
+
+        return redirect("dashboard:supervisor-payout-audit")
+
+    # Fetch completed sign-offs awaiting supervisor payout audit
+    pending_payouts = AmbassadorAssignment.objects.filter(
+        ambassador_marked_complete=True,
+        payout_processed=False
+    ).select_related('ambassador__user', 'client', 'project').order_by('-updated_at')
+
+    context = {
+        'pending_payouts': pending_payouts,
+        'pending_payouts_count': pending_payouts.count(),
+    }
+    return render(request, "dashboards/supervisor_payout_audit.html", context)
+
+
+@login_required
+@role_required(SUPERVISORY_ROLES)
+def supervisor_staff_activity_logs(request):
+    """
+    Filtered activity log audit view displaying actions performed by Consultants and Associates.
+    """
+    category_filter = request.GET.get('category', '').strip()
+    query = request.GET.get('q', '').strip()
+
+    staff_roles = [UserRole.CONSULTANT, UserRole.AMBASSADOR]
+    logs = ActivityLog.objects.filter(
+        user__role__in=staff_roles
+    ).select_related('user').order_by('-timestamp')
+
+    if category_filter:
+        logs = logs.filter(category=category_filter)
+
+    if query:
+        logs = logs.filter(
+            Q(description__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(user__email__icontains=query)
+        )
+
+    paginator = Paginator(logs, 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        paginated_logs = paginator.page(page)
+    except PageNotAnInteger:
+        paginated_logs = paginator.page(1)
+    except EmptyPage:
+        paginated_logs = paginator.page(paginator.num_pages)
+
+    context = {
+        'logs': paginated_logs,
+        'query': query,
+        'category_filter': category_filter,
+        'categories': LogCategory.choices,
+    }
+    return render(request, "dashboards/supervisor_activity_logs.html", context)
+
 
 
 

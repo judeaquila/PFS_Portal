@@ -1,5 +1,6 @@
 import secrets
 from django import forms
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth import authenticate, get_user_model
 from django.core.exceptions import ValidationError
 from .models import UserRole
@@ -244,3 +245,16 @@ class AdminClientCreationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+
+class CustomPasswordResetForm(TailwindFormMixin, PasswordResetForm):
+    """Custom Password Reset Request Form with Tailwind styling."""
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'placeholder': 'you@company.com'})
+    )
+
+
+class CustomSetPasswordForm(TailwindFormMixin, SetPasswordForm):
+    """Custom Set New Password Form with Tailwind styling."""
+    pass

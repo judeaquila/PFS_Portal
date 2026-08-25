@@ -1,0 +1,42 @@
+{% extends 'dashboards/base_supervisor.html' %}
+{% block header_title %}Payout Audit Queue{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl border border-gray-200 p-5">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Completed Field Assignments Pending Audit</h2>
+
+    <div class="space-y-4">
+        {% for payout in pending_payouts %}
+        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <p class="font-bold text-gray-800">Assignment #{{ payout.id }} - {{ payout.client.business_name|default:payout.client.get_full_name }}</p>
+                <p class="text-xs text-gray-500">Field Associate: {{ payout.ambassador.user.get_full_name }} ({{ payout.ambassador.user.email }})</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <form method="POST" action="{% url 'dashboard:supervisor-payout-audit' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="assignment_id" value="{{ payout.id }}">
+                    <input type="hidden" name="action" value="approve_payout">
+                    <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">
+                        Approve Clearance
+                    </button>
+                </form>
+
+                <form method="POST" action="{% url 'dashboard:supervisor-payout-audit' %}" class="flex gap-1" x-data="{ showNote: false }">
+                    {% csrf_token %}
+                    <input type="hidden" name="assignment_id" value="{{ payout.id }}">
+                    <input type="hidden" name="action" value="reject_payout">
+                    <input type="text" x-show="showNote" name="audit_note" placeholder="Rejection reason..." class="text-xs border border-gray-300 rounded px-2 py-1 outline-none">
+                    <button type="button" @click="if(!showNote){ showNote=true } else { $el.type='submit' }" class="bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition">
+                        Reject & Reopen
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-sm text-gray-500 py-6">No associate field assignments currently awaiting payout approval.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

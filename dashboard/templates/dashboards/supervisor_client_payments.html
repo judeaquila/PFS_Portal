@@ -1,0 +1,69 @@
+{% extends 'dashboards/base_supervisor.html' %}
+{% block header_title %}Client Payment Audit{% endblock %}
+
+{% block content %}
+<!-- Payment Summary Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500 uppercase font-semibold">Total Revenue Verified</p>
+        <p class="text-2xl font-bold text-emerald-600 mt-1">${{ total_revenue|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500 uppercase font-semibold">Verified Transactions</p>
+        <p class="text-2xl font-bold text-gray-800 mt-1">{{ successful_count }}</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-gray-200">
+        <p class="text-xs text-gray-500 uppercase font-semibold">Pending Verification</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1">{{ pending_count }}</p>
+    </div>
+</div>
+
+<!-- Search / Filters -->
+<div class="bg-white p-4 rounded-xl border border-gray-200 mb-6">
+    <form method="GET" action="{% url 'dashboard:supervisor-client-payments' %}" class="flex flex-col md:flex-row gap-3">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by reference, email, business name..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">-- All Payment Statuses --</option>
+            <option value="success" {% if status_filter == 'success' %}selected{% endif %}>Verified Success</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+        </select>
+        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Filter</button>
+    </form>
+</div>
+
+<!-- Payments Table -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+            <tr>
+                <th class="p-3">Reference</th>
+                <th class="p-3">Client / Business</th>
+                <th class="p-3">Package</th>
+                <th class="p-3">Amount</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Date</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for payment in payments %}
+            <tr>
+                <td class="p-3 font-mono text-xs font-bold text-gray-700">{{ payment.ref }}</td>
+                <td class="p-3 font-medium text-gray-800">{{ payment.business_name|default:payment.email }}</td>
+                <td class="p-3 text-gray-600">{{ payment.package.name|default:"Custom Service" }}</td>
+                <td class="p-3 font-bold text-gray-800">${{ payment.amount }}</td>
+                <td class="p-3">
+                    {% if payment.verified %}
+                    <span class="px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded">Verified</span>
+                    {% else %}
+                    <span class="px-2 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded">Pending</span>
+                    {% endif %}
+                </td>
+                <td class="p-3 text-xs text-gray-500">{{ payment.created_at|date:"M d, Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="p-3 text-center text-gray-500">No payment transaction records match your criteria.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

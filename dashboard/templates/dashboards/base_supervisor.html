@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supervisor Dashboard{% endblock %} | PFS Online Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased" x-data="{ sidebarOpen: false }">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-slate-100 flex flex-col justify-between flex-shrink-0 z-20">
+            <div>
+                <!-- Brand / Logo -->
+                <div class="flex items-center space-x-3 px-6 py-5 border-b border-slate-800">
+                    <i class="fa-solid fa-user-shield text-indigo-400 text-2xl"></i>
+                    <span class="text-lg font-bold tracking-wide">PFS SUPERVISOR</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="mt-6 px-4 space-y-1">
+                    <a href="{% url 'dashboard:supervisor-dashboard' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-dashboard' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-gauge w-5 text-center"></i>
+                        <span>Overview</span>
+                    </a>
+
+                    <a href="{% url 'dashboard:supervisor-associates' %}" 
+                         class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-associates' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                            <i class="fa-solid fa-user-plus w-5 h-5 text-center"></i>
+                            <span>Manage Associates</span>
+                    </a>
+
+                    {% comment %} <a href="{% url 'dashboard:supervisor-verifications' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-verifications' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-user-check w-5 text-center"></i>
+                        <span>Verifications</span>
+                    </a> {% endcomment %}
+
+                    {% comment %} <a href="{% url 'dashboard:supervisor-project-oversight' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-project-oversight' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-diagram-project w-5 text-center"></i>
+                        <span>Project Oversight</span>
+                    </a> {% endcomment %}
+
+                    {% comment %} <a href="{% url 'dashboard:supervisor-payout-audit' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-payout-audit' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i>
+                        <span>Payout Audits</span>
+                    </a> {% endcomment %}
+
+                    {% comment %} <a href="{% url 'dashboard:supervisor-client-payments' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-client-payments' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-credit-card w-5 text-center"></i>
+                        <span>Client Payments</span>
+                    </a> {% endcomment %}
+
+                    <a href="{% url 'dashboard:supervisor-staff-schedules' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-staff-schedules' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-calendar-days w-5 text-center"></i>
+                        <span>Staff Schedules</span>
+                    </a>
+
+                    {% comment %} <a href="{% url 'dashboard:supervisor-staff-activity-logs' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-staff-activity-logs' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-list-check w-5 text-center"></i>
+                        <span>Activity Logs</span>
+                    </a> {% endcomment %}
+                </nav>
+            </div>
+
+            <!-- Footer / Logout Form -->
+            <div class="p-4 border-t border-slate-800">
+                <form method="POST" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-sm font-medium transition">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Log Out</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            
+            <!-- Top Header -->
+            <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <h1 class="text-xl font-bold text-gray-800">{% block header_title %}Dashboard{% endblock %}</h1>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-500">Role: <strong class="text-indigo-600">Supervisor</strong></span>
+                    <div class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                        {{ request.user.first_name|default:request.user.email|slice:":1"|upper }}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Alerts / Django Messages -->
+            {% if messages %}
+                <div class="px-6 pt-4">
+                    {% for message in messages %}
+                        <div class="p-4 mb-2 text-sm rounded-lg flex items-center justify-between
+                            {% if message.tags == 'error' %}bg-red-100 text-red-700 border border-red-200{% elif message.tags == 'warning' %}bg-amber-100 text-amber-700 border border-amber-200{% else %}bg-emerald-100 text-emerald-700 border border-emerald-200{% endif %}">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- View Page Body -->
+            <main class="flex-1 overflow-y-auto p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+
+    </div>
+
+</body>
+</html>

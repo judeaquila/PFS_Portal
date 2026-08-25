@@ -1,0 +1,55 @@
+{% extends 'dashboards/base_supervisor.html' %}
+{% block header_title %}Read-Only Project Oversight{% endblock %}
+
+{% block content %}
+<!-- Flagged Bottleneck Alerts -->
+{% if flagged_projects %}
+<div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+    <h2 class="text-sm font-bold text-amber-800 uppercase flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Projects Requiring Supervisor Attention</span>
+    </h2>
+    <div class="mt-2 space-y-1">
+        {% for item in flagged_projects %}
+        <p class="text-sm text-amber-900">
+            <strong>{{ item.project.client.business_name|default:item.project.title }}</strong> has {{ item.delayed_count }} delayed or paused milestones.
+        </p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="p-4 border-b border-gray-200 font-bold text-gray-800">
+        All Active Client Projects ({{ total_projects_count }})
+    </div>
+    <div class="divide-y divide-gray-200">
+        {% for project in projects %}
+        <div class="p-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-bold text-gray-800">{{ project.title }}</h3>
+                    <p class="text-xs text-gray-500">Client: {{ project.client.business_name|default:project.client.email }} | Consultant: {{ project.assigned_consultant.get_full_name|default:"Unassigned" }}</p>
+                </div>
+            </div>
+            
+            <!-- Milestones Progress Timeline -->
+            <div class="mt-3 flex flex-wrap gap-2">
+                {% for act in project.activities.all %}
+                <span class="px-2.5 py-1 rounded text-xs font-semibold
+                    {% if act.activity_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                    {% elif act.activity_status == 'PAUSED' %}bg-red-100 text-red-800
+                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ act.title }} ({{ act.get_activity_status_display }})
+                </span>
+                {% empty %}
+                <span class="text-xs text-gray-400">No milestone activities linked to this project board yet.</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="p-4 text-center text-gray-500 text-sm">No registered client projects.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

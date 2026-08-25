@@ -1,0 +1,146 @@
+{% extends 'dashboards/base_supervisor.html' %}
+{% block header_title %}Staff Schedules & Availability{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top Action / Stats Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900">Staff Weekly Schedules</h1>
+            <p class="text-xs text-slate-500 mt-1">Overview of recurring availability slots for consultants and field associates.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 font-medium">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                Consultants: <span class="font-bold text-slate-900">{{ consultants_availability|length }}</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Associates: <span class="font-bold text-slate-900">{{ associates_availability|length }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Consultants' Weekly Availability -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                        <i class="fa-solid fa-user-tie text-xs"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Consultants Availability</h2>
+                        <p class="text-[11px] text-slate-500">Scheduled office & consultation hours</p>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {{ consultants_availability|length }} Active
+                </span>
+            </div>
+
+            <div class="p-5 space-y-4 flex-1 overflow-y-auto max-h-[600px] divide-y divide-slate-100">
+                {% for consultant, slots in consultants_availability.items %}
+                <div class="pt-4 first:pt-0 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                                {{ consultant.get_full_name|default:consultant.email|slice:":2" }}
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-slate-800">{{ consultant.get_full_name|default:consultant.email }}</p>
+                                <p class="text-[10px] text-slate-400 font-mono">ID: #{{ consultant.id }}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-medium text-slate-400">
+                            {{ slots|length }} slot{{ slots|length|pluralize }}
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1.5 pl-9">
+                        {% for slot in slots %}
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50/60 hover:bg-indigo-50 text-indigo-900 rounded-md text-xs border border-indigo-100/80 font-medium transition">
+                            <span class="font-semibold text-indigo-700 uppercase text-[10px] tracking-wide">{{ slot.get_weekday_display|slice:":3" }}</span>
+                            <span class="text-indigo-300">•</span>
+                            <span class="text-slate-600 text-[11px]">{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">No time slots configured for this consultant.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-12 text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                        <i class="fa-regular fa-calendar-xmark"></i>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">No consultant availability schedules configured.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Associates' Weekly Availability -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                        <i class="fa-solid fa-person-walking-luggage text-xs"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Field Associates Availability</h2>
+                        <p class="text-[11px] text-slate-500">On-field and client visit windows</p>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    {{ associates_availability|length }} Active
+                </span>
+            </div>
+
+            <div class="p-5 space-y-4 flex-1 overflow-y-auto max-h-[600px] divide-y divide-slate-100">
+                {% for associate, slots in associates_availability.items %}
+                <div class="pt-4 first:pt-0 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                                {{ associate.get_full_name|default:associate.email|slice:":2" }}
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-slate-800">{{ associate.get_full_name|default:associate.email }}</p>
+                                <p class="text-[10px] text-slate-400 font-mono">ID: #{{ associate.id }}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-medium text-slate-400">
+                            {{ slots|length }} slot{{ slots|length|pluralize }}
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1.5 pl-9">
+                        {% for slot in slots %}
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-900 rounded-md text-xs border border-emerald-100/80 font-medium transition">
+                            <span class="font-semibold text-emerald-700 uppercase text-[10px] tracking-wide">{{ slot.get_weekday_display|slice:":3" }}</span>
+                            <span class="text-emerald-300">•</span>
+                            <span class="text-slate-600 text-[11px]">{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">No time slots configured for this associate.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-12 text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                        <i class="fa-regular fa-calendar-xmark"></i>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">No associate availability schedules configured.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

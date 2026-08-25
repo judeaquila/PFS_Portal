@@ -1,0 +1,64 @@
+{% extends 'dashboards/base_supervisor.html' %}
+{% block header_title %}Staff Activity Audit Logs{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Controls -->
+<div class="bg-white p-4 rounded-xl border border-gray-200 mb-6">
+    <form method="GET" action="{% url 'dashboard:supervisor-staff-activity-logs' %}" class="flex flex-col md:flex-row gap-3">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search description, staff email or name..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        <select name="category" class="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">-- All Categories --</option>
+            {% for cat_val, cat_label in categories %}
+            <option value="{{ cat_val }}" {% if category_filter == cat_val %}selected{% endif %}>{{ cat_label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Filter Logs</button>
+    </form>
+</div>
+
+<!-- Activity Stream Table -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+            <tr>
+                <th class="p-3">Timestamp</th>
+                <th class="p-3">Staff Member</th>
+                <th class="p-3">Category</th>
+                <th class="p-3">Description</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for log in logs %}
+            <tr>
+                <td class="p-3 text-xs text-gray-500 whitespace-nowrap">{{ log.timestamp|date:"M d, Y H:i:s" }}</td>
+                <td class="p-3 font-medium text-gray-800 whitespace-nowrap">
+                    {{ log.user.get_full_name|default:log.user.email }}
+                    <span class="text-xs text-gray-400 block">{{ log.user.get_role_display }}</span>
+                </td>
+                <td class="p-3">
+                    <span class="px-2 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-700 uppercase">{{ log.category }}</span>
+                </td>
+                <td class="p-3 text-gray-600">{{ log.description }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="p-3 text-center text-gray-500">No staff activity logs match your filter criteria.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% if logs.has_other_pages %}
+    <div class="p-4 border-t border-gray-200 flex justify-between items-center text-xs text-gray-600">
+        <div>Page {{ logs.number }} of {{ logs.paginator.num_pages }}</div>
+        <div class="flex gap-1">
+            {% if logs.has_previous %}
+            <a href="?page={{ logs.previous_page_number }}&q={{ query }}&category={{ category_filter }}" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded font-semibold">Previous</a>
+            {% endif %}
+            {% if logs.has_next %}
+            <a href="?page={{ logs.next_page_number }}&q={{ query }}&category={{ category_filter }}" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded font-semibold">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

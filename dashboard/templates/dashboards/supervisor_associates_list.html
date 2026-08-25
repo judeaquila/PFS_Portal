@@ -1,0 +1,177 @@
+{% extends 'dashboards/base_supervisor.html' %}
+
+{% block title %}Associates Directory{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Associates Directory</h1>
+                <p class="text-xs text-slate-500 mt-1">Audit submitted files, edit identity info, authorize Associates, or purge records.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    Total: {{ ambassadors|length }}
+                </span>
+                <a href="{% url 'dashboard:supervisor-dashboard' %}" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm">
+                    &larr; Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Table Container -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                            <th class="p-4">Identity Info</th>
+                            <th class="p-4">Status & Availability</th>
+                            <th class="p-4">Verification Credentials</th>
+                            <th class="p-4">Assigned Clients</th>
+                            <th class="p-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 text-xs">
+                    {% for account in ambassadors %}
+                        <tr class="hover:bg-slate-50/80 transition align-top">
+                            
+                            <!-- Identity Column -->
+                            <td class="p-4">
+                                <div class="flex items-start gap-3">
+                                    <a href="{% url 'dashboard:supervisor-user-detail' pk=account.id %}" class="w-9 h-9 bg-slate-100 border border-slate-200 hover:border-pink-500 rounded-xl flex items-center justify-center font-bold text-pink-600 text-xs uppercase shrink-0 shadow-inner transition overflow-hidden">
+                                        {% if account.ambassador_profile.avatar %}
+                                            <img src="{{ account.ambassador_profile.avatar.url }}" alt="{{ account.get_full_name|default:account.email }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            {% if account.first_name or account.last_name %}
+                                                {{ account.first_name|slice:":1" }}{{ account.last_name|slice:":1" }}
+                                            {% else %}
+                                                {{ account.email|slice:":2" }}
+                                            {% endif %}
+                                        {% endif %}
+                                    </a>
+                                    <div>
+                                        <div class="font-bold text-slate-900 text-sm hover:text-pink-600 transition">
+                                            <a href="{% url 'dashboard:supervisor-user-detail' pk=account.id %}">
+                                                {{ account.get_full_name|default:account.email }}
+                                            </a>
+                                        </div>
+                                        <a href="{% url 'dashboard:supervisor-user-detail' pk=account.id %}" class="text-[10px] text-slate-400 font-mono mt-0.5 hover:text-slate-600 block">ID: #{{ account.id }}</a>
+                                        <div class="text-slate-600 font-medium mt-1">{{ account.email }}</div>
+                                        {% if account.whatsapp_number %}
+                                            <div class="text-[11px] text-slate-500 mt-0.5"><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i>{{ account.whatsapp_number }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Status Column -->
+                            <td class="p-4">
+                                <div class="space-y-1.5">
+                                    <div>
+                                        {% if account.ambassador_profile.verification_status == 'APPROVED' %}
+                                            <span class="inline-flex items-center bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-lg text-[10px] uppercase border border-emerald-200">
+                                                ● Verified
+                                            </span>
+                                        {% elif account.ambassador_profile.verification_status == 'DECLINED' %}
+                                            <span class="inline-flex items-center bg-rose-50 text-rose-700 font-semibold px-2.5 py-0.5 rounded-lg text-[10px] uppercase border border-rose-200">
+                                                ✕ Declined
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center bg-amber-50 text-amber-700 font-semibold px-2.5 py-0.5 rounded-lg text-[10px] uppercase border border-amber-200">
+                                                ◷ Pending Audit
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-[10px] font-medium pl-0.5">
+                                        {% if account.ambassador_profile.is_active_field_agent %}
+                                            <span class="text-emerald-700">Active Associate</span>
+                                        {% else %}
+                                            <span class="text-rose-600">Account Suspended</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Credentials Column -->
+                            <td class="p-4">
+                                <div class="space-y-2 max-w-xs">
+                                    <div class="flex items-center gap-4">
+                                        <div>
+                                            <span class="block text-[9px] uppercase font-bold text-slate-400">ID Reference</span>
+                                            {% if account.ambassador_profile.id_card %}
+                                                <a href="{{ account.ambassador_profile.id_card.url }}" target="_blank" class="text-pink-600 font-semibold hover:text-pink-700 hover:underline text-[11px] transition">View ID Card &rarr;</a>
+                                            {% else %}
+                                                <span class="text-slate-400 italic text-[11px]">Not Provided</span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <span class="block text-[9px] uppercase font-bold text-slate-400">Selfie/Pic</span>
+                                            {% if account.ambassador_profile.verification_selfie %}
+                                                <a href="{{ account.ambassador_profile.verification_selfie.url }}" target="_blank" class="text-pink-600 font-semibold hover:text-pink-700 hover:underline text-[11px] transition">View Selfie &rarr;</a>
+                                            {% else %}
+                                                <span class="text-slate-400 italic text-[11px]">Not Provided</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-slate-500 italic text-[11px] border-t border-slate-100 pt-1.5">
+                                        "{{ account.ambassador_profile.bio|default:'No statement bio uploaded.'|truncatechars:100 }}"
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Assignments Column -->
+                            <td class="p-4 font-bold text-slate-800">
+                                {{ account.assignment_count|default:"0" }} <span class="text-slate-500 font-normal">clients</span>
+                            </td>
+
+                            <!-- Actions Column -->
+                            <td class="p-4 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-2">
+
+                                    <!-- Quick Verification Actions -->
+                                    {% if account.ambassador_profile.id_card %}
+                                        {% if account.ambassador_profile.verification_status != 'APPROVED' %}
+                                            <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=account.id action='verify' %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" title="Approve Associate" class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-lg transition">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {% if account.ambassador_profile.verification_status != 'DECLINED' %}
+                                            <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=account.id action='decline' %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" title="Decline Associate" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <!-- Detail Link -->
+                                    <a href="{% url 'dashboard:supervisor-user-detail' pk=account.id %}" title="View Details" class="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-lg transition border border-slate-200 shadow-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">
+                                No Associates have signed up to the platform yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'dashboards/base_supervisor.html' %}
+{% block header_title %}Verification Asset Approvals{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 gap-6">
+
+    <!-- Field Associates Verification Queue -->
+    <div class="bg-white p-5 rounded-xl border border-gray-200">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">Field Associates Credentials</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                    <tr>
+                        <th class="p-3">User</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3">ID Card</th>
+                        <th class="p-3">Selfie Document</th>
+                        <th class="p-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for associate in associates %}
+                    <tr>
+                        <td class="p-3 font-medium text-gray-800">{{ associate.user.get_full_name|default:associate.user.email }}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 text-xs font-bold rounded uppercase
+                                {% if associate.verification_status == 'APPROVED' %}bg-emerald-100 text-emerald-800{% elif associate.verification_status == 'DECLINED' %}bg-red-100 text-red-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ associate.get_verification_status_display }}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            {% if associate.id_card %}
+                            <a href="{{ associate.id_card.url }}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-file-pdf"></i> View File</a>
+                            {% else %}<span class="text-gray-400">Missing</span>{% endif %}
+                        </td>
+                        <td class="p-3">
+                            {% if associate.verification_selfie %}
+                            <a href="{{ associate.verification_selfie.url }}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-image"></i> View Selfie</a>
+                            {% else %}<span class="text-gray-400">Missing</span>{% endif %}
+                        </td>
+                        <td class="p-3 text-right space-x-2">
+                            <form method="POST" action="{% url 'dashboard:supervisor-process-ambassador-verification' associate.user.id 'verify' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-emerald-700">Approve</button>
+                            </form>
+                            <form method="POST" action="{% url 'dashboard:supervisor-process-ambassador-verification' associate.user.id 'decline' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-red-700">Decline</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-3 text-center text-gray-500">No field associate records submitted.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Consultants Verification Queue -->
+    <div class="bg-white p-5 rounded-xl border border-gray-200">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">Consultants Credentials</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                    <tr>
+                        <th class="p-3">User</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3">ID Card</th>
+                        <th class="p-3">Selfie Document</th>
+                        <th class="p-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for consultant in consultants %}
+                    <tr>
+                        <td class="p-3 font-medium text-gray-800">{{ consultant.user.get_full_name|default:consultant.user.email }}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 text-xs font-bold rounded uppercase
+                                {% if consultant.verification_status == 'APPROVED' %}bg-emerald-100 text-emerald-800{% elif consultant.verification_status == 'DECLINED' %}bg-red-100 text-red-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ consultant.get_verification_status_display }}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            {% if consultant.id_card %}
+                            <a href="{{ consultant.id_card.url }}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-file-pdf"></i> View File</a>
+                            {% else %}<span class="text-gray-400">Missing</span>{% endif %}
+                        </td>
+                        <td class="p-3">
+                            {% if consultant.verification_selfie %}
+                            <a href="{{ consultant.verification_selfie.url }}" target="_blank" class="text-indigo-600 hover:underline"><i class="fa-solid fa-image"></i> View Selfie</a>
+                            {% else %}<span class="text-gray-400">Missing</span>{% endif %}
+                        </td>
+                        <td class="p-3 text-right space-x-2">
+                            <form method="POST" action="{% url 'dashboard:supervisor-process-consultant-verification' consultant.user.id 'verify' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-emerald-700">Approve</button>
+                            </form>
+                            <form method="POST" action="{% url 'dashboard:supervisor-process-consultant-verification' consultant.user.id 'decline' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-red-700">Decline</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-3 text-center text-gray-500">No consultant verification records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

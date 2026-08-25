@@ -107,6 +107,8 @@
                                     Client
                                 {% elif u.role == 'SUPER_ADMIN' %}
                                     Super Admin
+                                {% elif u.role == 'SUPERVISOR' %}
+                                    Supervisor
                                 {% else %}
                                     {{ u.role|default:"Client"|title }}
                                 {% endif %}

@@ -1,0 +1,505 @@
+{% extends 'dashboards/base_supervisor.html' %}
+
+{% block title %}User Detail - {{ target_user.get_full_name|default:target_user.email }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Header Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'dashboard:supervisor-associates' %}" class="p-2.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-xl border border-slate-200 transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        {{ target_user.get_full_name|default:"Unnamed Account" }}
+                        {% if target_user.business_name %}
+                            <span class="text-sm font-normal text-slate-500">({{ target_user.business_name }})</span>
+                        {% endif %}
+                    </h1>
+                    <p class="text-xs text-slate-500 mt-0.5">ID: <span class="font-mono text-slate-700">#{{ target_user.pk }}</span> • Created on {{ target_user.created_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Sidebar Info Column -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- User Profile Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 text-center space-y-4 shadow-sm">
+                    <div class="relative inline-block">
+                        {% if target_user.is_consultant and target_user.consultant_profile.avatar %}
+                            <img src="{{ target_user.consultant_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-md mx-auto">
+                        {% elif target_user.is_ambassador and target_user.ambassador_profile.avatar %}
+                            <img src="{{ target_user.ambassador_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-md mx-auto">
+                        {% elif target_user.is_regular_user and target_user.company_logo %}
+                            <img src="{{ target_user.company_logo.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-md mx-auto">
+                        {% else %}
+                            <div class="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-2xl font-black text-pink-600 mx-auto shadow-inner">
+                                {{ target_user.first_name|default:target_user.email|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">{{ target_user.get_full_name|default:"No Name Set" }}</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-mono">{{ target_user.email }}</p>
+                    </div>
+
+                    <div>
+                        <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold tracking-wider border
+                            {% if target_user.is_superuser %}bg-purple-50 text-purple-700 border-purple-200
+                            {% elif target_user.is_supervisor %}bg-indigo-50 text-indigo-700 border-indigo-200
+                            {% elif target_user.is_consultant %}bg-sky-50 text-sky-700 border-sky-200
+                            {% elif target_user.is_ambassador %}bg-pink-50 text-pink-700 border-pink-200
+                            {% else %}bg-slate-100 text-slate-700 border-slate-200{% endif %}">
+                            {{ target_user.get_role_display|default:"Client" }}
+                        </span>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-around text-xs">
+                        <div>
+                            <span class="block text-slate-400 font-medium text-[11px]">Account Status</span>
+                            {% if target_user.is_active %}
+                                <span class="text-emerald-600 font-semibold">Active</span>
+                            {% else %}
+                                <span class="text-rose-600 font-semibold">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="block text-slate-400 font-medium text-[11px]">Superuser</span>
+                            <span class="text-slate-700 font-semibold">{% if target_user.is_superuser %}Yes{% else %}No{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Location Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-sm">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact & Location</h3>
+                    
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-500">WhatsApp Phone</span>
+                            <span class="text-slate-800 font-medium font-mono">{{ target_user.whatsapp_number|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-500">Alternative Phone</span>
+                            <span class="text-slate-800 font-medium font-mono">{{ target_user.alternative_number|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-500">Region</span>
+                            <span class="text-slate-800 font-medium">{{ target_user.get_region_display|default:target_user.region|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-500">Location / City</span>
+                            <span class="text-slate-800 font-medium">{{ target_user.location|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between py-1.5 border-b border-slate-100">
+                            <span class="text-slate-500">Last Login</span>
+                            <span class="text-slate-800 font-medium">{{ target_user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- Client & Business Details Card -->
+                {% if target_user.is_regular_user or not target_user.role %}
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-900">Client & Business Details</h3>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold border bg-slate-50 text-slate-700 border-slate-200">
+                            Standard Client
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                            <span class="text-slate-500 block text-[11px] font-medium">Business / Enterprise Name</span>
+                            <p class="text-slate-900 font-semibold text-sm mt-1">{{ target_user.business_name|default:"Not Provided" }}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                            <span class="text-slate-500 block text-[11px] font-medium">Industry Sector</span>
+                            <p class="text-slate-900 font-semibold text-sm mt-1">{{ target_user.get_sector_display|default:target_user.sector|default:"Not Specified" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment & Billing Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <span>Payment & Service Billing History</span>
+                            </h3>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Package subscriptions & custom historical payments</p>
+                        </div>
+                        
+                        <a href="{% url 'dashboard:admin-add-historical-payment' target_user.pk %}" class="px-3.5 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Log Past Payment
+                        </a>
+                    </div>
+
+                    {% if onboarding_payments or custom_payments %}
+                        <div class="space-y-3">
+                            {% for payment in onboarding_payments %}
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-slate-900 text-sm">{{ payment.package.title|default:"Assessment Package" }}</span>
+                                        
+                                        {% if payment.verified %}
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">VERIFIED</span>
+                                        {% else %}
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">PENDING</span>
+                                        {% endif %}
+
+                                        {% if payment.payment_method %}
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-700 border border-slate-200 shadow-sm">
+                                                {{ payment.get_payment_method_display|default:payment.payment_method }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-slate-500 text-[11px] font-mono">
+                                        REF: {{ payment.ref }} • Date: {% firstof payment.paid_at|date:"M d, Y" payment.created_at|date:"M d, Y" %}
+                                    </p>
+                                    {% if payment.notes %}
+                                        <p class="text-slate-500 text-[11px] italic mt-1">Note: {{ payment.notes }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="text-right sm:text-right text-left">
+                                    <span class="text-base font-black text-emerald-600">GHS {{ payment.amount }}</span>
+                                    <span class="block text-[10px] text-slate-400 uppercase tracking-wider">{{ payment.package.get_package_type_display|default:"Package Tier" }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            {% for req in custom_payments %}
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-slate-900 text-sm">{{ req.service_name|default:"Custom Service Payment" }}</span>
+                                        
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            {{ req.get_status_display|default:req.status|upper }}
+                                        </span>
+
+                                        {% if req.payment_method %}
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-700 border border-slate-200 shadow-sm">
+                                                {{ req.get_payment_method_display|default:req.payment_method }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-slate-500 text-[11px] font-mono">
+                                        Date: {{ req.paid_at|default:req.created_at|date:"M d, Y" }}
+                                    </p>
+                                    {% if req.note %}
+                                        <p class="text-slate-500 text-[11px] italic mt-0.5">Note: {{ req.note }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="text-right sm:text-right text-left">
+                                    <span class="text-base font-black text-emerald-600">GHS {{ req.amount }}</span>
+                                    <span class="block text-[10px] text-slate-400 uppercase tracking-wider">Custom Charge</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center space-y-2">
+                            <p class="text-xs text-slate-500">No payment records or package subscriptions found for this account.</p>
+                            <a href="{% url 'dashboard:admin-add-historical-payment' target_user.pk %}" class="inline-block text-xs text-pink-600 hover:text-pink-700 font-semibold">
+                                + Add a historical/past payment
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Consultant Details Card -->
+                {% if target_user.is_consultant and target_user.consultant_profile %}
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-900">Consultant Details</h3>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
+                            {% if target_user.consultant_profile.verification_status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                            {% elif target_user.consultant_profile.verification_status == 'DECLINED' %}bg-rose-50 text-rose-700 border-rose-200
+                            {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                            {{ target_user.consultant_profile.get_verification_status_display|default:"PENDING" }}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-800 block">Verification Status</span>
+                            <p class="text-[11px] text-slate-500">Approve or decline this consultant's credentials.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {% if target_user.consultant_profile.verification_status != 'APPROVED' %}
+                            <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' profile_id=target_user.id action='verify' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Approve
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if target_user.consultant_profile.verification_status != 'DECLINED' %}
+                            <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' profile_id=target_user.id action='decline' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium text-xs rounded-lg transition flex items-center gap-1 shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Decline
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <span class="text-slate-500 block">Bio</span>
+                            <p class="text-slate-700 mt-1 font-medium">{{ target_user.consultant_profile.bio|default:"No bio provided." }}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Status</span>
+                            <span class="inline-block mt-1 font-semibold {% if target_user.consultant_profile.is_active_consultant %}text-emerald-600{% else %}text-amber-600{% endif %}">
+                                {% if target_user.consultant_profile.is_active_consultant %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Verification Document Cards -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Verification Assets</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            
+                            <!-- ID Card Preview -->
+                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Government ID Card</span>
+                                    {% if target_user.consultant_profile.id_card %}
+                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
+                                    {% else %}
+                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
+                                    {% endif %}
+                                </div>
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                    {% if target_user.consultant_profile.id_card %}
+                                        <img src="{{ target_user.consultant_profile.id_card.url }}" alt="National ID" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                        <a href="{{ target_user.consultant_profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            View Full Document
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center p-4 text-slate-400 space-y-1">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6"></path></svg>
+                                            <span class="text-xs font-medium block">No ID uploaded</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Verification Selfie Preview -->
+                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Selfie</span>
+                                    {% if target_user.consultant_profile.verification_selfie %}
+                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
+                                    {% else %}
+                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
+                                    {% endif %}
+                                </div>
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                    {% if target_user.consultant_profile.verification_selfie %}
+                                        <img src="{{ target_user.consultant_profile.verification_selfie.url }}" alt="Verification Selfie" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                        <a href="{{ target_user.consultant_profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            View Full Selfie
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center p-4 text-slate-400 space-y-1">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                            <span class="text-xs font-medium block">No selfie uploaded</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Curriculum Vitae (CV) Preview -->
+                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Curriculum Vitae</span>
+                                    {% if target_user.consultant_profile.cv %}
+                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
+                                    {% else %}
+                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
+                                    {% endif %}
+                                </div>
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                    {% if target_user.consultant_profile.cv %}
+                                        <div class="text-center p-4 space-y-1">
+                                            <svg class="w-8 h-8 mx-auto text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            <span class="text-xs font-medium text-slate-700 block">Document Available</span>
+                                        </div>
+                                        <a href="{{ target_user.consultant_profile.cv.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            Download CV
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center p-4 text-slate-400 space-y-1">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            <span class="text-xs font-medium block">No CV uploaded</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Associate Details Card -->
+                {% if target_user.is_ambassador and target_user.ambassador_profile %}
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-900">Associate Details</h3>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
+                            {% if target_user.ambassador_profile.verification_status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                            {% elif target_user.ambassador_profile.verification_status == 'DECLINED' %}bg-rose-50 text-rose-700 border-rose-200
+                            {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                            {{ target_user.ambassador_profile.get_verification_status_display|default:"PENDING" }}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-800 block">Verification Status</span>
+                            <p class="text-[11px] text-slate-500">Approve or decline this Associate's credentials.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {% if target_user.ambassador_profile.verification_status != 'APPROVED' %}
+                            <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=target_user.id action='verify' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Approve
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if target_user.ambassador_profile.verification_status != 'DECLINED' %}
+                            <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=target_user.id action='decline' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium text-xs rounded-lg transition flex items-center gap-1 shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Decline
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <span class="text-slate-500 block">Bio</span>
+                            <p class="text-slate-700 mt-1 font-medium">{{ target_user.ambassador_profile.bio|default:"No bio provided." }}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Status</span>
+                            <span class="inline-block mt-1 font-semibold {% if target_user.ambassador_profile.is_active_field_agent %}text-emerald-600{% else %}text-amber-600{% endif %}">
+                                {% if target_user.ambassador_profile.is_active_field_agent %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Verification Document Cards -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Verification Assets</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            
+                            <!-- ID Card Preview -->
+                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Government ID Card</span>
+                                    {% if target_user.ambassador_profile.id_card %}
+                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
+                                    {% else %}
+                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
+                                    {% endif %}
+                                </div>
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                    {% if target_user.ambassador_profile.id_card %}
+                                        <img src="{{ target_user.ambassador_profile.id_card.url }}" alt="National ID" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                        <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            View Full Document
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center p-4 text-slate-400 space-y-1">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6"></path></svg>
+                                            <span class="text-xs font-medium block">No ID uploaded</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Verification Selfie Preview -->
+                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Selfie</span>
+                                    {% if target_user.ambassador_profile.verification_selfie %}
+                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
+                                    {% else %}
+                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
+                                    {% endif %}
+                                </div>
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                    {% if target_user.ambassador_profile.verification_selfie %}
+                                        <img src="{{ target_user.ambassador_profile.verification_selfie.url }}" alt="Verification Selfie" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                        <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            View Full Selfie
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center p-4 text-slate-400 space-y-1">
+                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                                            <span class="text-xs font-medium block">No selfie uploaded</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Admin Access Card -->
+                {% if target_user.is_super_admin or target_user.is_supervisor %}
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-900">Administrative Access</h3>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold border bg-purple-50 text-purple-700 border-purple-200">
+                            Privileged User
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        This user holds platform management privileges. Administrative accounts have elevated system permissions and are not required to complete standard client or field agent verification steps.
+                    </p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

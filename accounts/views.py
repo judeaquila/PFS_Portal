@@ -1,12 +1,17 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
-from .forms import LoginForm, RegistrationForm, AmbassadorRegistrationForm, ConsultantRegistrationForm
+from django.contrib.auth import login, logout, get_user_model
+from .forms import LoginForm, RegistrationForm, AmbassadorRegistrationForm, ConsultantRegistrationForm, CustomPasswordResetForm, CustomSetPasswordForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from payments.models import Payment
 from common.decorators import anonymous_required
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
 
+
+
+User = get_user_model()
 
 @anonymous_required
 def register_view(request):
@@ -169,3 +174,66 @@ def consultant_register(request):
         form = ConsultantRegistrationForm()
 
     return render(request, 'registration/consultant_register.html', {"form": form})
+
+
+
+@anonymous_required
+def password_reset_request_view(request):
+    """Handles the initial password reset email request."""
+    if request.method == "POST":
+        form = CustomPasswordResetForm(request.POST)
+        if form.is_valid():
+            form.save(
+                request=request,
+                use_https=request.is_secure(),
+                email_template_name="accounts/password_reset_email.html",
+                subject_template_name="accounts/password_reset_subject.txt",
+                from_email=None,
+                extra_email_context={"extra_url_name": "accounts:password_reset_confirm"},
+            )
+            return redirect("accounts:password_reset_done")
+    else:
+        form = CustomPasswordResetForm()
+
+    return render(request, "accounts/password_reset_form.html", {"form": form})
+
+
+@anonymous_required
+def password_reset_done_view(request):
+    """Displays confirmation that a password reset email was dispatched."""
+    return render(request, "accounts/password_reset_done.html")
+
+
+@anonymous_required
+def password_reset_confirm_view(request, uidb64, token):
+    """Validates the reset token and accepts the new password."""
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        validlink = True
+        if request.method == "POST":
+            form = CustomSetPasswordForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect("accounts:password_reset_complete")
+        else:
+            form = CustomSetPasswordForm(user)
+    else:
+        validlink = False
+        form = None
+
+    context = {
+        "form": form,
+        "validlink": validlink,
+    }
+    return render(request, "accounts/password_reset_confirm.html", context)
+
+
+@anonymous_required
+def password_reset_complete_view(request):
+    """Informs the user that their password reset was successful."""
+    return render(request, "accounts/password_reset_complete.html")
