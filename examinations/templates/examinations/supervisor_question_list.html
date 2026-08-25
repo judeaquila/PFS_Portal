@@ -1,0 +1,225 @@
+{% extends "dashboards/base_supervisor.html" %}
+
+{% block title %}Question Bank | Supervisor Portal{% endblock %}
+
+{% block header_title %}Examination Question Bank{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6" x-data="{ optionsModalOpen: false, activeQuestion: null }">
+
+    <!-- Header / Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight">Question Bank</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Manage and organize exam questions for Associate certifications.</p>
+        </div>
+        <a href="{% url 'examination:supervisor_question_create' %}" 
+           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs transition shadow-sm">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Add New Question</span>
+        </a>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <form method="GET" class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div class="w-full sm:w-72">
+                <select name="category" onchange="this.form.submit()" 
+                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <option value="">All Categories</option>
+                    {% for key, label in categories %}
+                        <option value="{{ key }}" {% if selected_category == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if selected_category %}
+                <a href="{% url 'examination:supervisor_question_list' %}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">Clear Filter</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Questions Table -->
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-700">
+                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4">Question Text</th>
+                        <th class="px-6 py-4">Options Overview</th>
+                        <th class="px-6 py-4 text-center">Correct Key</th>
+                        <th class="px-6 py-4">Created By</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for q in page_obj %}
+                    <tr class="hover:bg-gray-50/60 transition">
+                        <!-- Category -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 border border-indigo-100 text-indigo-700">
+                                {{ q.get_category_display }}
+                            </span>
+                        </td>
+
+                        <!-- Question Text -->
+                        <td class="px-6 py-4 font-medium text-gray-900 max-w-xs truncate" title="{{ q.text }}">
+                            {{ q.text }}
+                        </td>
+
+                        <!-- Options Column -->
+                        <td class="px-6 py-4">
+                            <button type="button" 
+                                    @click="activeQuestion = {
+                                        text: '{{ q.text|escapejs }}',
+                                        option_a: '{{ q.option_a|escapejs }}',
+                                        option_b: '{{ q.option_b|escapejs }}',
+                                        option_c: '{{ q.option_c|escapejs }}',
+                                        option_d: '{{ q.option_d|escapejs }}',
+                                        correct: '{{ q.correct_answer|escapejs }}'
+                                    }; optionsModalOpen = true;"
+                                    class="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 font-medium transition group">
+                                <i class="fa-solid fa-list-check text-xs"></i>
+                                <span>View 4 Options</span>
+                            </button>
+                        </td>
+
+                        <!-- Correct Key -->
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold text-[11px]">
+                                {{ q.correct_answer }}
+                            </span>
+                        </td>
+
+                        <!-- Created By -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-bold text-[10px] flex items-center justify-center">
+                                    {{ q.created_by.first_name|default:"A"|slice:":1"|upper }}
+                                </div>
+                                <span class="text-gray-900 font-medium">
+                                    {% if q.created_by %}
+                                        {{ q.created_by.get_full_name|default:q.created_by.first_name }} ({{q.created_by.get_role_display}})
+                                    {% else %}
+                                        <span class="text-gray-400 italic">System / Admin</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            {% if q.is_active %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4 text-right whitespace-nowrap space-x-3">
+                            <a href="{% url 'examination:supervisor_question_update' q.pk %}" class="inline-block font-semibold text-indigo-600 hover:text-indigo-800 transition">Edit</a>
+                            <a href="{% url 'examination:supervisor_question_delete' q.pk %}" class="inline-block font-semibold text-rose-600 hover:text-rose-800 transition">Delete</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                            No questions found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between text-xs text-gray-600">
+            <div>
+                Showing page <strong>{{ page_obj.number }}</strong> of <strong>{{ page_obj.paginator.num_pages }}</strong>
+            </div>
+            <div class="flex gap-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&category={{ selected_category }}" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-medium hover:bg-gray-100 text-gray-700 transition">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&category={{ selected_category }}" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-medium hover:bg-gray-100 text-gray-700 transition">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Options Preview Modal (Alpine.js) -->
+    <div x-show="optionsModalOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white border border-gray-200 rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4" @click.away="optionsModalOpen = false">
+            <div class="flex items-start justify-between border-b border-gray-100 pb-3">
+                <h3 class="text-sm font-bold text-gray-900">Question & Options Preview</h3>
+                <button @click="optionsModalOpen = false" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-800" x-text="activeQuestion?.text"></div>
+
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'A' ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold' : 'bg-white border-gray-200 text-gray-700'">
+                        <span><strong>A:</strong> <span x-text="activeQuestion?.option_a"></span></span>
+                        <template x-if="activeQuestion?.correct === 'A'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Correct</span>
+                        </template>
+                    </div>
+
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'B' ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold' : 'bg-white border-gray-200 text-gray-700'">
+                        <span><strong>B:</strong> <span x-text="activeQuestion?.option_b"></span></span>
+                        <template x-if="activeQuestion?.correct === 'B'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Correct</span>
+                        </template>
+                    </div>
+
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'C' ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold' : 'bg-white border-gray-200 text-gray-700'">
+                        <span><strong>C:</strong> <span x-text="activeQuestion?.option_c"></span></span>
+                        <template x-if="activeQuestion?.correct === 'C'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Correct</span>
+                        </template>
+                    </div>
+
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'D' ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold' : 'bg-white border-gray-200 text-gray-700'">
+                        <span><strong>D:</strong> <span x-text="activeQuestion?.option_d"></span></span>
+                        <template x-if="activeQuestion?.correct === 'D'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Correct</span>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button type="button" @click="optionsModalOpen = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

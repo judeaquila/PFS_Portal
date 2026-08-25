@@ -1,0 +1,84 @@
+{% extends "dashboards/base_ambassador.html" %}
+
+{% block title %}Certification Exam | PFS Associate Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="space-y-1 text-center sm:text-left">
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">PFS Certification Examination</h1>
+            <p class="text-xs text-slate-500">Achieve a score of 80% or higher to qualify for active associate certification.</p>
+        </div>
+
+        {% if is_locked %}
+            {% if latest_attempt.passed %}
+                <div class="text-center sm:text-right">
+                    <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs shadow-sm">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Certified (Passed)
+                    </span>
+                </div>
+            {% else %}
+                <div class="text-center sm:text-right">
+                    <div class="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-medium text-xs">
+                        Exam Countdown Active
+                        <span class="block text-[11px] text-amber-600 font-normal mt-0.5">Unlocked on: {{ latest_attempt.next_attempt_allowed_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'examination:take_exam' %}" 
+               class="px-6 py-3 rounded-xl bg-pink-700 hover:bg-pink-600 text-white font-semibold text-xs transition shadow-sm inline-flex items-center gap-2">
+                {% if latest_attempt %}Retake Examination{% else %}Start Examination{% endif %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Attempt History Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+            <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Examination Attempt History</h2>
+            <span class="text-[11px] font-medium text-slate-400">Total Attempts: {{ attempts|length }}</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Attempt Date</th>
+                        <th class="px-6 py-3.5 text-center">Score</th>
+                        <th class="px-6 py-3.5 text-center">Correct Answers</th>
+                        <th class="px-6 py-3.5 text-right">Result</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in attempts %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-medium text-slate-800">{{ item.attempt_date|date:"M d, Y H:i" }}</td>
+                        <td class="px-6 py-4 text-center font-bold text-slate-900">{{ item.score_percentage }}%</td>
+                        <td class="px-6 py-4 text-center text-slate-500">{{ item.correct_answers }} / {{ item.total_questions }}</td>
+                        <td class="px-6 py-4 text-right">
+                            {% if item.passed %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">PASSED</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">FAILED</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">No previous examination attempts recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

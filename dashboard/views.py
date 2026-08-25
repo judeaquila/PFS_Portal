@@ -10,7 +10,7 @@ from .forms import BaseUserProfileForm, ClientProfileForm, AmbassadorVerificatio
 from django.contrib import messages
 from .models import ClientDocument, ClientRegion, DocumentType, DocumentStatus, ActivityLog, LogCategory, ProductCategory, ClientProject, ClientPackage as PackageChoices, ActivityStatus, PaymentStatus, ProjectActivity, ProjectGroup, ActivityNote, AmbassadorProfile, AmbassadorAssignment, ConsultantProfile, Availability, ConsultantAssignment
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Count, Max, F, Sum
+from django.db.models import Q, Count, Max, F, Sum, OuterRef, Subquery
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
@@ -21,6 +21,7 @@ from django.conf import settings
 import requests
 from decimal import Decimal
 from payments.forms import HistoricalPaymentRequestForm
+from examinations.models import ExamAttempt
 
 
 
@@ -351,11 +352,26 @@ def admin_create_payment_request(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def superadmin_ambassadors(request):
-    """Renders comprehensive directory table managing all platform ambassador profiles."""
+    """Renders comprehensive directory table managing all platform ambassador profiles with exam analytics."""
+    
+    # Subquery to retrieve the latest attempt score percentage for each associate
+    latest_score_subquery = ExamAttempt.objects.filter(
+        user=OuterRef('pk')
+    ).order_by('-attempt_date').values('score_percentage')[:1]
+
+    # Subquery to retrieve the latest attempt pass status
+    latest_passed_subquery = ExamAttempt.objects.filter(
+        user=OuterRef('pk')
+    ).order_by('-attempt_date').values('passed')[:1]
+
     ambassadors_users = User.objects.filter(role=UserRole.AMBASSADOR).select_related(
         'ambassador_profile'
     ).annotate(
-        assignment_count=Count('ambassador_profile__assignments')
+        assignment_count=Count('ambassador_profile__assignments', distinct=True),
+        total_exam_attempts=Count('exam_attempts', distinct=True),
+        latest_exam_score=Subquery(latest_score_subquery),
+        latest_exam_passed=Subquery(latest_passed_subquery),
+        has_passed_exam=Count('exam_attempts', filter=Q(exam_attempts__passed=True))
     ).order_by('-id')
 
     context = {
@@ -577,8 +593,13 @@ def admin_user_list(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def admin_user_detail(request, pk):
-    """Shows full account profile including attached profiles and payment history."""
+    """Shows full account profile including attached profiles, exam history, and payment history."""
     target_user = get_object_or_404(User, pk=pk)
+    
+    # Fetch Exam History
+    exam_attempts = ExamAttempt.objects.filter(user=target_user).order_by('-attempt_date')
+    latest_exam_attempt = exam_attempts.first()
+    has_passed_exam = exam_attempts.filter(passed=True).exists()
     
     # Check related manager dynamically and optimize related package lookups
     payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
@@ -588,10 +609,14 @@ def admin_user_detail(request, pk):
     
     context = {
         'target_user': target_user,
-        'ambassador_profile': getattr(target_user, 'ambassadorprofile', None),
+        'ambassador_profile': getattr(target_user, 'ambassador_profile', None),
         'consultant_profile': getattr(target_user, 'consultantprofile', None),
         'onboarding_payments': onboarding_payments,
         'custom_payments': custom_payments,
+        # Exam Analytics
+        'exam_attempts': exam_attempts,
+        'latest_exam_attempt': latest_exam_attempt,
+        'has_passed_exam': has_passed_exam,
     }
     return render(request, 'dashboards/superadmin_user_detail.html', context)
 
@@ -794,13 +819,28 @@ def supervisor_dashboard(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.SUPER_ADMIN])
 def supervisor_associates(request):
-    """Renders comprehensive directory table managing all platform associate profiles."""
+    """Renders comprehensive directory table managing all platform ambassador/associate profiles with exam analytics for supervisors."""
+    
+    # Subquery to retrieve the latest attempt score percentage for each associate
+    latest_score_subquery = ExamAttempt.objects.filter(
+        user=OuterRef('pk')
+    ).order_by('-attempt_date').values('score_percentage')[:1]
+
+    # Subquery to retrieve the latest attempt pass status
+    latest_passed_subquery = ExamAttempt.objects.filter(
+        user=OuterRef('pk')
+    ).order_by('-attempt_date').values('passed')[:1]
+
     ambassadors_users = User.objects.filter(role=UserRole.AMBASSADOR).select_related(
         'ambassador_profile'
     ).annotate(
-        assignment_count=Count('ambassador_profile__assignments')
+        assignment_count=Count('ambassador_profile__assignments', distinct=True),
+        total_exam_attempts=Count('exam_attempts', distinct=True),
+        latest_exam_score=Subquery(latest_score_subquery),
+        latest_exam_passed=Subquery(latest_passed_subquery),
+        has_passed_exam=Count('exam_attempts', filter=Q(exam_attempts__passed=True))
     ).order_by('-id')
 
     context = {
@@ -843,8 +883,13 @@ def supervisor_process_verification(request, profile_id, action):
 @login_required
 @role_required([UserRole.SUPERVISOR])
 def supervisor_user_detail(request, pk):
-    """Shows full account profile including attached profiles and payment history."""
+    """Shows full account profile including attached profiles, exam history, and payment history."""
     target_user = get_object_or_404(User, pk=pk)
+    
+    # Fetch Exam History
+    exam_attempts = ExamAttempt.objects.filter(user=target_user).order_by('-attempt_date')
+    latest_exam_attempt = exam_attempts.first()
+    has_passed_exam = exam_attempts.filter(passed=True).exists()
     
     # Check related manager dynamically and optimize related package lookups
     payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
@@ -854,10 +899,14 @@ def supervisor_user_detail(request, pk):
     
     context = {
         'target_user': target_user,
-        'ambassador_profile': getattr(target_user, 'ambassadorprofile', None),
+        'ambassador_profile': getattr(target_user, 'ambassador_profile', None),
         'consultant_profile': getattr(target_user, 'consultantprofile', None),
         'onboarding_payments': onboarding_payments,
         'custom_payments': custom_payments,
+        # Exam Analytics
+        'exam_attempts': exam_attempts,
+        'latest_exam_attempt': latest_exam_attempt,
+        'has_passed_exam': has_passed_exam,
     }
     return render(request, 'dashboards/supervisor_user_detail.html', context)
 

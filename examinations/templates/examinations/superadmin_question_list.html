@@ -1,0 +1,229 @@
+{% extends "dashboards/base_superadmin.html" %}
+
+{% block title %}Examination Questions | Superadmin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6" x-data="{ optionsModalOpen: false, activeQuestion: null }">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">Question Bank</h1>
+            <p class="text-xs text-slate-400 mt-1">Manage and organize exam questions for Ambassador certifications.</p>
+        </div>
+        <a href="{% url 'examination:question_create' %}" 
+           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-medium text-sm transition shadow-lg shadow-pink-600/20">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>Add New Question</span>
+        </a>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+        <form method="GET" class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div class="w-full sm:w-72">
+                <select name="category" onchange="this.form.submit()" 
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500 transition">
+                    <option value="">All Categories</option>
+                    {% for key, label in categories %}
+                        <option value="{{ key }}" {% if selected_category == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if selected_category %}
+                <a href="{% url 'examination:question_list' %}" class="text-xs text-pink-400 hover:text-pink-300 transition">Clear Filter</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Questions Table -->
+    <div class="bg-slate-950 border border-slate-800/80 rounded-2xl shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+                <thead class="bg-slate-900/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800/80">
+                    <tr>
+                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4">Question Text</th>
+                        <th class="px-6 py-4">Options Overview</th>
+                        <th class="px-6 py-4 text-center">Correct Key</th>
+                        <th class="px-6 py-4">Created By</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    {% for q in page_obj %}
+                    <tr class="hover:bg-slate-900/40 transition">
+                        <!-- Category -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900 border border-slate-800 text-pink-400">
+                                {{ q.get_category_display }}
+                            </span>
+                        </td>
+
+                        <!-- Question Text -->
+                        <td class="px-6 py-4 font-medium text-slate-200 max-w-xs truncate" title="{{ q.text }}">
+                            {{ q.text }}
+                        </td>
+
+                        <!-- Options Column -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button type="button" 
+                                    @click="activeQuestion = {
+                                        text: '{{ q.text|escapejs }}',
+                                        option_a: '{{ q.option_a|escapejs }}',
+                                        option_b: '{{ q.option_b|escapejs }}',
+                                        option_c: '{{ q.option_c|escapejs }}',
+                                        option_d: '{{ q.option_d|escapejs }}',
+                                        correct: '{{ q.correct_answer|escapejs }}'
+                                    }; optionsModalOpen = true;"
+                                    class="inline-flex items-center gap-1.5 text-pink-400 hover:text-pink-300 font-medium transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                </svg>
+                                <span>View 4 Options</span>
+                            </button>
+                        </td>
+
+                        <!-- Correct Key -->
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 border border-pink-500/40 text-pink-400 font-bold text-[11px]">
+                                {{ q.correct_answer }}
+                            </span>
+                        </td>
+
+                        <!-- Created By -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">
+                                    {{ q.created_by.first_name|default:"A"|slice:":1"|upper }}
+                                </div>
+                                <span class="text-slate-200 font-medium">
+                                    {% if q.created_by %}
+                                        {{ q.created_by.get_full_name|default:q.created_by.first_name }} ({{q.created_by.get_role_display}})
+                                    {% else %}
+                                        <span class="text-slate-500 italic">System / Admin</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            {% if q.is_active %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-950/40 text-emerald-400 border border-emerald-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-950/40 text-rose-400 border border-rose-900/50">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4 text-right whitespace-nowrap space-x-2">
+                            <a href="{% url 'examination:question_update' q.pk %}" class="inline-block text-xs font-semibold text-slate-400 hover:text-white transition">Edit</a>
+                            <a href="{% url 'examination:question_delete' q.pk %}" class="inline-block text-xs font-semibold text-rose-500 hover:text-rose-400 transition">Delete</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                            No questions found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-950 flex items-center justify-between text-xs text-slate-400">
+            <div>
+                Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </div>
+            <div class="flex gap-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&category={{ selected_category }}" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:text-white transition">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&category={{ selected_category }}" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:text-white transition">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Options Preview Modal (Alpine.js) -->
+    <div x-show="optionsModalOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4" @click.away="optionsModalOpen = false">
+            <div class="flex items-start justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white">Question & Options Preview</h3>
+                <button @click="optionsModalOpen = false" class="text-slate-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold text-slate-200" x-text="activeQuestion?.text"></div>
+
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'A' ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300 font-semibold' : 'bg-slate-900/60 border-slate-800 text-slate-300'">
+                        <span><strong>A:</strong> <span x-text="activeQuestion?.option_a"></span></span>
+                        <template x-if="activeQuestion?.correct === 'A'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-800">Correct</span>
+                        </template>
+                    </div>
+
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'B' ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300 font-semibold' : 'bg-slate-900/60 border-slate-800 text-slate-300'">
+                        <span><strong>B:</strong> <span x-text="activeQuestion?.option_b"></span></span>
+                        <template x-if="activeQuestion?.correct === 'B'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-800">Correct</span>
+                        </template>
+                    </div>
+
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'C' ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300 font-semibold' : 'bg-slate-900/60 border-slate-800 text-slate-300'">
+                        <span><strong>C:</strong> <span x-text="activeQuestion?.option_c"></span></span>
+                        <template x-if="activeQuestion?.correct === 'C'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-800">Correct</span>
+                        </template>
+                    </div>
+
+                    <div class="p-3 rounded-xl border flex items-center justify-between"
+                         :class="activeQuestion?.correct === 'D' ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300 font-semibold' : 'bg-slate-900/60 border-slate-800 text-slate-300'">
+                        <span><strong>D:</strong> <span x-text="activeQuestion?.option_d"></span></span>
+                        <template x-if="activeQuestion?.correct === 'D'">
+                            <span class="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-800">Correct</span>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button type="button" @click="optionsModalOpen = false" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl border border-slate-800 transition">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

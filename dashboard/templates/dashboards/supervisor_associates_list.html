@@ -10,7 +10,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Associates Directory</h1>
-                <p class="text-xs text-slate-500 mt-1">Audit submitted files, edit identity info, authorize Associates, or purge records.</p>
+                <p class="text-xs text-slate-500 mt-1">Audit submitted files, review exam scores, edit identity info, authorize Associates, or purge records.</p>
             </div>
             <div class="flex items-center gap-3">
                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -30,6 +30,7 @@
                         <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                             <th class="p-4">Identity Info</th>
                             <th class="p-4">Status & Availability</th>
+                            <th class="p-4">Exam Performance</th>
                             <th class="p-4">Verification Credentials</th>
                             <th class="p-4">Assigned Clients</th>
                             <th class="p-4 text-right">Actions</th>
@@ -93,6 +94,37 @@
                                             <span class="text-rose-600">Account Suspended</span>
                                         {% endif %}
                                     </div>
+                                </div>
+                            </td>
+
+                            <!-- Exam Performance Column -->
+                            <td class="p-4">
+                                <div class="space-y-1">
+                                    {% if account.total_exam_attempts > 0 %}
+                                        <div class="flex items-center gap-2">
+                                            {% if account.latest_exam_passed %}
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <i class="fa-solid fa-circle-check text-[9px]"></i> Passed
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                    <i class="fa-solid fa-circle-xmark text-[9px]"></i> Failed
+                                                </span>
+                                            {% endif %}
+
+                                            <span class="font-bold text-slate-800 text-xs">
+                                                {{ account.latest_exam_score|floatformat:0 }}%
+                                            </span>
+                                        </div>
+
+                                        <div class="text-[10px] text-slate-500 font-medium">
+                                            Attempts: <span class="text-slate-700 font-bold">{{ account.total_exam_attempts }}</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                                            Not Attempted
+                                        </span>
+                                    {% endif %}
                                 </div>
                             </td>
 
@@ -162,7 +194,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center p-12 text-slate-400 italic text-sm">
+                            <td colspan="6" class="text-center p-12 text-slate-400 italic text-sm">
                                 No Associates have signed up to the platform yet.
                             </td>
                         </tr>

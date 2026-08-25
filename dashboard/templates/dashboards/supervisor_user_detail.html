@@ -369,7 +369,9 @@
 
                 <!-- Associate Details Card -->
                 {% if target_user.is_ambassador and target_user.ambassador_profile %}
-                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-sm">
+                    
+                    <!-- Title & Verification Status Badge -->
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <h3 class="text-sm font-bold text-slate-900">Associate Details</h3>
                         <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
@@ -380,6 +382,7 @@
                         </span>
                     </div>
 
+                    <!-- Quick Action Bar -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <span class="text-xs font-semibold text-slate-800 block">Verification Status</span>
@@ -387,9 +390,9 @@
                         </div>
                         <div class="flex items-center gap-2">
                             {% if target_user.ambassador_profile.verification_status != 'APPROVED' %}
-                            <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=target_user.id action='verify' %}">
+                            <form method="POST" action="{% url 'dashboard:superadmin-process-verification' profile_id=target_user.id action='verify' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1">
+                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                     Approve
                                 </button>
@@ -397,9 +400,9 @@
                             {% endif %}
 
                             {% if target_user.ambassador_profile.verification_status != 'DECLINED' %}
-                            <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=target_user.id action='decline' %}">
+                            <form method="POST" action="{% url 'dashboard:superadmin-process-verification' profile_id=target_user.id action='decline' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium text-xs rounded-lg transition flex items-center gap-1 shadow-sm">
+                                <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium text-xs rounded-lg transition flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                     Decline
                                 </button>
@@ -408,22 +411,103 @@
                         </div>
                     </div>
 
+                    <!-- Basic Associate Metadata -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                         <div>
-                            <span class="text-slate-500 block">Bio</span>
+                            <span class="text-slate-400 font-semibold uppercase text-[10px] block">Bio</span>
                             <p class="text-slate-700 mt-1 font-medium">{{ target_user.ambassador_profile.bio|default:"No bio provided." }}</p>
                         </div>
                         <div>
-                            <span class="text-slate-500 block">Status</span>
+                            <span class="text-slate-400 font-semibold uppercase text-[10px] block">Field Status</span>
                             <span class="inline-block mt-1 font-semibold {% if target_user.ambassador_profile.is_active_field_agent %}text-emerald-600{% else %}text-amber-600{% endif %}">
-                                {% if target_user.ambassador_profile.is_active_field_agent %}Active{% else %}Inactive{% endif %}
+                                {% if target_user.ambassador_profile.is_active_field_agent %}Active Associate{% else %}Inactive Associate{% endif %}
                             </span>
                         </div>
                     </div>
 
+                    <!-- Certification Exam Performance Section -->
+                    <div class="border-t border-slate-100 pt-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Certification Exam Overview</h3>
+                            {% if has_passed_exam %}
+                                <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Certified
+                                </span>
+                            {% elif exam_attempts %}
+                                <span class="text-[10px] bg-rose-50 text-rose-700 border border-rose-200 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Not Certified
+                                </span>
+                            {% else %}
+                                <span class="text-[10px] bg-slate-100 text-slate-600 font-medium px-2.5 py-0.5 rounded-full border border-slate-200">
+                                    No Attempts
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        {% if exam_attempts %}
+                            <!-- Exam Stats Cards -->
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                    <span class="text-[10px] text-slate-500 font-semibold block uppercase">Total Attempts</span>
+                                    <span class="text-base font-bold text-slate-900 mt-0.5 block">{{ exam_attempts|length }}</span>
+                                </div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                    <span class="text-[10px] text-slate-500 font-semibold block uppercase">Latest Score</span>
+                                    <span class="text-base font-bold {% if latest_exam_attempt.passed %}text-emerald-600{% else %}text-rose-600{% endif %} mt-0.5 block">
+                                        {{ latest_exam_attempt.score_percentage }}%
+                                    </span>
+                                </div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 col-span-2 sm:col-span-1">
+                                    <span class="text-[10px] text-slate-500 font-semibold block uppercase">Last Attempt Date</span>
+                                    <span class="text-xs font-bold text-slate-700 mt-1 block">
+                                        {{ latest_exam_attempt.attempt_date|date:"M d, Y" }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Detailed Attempts Table -->
+                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-50 border-b border-slate-200 text-[10px] text-slate-500 uppercase font-bold">
+                                        <tr>
+                                            <th class="p-3">Attempt Date</th>
+                                            <th class="p-3">Score</th>
+                                            <th class="p-3 text-right">Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                                        {% for attempt in exam_attempts %}
+                                        <tr class="hover:bg-slate-50/80 transition">
+                                            <td class="p-3 font-mono text-[11px] text-slate-500">
+                                                {{ attempt.attempt_date|date:"Y-m-d H:i" }}
+                                            </td>
+                                            <td class="p-3 font-bold text-slate-900">
+                                                {{ attempt.score_percentage }}%
+                                            </td>
+                                            <td class="p-3 text-right">
+                                                {% if attempt.passed %}
+                                                    <span class="text-[10px] font-bold text-emerald-600">PASS</span>
+                                                {% else %}
+                                                    <span class="text-[10px] font-bold text-rose-600">FAIL</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                                <p class="text-xs text-slate-500 italic">This associate has not taken the certification exam yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
                     <!-- Verification Document Cards -->
-                    <div>
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Verification Assets</h3>
+                    <div class="border-t border-slate-100 pt-5">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Verification Assets</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             
                             <!-- ID Card Preview -->
@@ -436,10 +520,10 @@
                                         <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
                                     {% endif %}
                                 </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300 group flex items-center justify-center">
                                     {% if target_user.ambassador_profile.id_card %}
                                         <img src="{{ target_user.ambassador_profile.id_card.url }}" alt="National ID" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                        <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1 backdrop-blur-[2px]">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             View Full Document
                                         </a>
@@ -462,10 +546,10 @@
                                         <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
                                     {% endif %}
                                 </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
+                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300 group flex items-center justify-center">
                                     {% if target_user.ambassador_profile.verification_selfie %}
                                         <img src="{{ target_user.ambassador_profile.verification_selfie.url }}" alt="Verification Selfie" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                                        <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1 backdrop-blur-[2px]">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             View Full Selfie
                                         </a>

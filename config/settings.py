@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'core',
     'dashboard',
     'payments',
+    'examinations',
 ]
 
 AUTH_USER_MODEL = "accounts.User"

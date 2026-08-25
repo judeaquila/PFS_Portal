@@ -1,0 +1,50 @@
+{% extends "dashboards/base_supervisor.html" %}
+
+{% block title %}Delete Question | Supervisor Portal{% endblock %}
+
+{% block header_title %}Delete Question Confirmation{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-8">
+    <div class="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm text-center space-y-4">
+        
+        <!-- Warning Icon Badge -->
+        <div class="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto text-lg">
+            <i class="fa-solid fa-trash-can"></i>
+        </div>
+        
+        <!-- Title & Subtitle -->
+        <div>
+            <h2 class="text-xl font-bold text-gray-900">Delete Question?</h2>
+            <p class="text-xs text-gray-500 mt-1">
+                Are you sure you want to delete this question? This action cannot be undone.
+            </p>
+        </div>
+
+        <!-- Question Context Preview Card -->
+        <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 text-left text-xs text-gray-800">
+            <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 border border-indigo-100 text-indigo-700 uppercase tracking-wider mb-2">
+                {{ question.get_category_display }}
+            </span>
+            <p class="font-medium text-gray-900">
+                {{ question.text }}
+            </p>
+        </div>
+
+        <!-- Action Form -->
+        <form method="POST" class="flex items-center gap-3 pt-2">
+            {% csrf_token %}
+            <a href="{% url 'examination:supervisor_question_list' %}" 
+               class="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition text-center">
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition shadow-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                <span>Confirm Delete</span>
+            </button>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

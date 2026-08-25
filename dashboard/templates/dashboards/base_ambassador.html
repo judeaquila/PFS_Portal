@@ -44,13 +44,22 @@
                 My Clients
             </a>
 
+            <!-- Availability Schedule Link -->
             <a href="{% url 'dashboard:associate-availability' %}"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors {% if url_name == 'associate-availability' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+               class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors {% if url_name == 'associate-availability' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 9h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2h-1V3m-10 2V3H8m0 2h8M6 21a2 2 0 01-2-2V7a2 2 0 012-2h1" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 9h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2h-1V3m-10 2V3H8m0 2h8M6 21a2 2 0 01-2-2V7a2 2 0 012-2h1" />
                 </svg>
                 Availability Schedule
+            </a>
+
+            <!-- Certification Exam Link -->
+            <a href="{% url 'examination:ambassador_landing' %}"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors {% if url_name == 'ambassador_landing' or url_name == 'take_exam' %}bg-pink-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Certification Exam
             </a>
 
             <!-- Profile Settings Link -->

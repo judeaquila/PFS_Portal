@@ -9,7 +9,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-100">Associates Directory</h1>
-            <p class="text-xs text-slate-400 mt-1">Audit submitted files, edit identity info, authorize Associates, or purge records.</p>
+            <p class="text-xs text-slate-400 mt-1">Audit submitted files, review certification exams, edit identity info, authorize Associates, or purge records.</p>
         </div>
         <div class="flex items-center gap-3">
             <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -29,6 +29,7 @@
                     <tr class="bg-slate-950/60 border-b border-slate-800 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                         <th class="p-4">Identity Info</th>
                         <th class="p-4">Status & Availability</th>
+                        <th class="p-4">Exam Performance</th>
                         <th class="p-4">Verification Credentials</th>
                         <th class="p-4">Assigned Clients</th>
                         <th class="p-4 text-right">Actions</th>
@@ -91,6 +92,34 @@
                                     {% else %}
                                         <span class="text-rose-400/80">Account Suspended</span>
                                     {% endif %}
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Exam Performance Column -->
+                        <td class="p-4">
+                            <div class="space-y-1">
+                                <div>
+                                    {% if account.total_exam_attempts > 0 %}
+                                        {% if account.latest_exam_passed or account.has_passed_exam > 0 %}
+                                            <span class="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded text-[10px] border border-emerald-500/20">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                PASSED ({{ account.latest_exam_score }}%)
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center gap-1 bg-rose-500/10 text-rose-400 font-semibold px-2 py-0.5 rounded text-[10px] border border-rose-500/20">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                FAILED ({{ account.latest_exam_score }}%)
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="inline-flex items-center bg-slate-800 text-slate-400 font-medium px-2 py-0.5 rounded text-[10px] border border-slate-700">
+                                            Not Attempted
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-[10px] text-slate-500 font-medium">
+                                    Attempts: <span class="text-slate-300">{{ account.total_exam_attempts }}</span>
                                 </div>
                             </div>
                         </td>
@@ -172,7 +201,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center p-12 text-slate-500 italic text-sm">
+                        <td colspan="6" class="text-center p-12 text-slate-500 italic text-sm">
                             No Associates have signed up to the platform yet.
                         </td>
                     </tr>
@@ -182,7 +211,7 @@
         </div>
     </div>
 
-    <!-- Single Global Delete Modal (Placed safely outside the table) -->
+    <!-- Single Global Delete Modal -->
     <div x-show="deleteModalOpen" 
          x-cloak 
          @keydown.escape.window="deleteModalOpen = false"

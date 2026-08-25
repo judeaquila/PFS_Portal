@@ -33,46 +33,23 @@
                     </a>
 
                     <a href="{% url 'dashboard:supervisor-associates' %}" 
-                         class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-associates' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
-                            <i class="fa-solid fa-user-plus w-5 h-5 text-center"></i>
-                            <span>Manage Associates</span>
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-associates' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-user-plus w-5 h-5 text-center"></i>
+                        <span>Manage Associates</span>
                     </a>
 
-                    {% comment %} <a href="{% url 'dashboard:supervisor-verifications' %}" 
-                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-verifications' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
-                        <i class="fa-solid fa-user-check w-5 text-center"></i>
-                        <span>Verifications</span>
-                    </a> {% endcomment %}
-
-                    {% comment %} <a href="{% url 'dashboard:supervisor-project-oversight' %}" 
-                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-project-oversight' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
-                        <i class="fa-solid fa-diagram-project w-5 text-center"></i>
-                        <span>Project Oversight</span>
-                    </a> {% endcomment %}
-
-                    {% comment %} <a href="{% url 'dashboard:supervisor-payout-audit' %}" 
-                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-payout-audit' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
-                        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i>
-                        <span>Payout Audits</span>
-                    </a> {% endcomment %}
-
-                    {% comment %} <a href="{% url 'dashboard:supervisor-client-payments' %}" 
-                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-client-payments' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
-                        <i class="fa-solid fa-credit-card w-5 text-center"></i>
-                        <span>Client Payments</span>
-                    </a> {% endcomment %}
+                    <!-- Examinations Link -->
+                    <a href="{% url 'examination:supervisor_question_list' %}" 
+                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.app_name == 'examination' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <i class="fa-solid fa-file-pen w-5 text-center"></i>
+                        <span>Examinations</span>
+                    </a>
 
                     <a href="{% url 'dashboard:supervisor-staff-schedules' %}" 
                        class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-staff-schedules' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
                         <i class="fa-solid fa-calendar-days w-5 text-center"></i>
                         <span>Staff Schedules</span>
                     </a>
-
-                    {% comment %} <a href="{% url 'dashboard:supervisor-staff-activity-logs' %}" 
-                       class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.url_name == 'supervisor-staff-activity-logs' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
-                        <i class="fa-solid fa-list-check w-5 text-center"></i>
-                        <span>Activity Logs</span>
-                    </a> {% endcomment %}
                 </nav>
             </div>
 

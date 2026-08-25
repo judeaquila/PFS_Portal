@@ -1,0 +1,120 @@
+{% extends "dashboards/base_ambassador.html" %}
+
+{% block title %}Taking Certification Exam | PFS Associate Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6" x-data="{ submitModalOpen: false }">
+
+    <!-- Header & Progress Counter -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm sticky top-0 z-20 flex justify-between items-center">
+        <div>
+            <h1 class="text-base font-bold text-slate-900">Certification Assessment</h1>
+            <p class="text-xs text-slate-500">Please review all questions carefully before submitting your answers.</p>
+        </div>
+        <span class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-pink-700 shrink-0">
+            Total Questions: {{ questions|length }}
+        </span>
+    </div>
+
+    <!-- Exam Form -->
+    <form id="examForm" method="POST" action="{% url 'examination:submit_exam' %}" class="space-y-6">
+        {% csrf_token %}
+
+        {% for q in questions %}
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="flex items-start gap-3">
+                <span class="flex-shrink-0 w-7 h-7 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center text-xs font-bold text-pink-700">
+                    {{ forloop.counter }}
+                </span>
+                <p class="text-sm font-semibold text-slate-800 leading-relaxed pt-1">{{ q.text }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-10">
+                <label class="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-pink-300 hover:bg-pink-50/30 cursor-pointer transition group">
+                    <input type="radio" name="question_{{ q.id }}" value="A" class="w-4 h-4 text-pink-700 border-slate-300 focus:ring-pink-500">
+                    <span class="text-xs text-slate-700 group-hover:text-slate-900"><strong class="text-slate-500">A.</strong> {{ q.option_a }}</span>
+                </label>
+
+                <label class="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-pink-300 hover:bg-pink-50/30 cursor-pointer transition group">
+                    <input type="radio" name="question_{{ q.id }}" value="B" class="w-4 h-4 text-pink-700 border-slate-300 focus:ring-pink-500">
+                    <span class="text-xs text-slate-700 group-hover:text-slate-900"><strong class="text-slate-500">B.</strong> {{ q.option_b }}</span>
+                </label>
+
+                <label class="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-pink-300 hover:bg-pink-50/30 cursor-pointer transition group">
+                    <input type="radio" name="question_{{ q.id }}" value="C" class="w-4 h-4 text-pink-700 border-slate-300 focus:ring-pink-500">
+                    <span class="text-xs text-slate-700 group-hover:text-slate-900"><strong class="text-slate-500">C.</strong> {{ q.option_c }}</span>
+                </label>
+
+                <label class="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-pink-300 hover:bg-pink-50/30 cursor-pointer transition group">
+                    <input type="radio" name="question_{{ q.id }}" value="D" class="w-4 h-4 text-pink-700 border-slate-300 focus:ring-pink-500">
+                    <span class="text-xs text-slate-700 group-hover:text-slate-900"><strong class="text-slate-500">D.</strong> {{ q.option_d }}</span>
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Submit Trigger Button -->
+        <div class="flex justify-end pt-2 pb-8">
+            <button type="button" @click="submitModalOpen = true"
+                    class="px-8 py-3 rounded-xl bg-pink-700 hover:bg-pink-600 text-white font-semibold text-xs transition shadow-sm hover:shadow flex items-center gap-2">
+                <span>Submit Exam Answers</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+        </div>
+    </form>
+
+    <!-- Tailwind Confirmation Modal -->
+    <div x-show="submitModalOpen" 
+         x-cloak 
+         @keydown.escape.window="submitModalOpen = false"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         role="dialog"
+         aria-modal="true">
+
+        <!-- Backdrop -->
+        <div x-show="submitModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+        <!-- Modal Dialog -->
+        <div x-show="submitModalOpen"
+             @click.outside="submitModalOpen = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="relative bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-sm shadow-xl z-10 text-center space-y-4">
+            
+            <div class="w-12 h-12 rounded-full bg-pink-50 border border-pink-100 text-pink-700 flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Submit Certification Exam?</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    Once submitted, your answers will be evaluated immediately. Make sure you have reviewed all questions before proceeding.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" @click="submitModalOpen = false"
+                        class="w-full py-2.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                    Review Answers
+                </button>
+                <button type="button" onclick="document.getElementById('examForm').submit();"
+                        class="w-full py-2.5 text-xs font-semibold text-white bg-pink-700 hover:bg-pink-600 rounded-xl transition shadow-sm">
+                    Confirm & Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
