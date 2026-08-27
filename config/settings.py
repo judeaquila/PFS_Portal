@@ -11,11 +11,23 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
-
 from pathlib import Path
+import environ
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Initialize environ
+env = environ.Env(
+    # Set casting and default values
+    DEBUG=(bool, False),
+    EMAIL_PORT=(int, 25),
+    EMAIL_USE_TLS=(bool, False)
+)
+
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -148,30 +160,14 @@ PAYSTACK_PUBLIC_KEY = 'pk_test_2a96e35ea12a7a83ea8607172860eec5516732fe'
 PAYSTACK_SECRET_KEY = 'sk_test_5be9ed1ac411d8784b620af067c168289c74c3c4'
 
 
-# # Default email sender display
-# DEFAULT_FROM_EMAIL = "PFS Online Portal <noreply@yourdomain.com>"
-# SERVER_EMAIL = "PFS System Errors <errors@yourdomain.com>"
-
-# # Mail Server Credentials
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = False
-# EMAIL_HOST_USER = "noreply@yourdomain.com"
-# EMAIL_HOST_PASSWORD = "your-actual-smtp-password"
-
-# # Timeout settings to prevent hanging server threads (in seconds)
-# EMAIL_TIMEOUT = 10
-
 # Gmail SMTP Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_USE_TLS = env('EMAIL_USE_TLS')
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'hologramdigitalx@gmail.com'
-EMAIL_HOST_PASSWORD = 'pikh ydbj uvdy lmds'
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'PFS Online Portal <hologramdigitalx@gmail.com>'
 
 SITE_DOMAIN = 'https://portal.pfsgh.com'

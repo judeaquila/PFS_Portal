@@ -40,11 +40,20 @@ class BaseUserRegistrationForm(TailwindFormMixin, forms.ModelForm):
     assigned_role = UserRole.USER
 
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': '••••••••'}),
+        widget=forms.PasswordInput(attrs={
+            'placeholder': '••••••••',
+            'id': 'id_password',
+            'class': 'pr-10'
+        }),
         help_text="Must be at least 8 characters long."
     )
+
     confirm_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': '••••••••'}),
+        widget=forms.PasswordInput(attrs={
+            'placeholder': '••••••••',
+            'id': 'id_confirm_password',
+            'class': 'pr-10'
+        }),
         label="Confirm Password"
     )
 
@@ -102,7 +111,11 @@ class LoginForm(TailwindFormMixin, forms.Form):
         widget=forms.EmailInput(attrs={'placeholder': 'you@company.com'})
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': '••••••••'})
+        widget=forms.PasswordInput(attrs={
+            'placeholder': '••••••••',
+            'id': 'id_password',
+            'class': 'pr-10'
+        })
     )
 
     def clean(self):
