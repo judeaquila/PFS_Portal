@@ -1,0 +1,79 @@
+{% extends "dashboards/base_superadmin.html" %}
+
+{% block title %}Bulk Upload Questions | Super Admin Portal{% endblock %}
+
+{% block header_title %}Bulk Question Import{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header & Back Navigation -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold text-white tracking-tight">Bulk Upload Questions</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Upload multiple questions at once using a CSV spreadsheet file.</p>
+        </div>
+        <a href="{% url 'examination:question_list' %}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium transition border border-slate-700/60 shadow-sm">
+            <i class="fa-solid fa-arrow-left text-white"></i>
+            <span>Back to Question Bank</span>
+        </a>
+    </div>
+
+    <!-- Instructions & Sample Download -->
+    <div class="bg-pink-950/30 border border-pink-500/30 rounded-2xl p-5 text-pink-200 text-xs space-y-3 shadow-sm backdrop-blur-sm">
+        <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-pink-100 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-white"></i>
+                Import Instructions
+            </span>
+            <a href="{% url 'examination:download_sample_question_csv' %}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-semibold transition text-xs shadow-sm">
+                <i class="fa-solid fa-download text-white"></i>
+                <span>Download Sample CSV</span>
+            </a>
+        </div>
+        <ul class="list-disc list-inside space-y-1 text-pink-300">
+            <li>Ensure the file header row remains unchanged: <code class="bg-pink-900/50 text-pink-200 border border-pink-700/50 px-1 py-0.5 rounded font-mono">category, text, option_a, option_b, option_c, option_d, correct_answer</code></li>
+            <li>The <strong>correct_answer</strong> column must be a single uppercase letter: <code class="bg-pink-900/50 text-pink-200 border border-pink-700/50 px-1 py-0.5 rounded font-mono">A</code>, <code class="bg-pink-900/50 text-pink-200 border border-pink-700/50 px-1 py-0.5 rounded font-mono">B</code>, <code class="bg-pink-900/50 text-pink-200 border border-pink-700/50 px-1 py-0.5 rounded font-mono">C</code>, or <code class="bg-pink-900/50 text-pink-200 border border-pink-700/50 px-1 py-0.5 rounded font-mono">D</code>.</li>
+            <li>Use exact <strong>Category Codes</strong> listed in the reference table below.</li>
+        </ul>
+    </div>
+
+    <!-- File Upload Form -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            
+            <label class="block text-xs font-bold text-slate-300">Upload CSV File</label>
+            <input type="file" name="csv_file" accept=".csv" required 
+                   class="block w-full text-xs text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-pink-400 hover:file:bg-slate-700 hover:file:text-pink-300 border border-slate-800 rounded-xl bg-slate-950 cursor-pointer focus:outline-none focus:border-pink-500">
+
+            <div class="pt-2 flex justify-end">
+                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs transition shadow-sm">
+                    <i class="fa-solid fa-cloud-arrow-up text-white"></i>
+                    <span>Import</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Category Key Reference Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold text-white">Valid Category Key Reference</h3>
+        <p class="text-xs text-slate-400">Copy these exact values into the <code class="font-mono text-pink-300">category</code> column of your CSV spreadsheet:</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">COMPANY_KNOWLEDGE</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">SERVICES</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">CLIENT_MANAGEMENT</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">COMMUNICATION</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">PROFESSIONALISM</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">PRODUCT_DEVELOPMENT</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">FDA</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">GMP</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">SALES</code></div>
+            <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300"><code class="text-pink-400 font-mono">CULTURE</code></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

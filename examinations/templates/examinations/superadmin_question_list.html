@@ -6,19 +6,24 @@
 <div class="max-w-7xl mx-auto space-y-6" x-data="{ optionsModalOpen: false, activeQuestion: null }">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">Question Bank</h1>
-            <p class="text-xs text-slate-400 mt-1">Manage and organize exam questions for Ambassador certifications.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Question Bank</h1>
+                <p class="text-xs text-slate-400 mt-1">Manage and organize exam questions for Ambassador certifications.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'examination:question_bulk_upload' %}" 
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs transition border border-slate-700/60 shadow-sm">
+                    <i class="fa-solid fa-file-csv text-white"></i>
+                    <span>Bulk CSV Import</span>
+                </a>
+                <a href="{% url 'examination:question_create' %}" 
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs transition shadow-sm">
+                    <i class="fa-solid fa-plus text-white"></i>
+                    <span>Add Single Question</span>
+                </a>
+            </div>
         </div>
-        <a href="{% url 'examination:question_create' %}" 
-           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-medium text-sm transition shadow-lg shadow-pink-600/20">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>Add New Question</span>
-        </a>
-    </div>
 
     <!-- Category Filter Bar -->
     <div class="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 shadow-xl">

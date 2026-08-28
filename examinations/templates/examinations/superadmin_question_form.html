@@ -4,17 +4,24 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-white tracking-tight">{{ title }}</h1>
-        <p class="text-xs text-slate-400 mt-1">Fill out the question parameters and configure the correct response key.</p>
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">{{ title }}</h1>
+            <p class="text-xs text-slate-400 mt-1">Fill out the question parameters and configure the correct response key.</p>
+        </div>
+        <a href="{% url 'examination:question_list' %}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium transition border border-slate-700/60 shadow-sm">
+            <i class="fa-solid fa-arrow-left text-white"></i>
+            <span>Back to Questions</span>
+        </a>
     </div>
 
-    <div class="bg-slate-950 border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-xl">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
         <form method="POST" class="space-y-6">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
-                <div class="p-4 rounded-xl bg-rose-950/40 border border-rose-900/50 text-rose-400 text-xs font-semibold">
+                <div class="p-4 rounded-xl bg-pink-950/40 border border-pink-500/30 text-pink-300 text-xs font-semibold">
                     {{ form.non_field_errors }}
                 </div>
             {% endif %}
@@ -22,58 +29,69 @@
             <!-- Category -->
             <div>
                 <label for="{{ form.category.id_for_label }}" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Category</label>
-                {{ form.category }}
-                {% if form.category.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.category.errors.0 }}</p>{% endif %}
+                <div class="[&>select]:w-full [&>select]:px-4 [&>select]:py-2.5 [&>select]:bg-slate-950 [&>select]:border [&>select]:border-slate-800 [&>select]:rounded-xl [&>select]:text-xs [&>select]:text-slate-200 [&>select]:focus:outline-none [&>select]:focus:border-pink-500">
+                    {{ form.category }}
+                </div>
+                {% if form.category.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.category.errors.0 }}</p>{% endif %}
             </div>
 
             <!-- Question Text -->
             <div>
                 <label for="{{ form.text.id_for_label }}" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Question Statement</label>
-                {{ form.text }}
-                {% if form.text.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.text.errors.0 }}</p>{% endif %}
+                <div class="[&>textarea]:w-full [&>textarea]:px-4 [&>textarea]:py-2.5 [&>textarea]:bg-slate-950 [&>textarea]:border [&>textarea]:border-slate-800 [&>textarea]:rounded-xl [&>textarea]:text-xs [&>textarea]:text-slate-200 [&>textarea]:focus:outline-none [&>textarea]:focus:border-pink-500">
+                    {{ form.text }}
+                </div>
+                {% if form.text.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.text.errors.0 }}</p>{% endif %}
             </div>
 
             <!-- Options Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-950 [&>input]:border [&>input]:border-slate-800 [&>input]:rounded-xl [&>input]:text-xs [&>input]:text-slate-200 [&>input]:focus:outline-none [&>input]:focus:border-pink-500">
                     <label for="{{ form.option_a.id_for_label }}" class="block text-xs font-medium text-slate-400 mb-1">Option A</label>
                     {{ form.option_a }}
-                    {% if form.option_a.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.option_a.errors.0 }}</p>{% endif %}
+                    {% if form.option_a.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.option_a.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
+                <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-950 [&>input]:border [&>input]:border-slate-800 [&>input]:rounded-xl [&>input]:text-xs [&>input]:text-slate-200 [&>input]:focus:outline-none [&>input]:focus:border-pink-500">
                     <label for="{{ form.option_b.id_for_label }}" class="block text-xs font-medium text-slate-400 mb-1">Option B</label>
                     {{ form.option_b }}
-                    {% if form.option_b.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.option_b.errors.0 }}</p>{% endif %}
+                    {% if form.option_b.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.option_b.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
+                <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-950 [&>input]:border [&>input]:border-slate-800 [&>input]:rounded-xl [&>input]:text-xs [&>input]:text-slate-200 [&>input]:focus:outline-none [&>input]:focus:border-pink-500">
                     <label for="{{ form.option_c.id_for_label }}" class="block text-xs font-medium text-slate-400 mb-1">Option C</label>
                     {{ form.option_c }}
-                    {% if form.option_c.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.option_c.errors.0 }}</p>{% endif %}
+                    {% if form.option_c.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.option_c.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
+                <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-950 [&>input]:border [&>input]:border-slate-800 [&>input]:rounded-xl [&>input]:text-xs [&>input]:text-slate-200 [&>input]:focus:outline-none [&>input]:focus:border-pink-500">
                     <label for="{{ form.option_d.id_for_label }}" class="block text-xs font-medium text-slate-400 mb-1">Option D</label>
                     {{ form.option_d }}
-                    {% if form.option_d.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.option_d.errors.0 }}</p>{% endif %}
+                    {% if form.option_d.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.option_d.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
             <!-- Correct Answer & Active Status -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 border-t border-slate-800/60">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
                 <div>
                     <label for="{{ form.correct_answer.id_for_label }}" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Correct Option</label>
-                    {{ form.correct_answer }}
-                    {% if form.correct_answer.errors %}<p class="text-xs text-rose-500 mt-1">{{ form.correct_answer.errors.0 }}</p>{% endif %}
+                    <div class="[&>select]:w-full [&>select]:px-4 [&>select]:py-2.5 [&>select]:bg-slate-950 [&>select]:border [&>select]:border-slate-800 [&>select]:rounded-xl [&>select]:text-xs [&>select]:text-slate-200 [&>select]:focus:outline-none [&>select]:focus:border-pink-500">
+                        {{ form.correct_answer }}
+                    </div>
+                    {% if form.correct_answer.errors %}<p class="text-xs text-pink-400 mt-1">{{ form.correct_answer.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="flex items-center gap-3 pt-6">
-                    {{ form.is_active }}
-                    <label for="{{ form.is_active.id_for_label }}" class="text-xs font-medium text-slate-300">Active (Included in exam pool)</label>
+                    <div class="[&>input[type=checkbox]]:w-4 [&>input[type=checkbox]]:h-4 [&>input[type=checkbox]]:rounded [&>input[type=checkbox]]:bg-slate-950 [&>input[type=checkbox]]:border-slate-800 [&>input[type=checkbox]]:accent-pink-600">
+                        {{ form.is_active }}
+                    </div>
+                    <label for="{{ form.is_active.id_for_label }}" class="text-xs font-medium text-slate-300 cursor-pointer">Active (Included in exam pool)</label>
                 </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center justify-between pt-4">
-                <a href="{% url 'examination:question_list' %}" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs transition">Cancel</a>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-medium text-xs transition shadow-lg shadow-pink-600/20">Save Question</button>
+            <div class="flex items-center justify-between pt-4 border-t border-slate-800/60">
+                <a href="{% url 'examination:question_list' %}" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700/60 text-slate-300 hover:text-white font-semibold text-xs transition shadow-sm">Cancel</a>
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs transition shadow-md shadow-pink-600/20">
+                    <i class="fa-solid fa-check text-white"></i>
+                    <span>Save Question</span>
+                </button>
             </div>
         </form>
     </div>

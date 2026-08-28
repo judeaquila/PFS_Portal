@@ -1,4 +1,6 @@
 import random
+import csv
+import io
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -8,6 +10,7 @@ from .models import Question, ExamAttempt, QuestionCategory
 from .forms import QuestionForm, SupervisorQuestionForm
 from common.decorators import role_required
 from accounts.models import UserRole
+from django.http import HttpResponse
 
 
 # ---------------------------------------------------------------------------------------- #
@@ -96,6 +99,114 @@ def question_delete(request, pk):
 
 
 
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def question_bulk_upload(request):
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+
+        # 1. Basic File Validation
+        if not csv_file:
+            messages.error(request, "Please select a CSV file to upload.")
+            return redirect('examination:question_bulk_upload')
+
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, "Invalid file format. Please upload a .csv file.")
+            return redirect('examination:question_bulk_upload')
+
+        # 2. Parse CSV
+        try:
+            data_set = csv_file.read().decode('UTF-8')
+            io_string = io.StringIO(data_set)
+            reader = csv.DictReader(io_string)
+        except Exception as e:
+            messages.error(request, f"Error reading file: {str(e)}")
+            return redirect('examination:question_bulk_upload')
+
+        valid_categories = dict(QuestionCategory.choices)
+        valid_options = dict(Question.OPTION_CHOICES)
+
+        questions_to_create = []
+        errors = []
+
+        # 3. Process Rows
+        for row_idx, row in enumerate(reader, start=2):
+            category = row.get('category', '').strip()
+            text = row.get('text', '').strip()
+            option_a = row.get('option_a', '').strip()
+            option_b = row.get('option_b', '').strip()
+            option_c = row.get('option_c', '').strip()
+            option_d = row.get('option_d', '').strip()
+            correct_answer = row.get('correct_answer', '').strip().upper()
+
+            # Check required fields
+            if not all([category, text, option_a, option_b, option_c, option_d, correct_answer]):
+                errors.append(f"Row {row_idx}: Missing required fields.")
+                continue
+
+            # Validate Category key
+            if category not in valid_categories:
+                errors.append(f"Row {row_idx}: Invalid category '{category}'.")
+                continue
+
+            # Validate Correct Answer Key
+            if correct_answer not in valid_options:
+                errors.append(f"Row {row_idx}: Invalid correct answer '{correct_answer}'. Must be A, B, C, or D.")
+                continue
+
+            questions_to_create.append(Question(
+                category=category,
+                text=text,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_answer=correct_answer,
+                created_by=request.user,
+                is_active=True
+            ))
+
+        # 4. Bulk Save
+        if questions_to_create:
+            Question.objects.bulk_create(questions_to_create)
+            messages.success(request, f"Successfully imported {len(questions_to_create)} question(s)!")
+
+        if errors:
+            for err in errors[:5]:  # Display first 5 errors
+                messages.warning(request, err)
+            if len(errors) > 5:
+                messages.warning(request, f"...and {len(errors) - 5} more errors.")
+
+        return redirect('examination:question_list')
+
+    return render(request, 'examinations/superadmin_question_bulk_upload.html')
+
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def download_sample_question_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="question_import_sample.csv"'
+
+    writer = csv.writer(response)
+    # Header Row
+    writer.writerow(['category', 'text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer'])
+    # Example Row
+    writer.writerow([
+        'COMPANY_KNOWLEDGE', 
+        'What year was PFS founded?', 
+        '2010', 
+        '2015', 
+        '2018', 
+        '2020', 
+        'B'
+    ])
+
+    return response
+
+
+
 # ---------------------------------------------------------------------------------------- #
 # -------------------------------- SUPERVISOR DASHBOARD ---------------------------------- #
 # ---------------------------------------------------------------------------------------- #
@@ -180,6 +291,114 @@ def supervisor_question_delete(request, pk):
     }
     
     return render(request, 'examinations/supervisor_question_confirm_delete.html', context)
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_question_bulk_upload(request):
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+
+        # 1. Basic File Validation
+        if not csv_file:
+            messages.error(request, "Please select a CSV file to upload.")
+            return redirect('examination:supervisor_question_bulk_upload')
+
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, "Invalid file format. Please upload a .csv file.")
+            return redirect('examination:supervisor_question_bulk_upload')
+
+        # 2. Parse CSV
+        try:
+            data_set = csv_file.read().decode('UTF-8')
+            io_string = io.StringIO(data_set)
+            reader = csv.DictReader(io_string)
+        except Exception as e:
+            messages.error(request, f"Error reading file: {str(e)}")
+            return redirect('examination:supervisor_question_bulk_upload')
+
+        valid_categories = dict(QuestionCategory.choices)
+        valid_options = dict(Question.OPTION_CHOICES)
+
+        questions_to_create = []
+        errors = []
+
+        # 3. Process Rows
+        for row_idx, row in enumerate(reader, start=2):
+            category = row.get('category', '').strip()
+            text = row.get('text', '').strip()
+            option_a = row.get('option_a', '').strip()
+            option_b = row.get('option_b', '').strip()
+            option_c = row.get('option_c', '').strip()
+            option_d = row.get('option_d', '').strip()
+            correct_answer = row.get('correct_answer', '').strip().upper()
+
+            # Check required fields
+            if not all([category, text, option_a, option_b, option_c, option_d, correct_answer]):
+                errors.append(f"Row {row_idx}: Missing required fields.")
+                continue
+
+            # Validate Category key
+            if category not in valid_categories:
+                errors.append(f"Row {row_idx}: Invalid category '{category}'.")
+                continue
+
+            # Validate Correct Answer Key
+            if correct_answer not in valid_options:
+                errors.append(f"Row {row_idx}: Invalid correct answer '{correct_answer}'. Must be A, B, C, or D.")
+                continue
+
+            questions_to_create.append(Question(
+                category=category,
+                text=text,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_answer=correct_answer,
+                created_by=request.user,
+                is_active=True
+            ))
+
+        # 4. Bulk Save
+        if questions_to_create:
+            Question.objects.bulk_create(questions_to_create)
+            messages.success(request, f"Successfully imported {len(questions_to_create)} question(s)!")
+
+        if errors:
+            for err in errors[:5]:  # Display first 5 errors
+                messages.warning(request, err)
+            if len(errors) > 5:
+                messages.warning(request, f"...and {len(errors) - 5} more errors.")
+
+        return redirect('examination:supervisor_question_list')
+
+    return render(request, 'examinations/supervisor_question_bulk_upload.html')
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def download_sample_question_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="question_import_sample.csv"'
+
+    writer = csv.writer(response)
+    # Header Row
+    writer.writerow(['category', 'text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer'])
+    # Example Row
+    writer.writerow([
+        'COMPANY_KNOWLEDGE', 
+        'What year was PFS founded?', 
+        '2010', 
+        '2015', 
+        '2018', 
+        '2020', 
+        'B'
+    ])
+
+    return response
 
 
 
