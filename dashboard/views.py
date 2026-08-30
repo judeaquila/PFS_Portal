@@ -21,7 +21,7 @@ from django.conf import settings
 import requests
 from decimal import Decimal
 from payments.forms import HistoricalPaymentRequestForm
-from examinations.models import ExamAttempt
+from examinations.models import ExamAttempt, Exam
 
 
 
@@ -819,32 +819,49 @@ def supervisor_dashboard(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.SUPER_ADMIN])
+@role_required([UserRole.SUPERVISOR])
 def supervisor_associates(request):
-    """Renders comprehensive directory table managing all platform ambassador/associate profiles with exam analytics for supervisors."""
+    """Renders directory table managing associates with per-exam performance modal data."""
     
-    # Subquery to retrieve the latest attempt score percentage for each associate
-    latest_score_subquery = ExamAttempt.objects.filter(
-        user=OuterRef('pk')
-    ).order_by('-attempt_date').values('score_percentage')[:1]
+    # Fetch all active exams for reporting
+    active_exams = Exam.objects.all()
 
-    # Subquery to retrieve the latest attempt pass status
-    latest_passed_subquery = ExamAttempt.objects.filter(
-        user=OuterRef('pk')
-    ).order_by('-attempt_date').values('passed')[:1]
-
+    # Base query for Ambassadors
     ambassadors_users = User.objects.filter(role=UserRole.AMBASSADOR).select_related(
         'ambassador_profile'
     ).annotate(
         assignment_count=Count('ambassador_profile__assignments', distinct=True),
         total_exam_attempts=Count('exam_attempts', distinct=True),
-        latest_exam_score=Subquery(latest_score_subquery),
-        latest_exam_passed=Subquery(latest_passed_subquery),
-        has_passed_exam=Count('exam_attempts', filter=Q(exam_attempts__passed=True))
-    ).order_by('-id')
+        total_passed_exams=Count('exam_attempts__exam', filter=Q(exam_attempts__passed=True), distinct=True)
+    ).prefetch_related('exam_attempts__exam').order_by('-id')
+
+    # Build per-associate exam summaries for the modal popup
+    for account in ambassadors_users:
+        exam_summary = []
+        user_attempts = account.exam_attempts.all()
+
+        for exam in active_exams:
+            attempts_for_exam = [a for a in user_attempts if a.exam_id == exam.id]
+            # Order attempts descending by date
+            attempts_for_exam.sort(key=lambda x: x.attempt_date, reverse=True)
+            latest = attempts_for_exam[0] if attempts_for_exam else None
+
+            exam_summary.append({
+                'exam_id': exam.id,
+                'exam_title': exam.title,
+                'total_attempts': len(attempts_for_exam),
+                'passed': latest.passed if latest else False,
+                'latest_score': float(latest.score_percentage) if latest else None,
+                'latest_date': latest.attempt_date.strftime('%b %d, %Y %H:%M') if latest else None,
+                'status': 'PASSED' if (latest and latest.passed) else ('FAILED' if latest else 'UNATTEMPTED')
+            })
+        
+        # Attach JSON-serialized summary to user object
+        account.exam_summary_json = json.dumps(exam_summary)
 
     context = {
-        'ambassadors': ambassadors_users
+        'ambassadors': ambassadors_users,
+        'total_active_exams': active_exams.count(),
     }
 
     return render(request, 'dashboards/supervisor_associates_list.html', context)

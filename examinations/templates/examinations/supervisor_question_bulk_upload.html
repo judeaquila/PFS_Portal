@@ -13,7 +13,7 @@
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">Bulk Upload Questions</h1>
             <p class="text-xs text-slate-500 mt-0.5">Upload multiple questions at once using a CSV spreadsheet file.</p>
         </div>
-        <a href="{% url 'examination:supervisor_question_list' %}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-medium transition">
+        <a href="{% url 'examination:supervisor_exam_question_list' exam_id=exam.id %}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-medium transition">
             <i class="fa-solid fa-arrow-left"></i>
             <span>Back to Question Bank</span>
         </a>
@@ -40,7 +40,7 @@
 
     <!-- File Upload Form -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <form method="POST" action="{% url 'examination:supervisor_question_bulk_upload' exam_id=exam.id %}" enctype="multipart/form-data" class="space-y-4">
             {% csrf_token %}
             
             <label class="block text-xs font-bold text-slate-700">Upload CSV File</label>

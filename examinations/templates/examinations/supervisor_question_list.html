@@ -11,36 +11,52 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-xl font-bold text-gray-900 tracking-tight">Question Bank</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Manage and organize exam questions for Associate certifications.</p>
+            <p class="text-xs text-gray-500 mt-0.5">Manage, organize, and assign exam questions for Associate certifications.</p>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{% url 'examination:supervisor_question_bulk_upload' %}" 
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition border border-slate-300">
+            <a href="{% url 'examination:download_sample_question_csv' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition border border-slate-300">
                 <i class="fa-solid fa-file-csv text-emerald-600"></i>
-                <span>Bulk CSV Import</span>
+                <span>Sample CSV</span>
             </a>
-            <a href="{% url 'examination:supervisor_question_create' %}" 
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition shadow-sm">
+            <a href="{% url 'examination:supervisor_general_question_create' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition shadow-sm">
                 <i class="fa-solid fa-plus"></i>
                 <span>Add Single Question</span>
             </a>
         </div>
     </div>
 
-    <!-- Category Filter Bar -->
+    <!-- Filter Bar (Category & Exam) -->
     <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
         <form method="GET" class="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div class="w-full sm:w-72">
-                <select name="category" onchange="this.form.submit()" 
-                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    <option value="">All Categories</option>
-                    {% for key, label in categories %}
-                        <option value="{{ key }}" {% if selected_category == key %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <!-- Category Filter -->
+                <div class="w-full sm:w-60">
+                    <select name="category" onchange="this.form.submit()" 
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <option value="">All Categories</option>
+                        {% for key, label in categories %}
+                            <option value="{{ key }}" {% if selected_category == key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Exam Filter -->
+                <div class="w-full sm:w-60">
+                    <select name="exam" onchange="this.form.submit()" 
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <option value="">All Exams</option>
+                        <option value="unassigned" {% if selected_exam == "unassigned" %}selected{% endif %}>-- Unassigned Questions --</option>
+                        {% for e in exams %}
+                            <option value="{{ e.id }}" {% if selected_exam == e.id|stringformat:"s" %}selected{% endif %}>{{ e.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            {% if selected_category %}
-                <a href="{% url 'examination:supervisor_question_list' %}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">Clear Filter</a>
+
+            {% if selected_category or selected_exam %}
+                <a href="{% url 'examination:supervisor_question_list' %}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">Clear Filters</a>
             {% endif %}
         </form>
     </div>
@@ -51,9 +67,10 @@
             <table class="w-full text-left text-xs text-gray-700">
                 <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200">
                     <tr>
+                        <th class="px-6 py-4">Associated Exam</th>
                         <th class="px-6 py-4">Category</th>
                         <th class="px-6 py-4">Question Text</th>
-                        <th class="px-6 py-4">Options Overview</th>
+                        <th class="px-6 py-4">Options</th>
                         <th class="px-6 py-4 text-center">Correct Key</th>
                         <th class="px-6 py-4">Created By</th>
                         <th class="px-6 py-4 text-center">Status</th>
@@ -63,6 +80,24 @@
                 <tbody class="divide-y divide-gray-100">
                     {% for q in page_obj %}
                     <tr class="hover:bg-gray-50/60 transition">
+                        
+                        <!-- Associated Exam (With Inline Quick Assign Dropdown) -->
+                        <td class="px-6 py-4 whitespace-nowrap min-w-[200px]">
+                            <form method="POST" class="flex items-center gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="question_id" value="{{ q.pk }}">
+                                <select name="exam_id" onchange="this.form.submit()" 
+                                        class="text-[11px] font-medium rounded-lg border border-gray-200 bg-gray-50/50 hover:bg-white text-gray-800 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 py-1 px-2.5 transition cursor-pointer w-full">
+                                    <option value="" {% if not q.exam %}selected{% endif %}>-- Unassigned --</option>
+                                    {% for e in exams %}
+                                        <option value="{{ e.id }}" {% if q.exam_id == e.id %}selected{% endif %}>
+                                            {{ e.title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+
                         <!-- Category -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 border border-indigo-100 text-indigo-700">
@@ -76,7 +111,7 @@
                         </td>
 
                         <!-- Options Column -->
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <button type="button" 
                                     @click="activeQuestion = {
                                         text: '{{ q.text|escapejs }}',
@@ -107,7 +142,7 @@
                                 </div>
                                 <span class="text-gray-900 font-medium">
                                     {% if q.created_by %}
-                                        {{ q.created_by.get_full_name|default:q.created_by.first_name }} ({{q.created_by.get_role_display}})
+                                        {{ q.created_by.get_full_name|default:q.created_by.first_name }}
                                     {% else %}
                                         <span class="text-gray-400 italic">System / Admin</span>
                                     {% endif %}
@@ -136,7 +171,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-400">
                             No questions found matching your criteria.
                         </td>
                     </tr>
@@ -153,10 +188,10 @@
             </div>
             <div class="flex gap-2">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}&category={{ selected_category }}" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-medium hover:bg-gray-100 text-gray-700 transition">Previous</a>
+                    <a href="?page={{ page_obj.previous_page_number }}&category={{ selected_category }}&exam={{ selected_exam }}" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-medium hover:bg-gray-100 text-gray-700 transition">Previous</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&category={{ selected_category }}" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-medium hover:bg-gray-100 text-gray-700 transition">Next</a>
+                    <a href="?page={{ page_obj.next_page_number }}&category={{ selected_category }}&exam={{ selected_exam }}" class="px-3 py-1.5 rounded-lg bg-white border border-gray-300 font-medium hover:bg-gray-100 text-gray-700 transition">Next</a>
                 {% endif %}
             </div>
         </div>

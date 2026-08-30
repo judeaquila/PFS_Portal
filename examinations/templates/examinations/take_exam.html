@@ -1,6 +1,6 @@
 {% extends "dashboards/base_ambassador.html" %}
 
-{% block title %}Taking Certification Exam | PFS Associate Portal{% endblock %}
+{% block title %}Taking {{ exam.title }} Examination | PFS Associate Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-6" x-data="{ submitModalOpen: false }">
@@ -8,7 +8,7 @@
     <!-- Header & Progress Counter -->
     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm sticky top-0 z-20 flex justify-between items-center">
         <div>
-            <h1 class="text-base font-bold text-slate-900">Certification Assessment</h1>
+            <h1 class="text-base font-bold text-slate-900">{{ exam.title}}</h1>
             <p class="text-xs text-slate-500">Please review all questions carefully before submitting your answers.</p>
         </div>
         <span class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-pink-700 shrink-0">
@@ -17,7 +17,7 @@
     </div>
 
     <!-- Exam Form -->
-    <form id="examForm" method="POST" action="{% url 'examination:submit_exam' %}" class="space-y-6">
+    <form id="examForm" method="POST" action="{% url 'examination:submit_exam' exam_id=exam.id %}" class="space-y-6">
         {% csrf_token %}
 
         {% for q in questions %}

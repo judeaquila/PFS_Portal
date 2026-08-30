@@ -3,14 +3,15 @@
 {% block title %}Associates Directory{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
+<!-- Alpine Context Container -->
+<div class="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8" x-data="{ openModal: false, activeUser: '', examData: [] }">
     <div class="max-w-7xl mx-auto space-y-6">
         
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Associates Directory</h1>
-                <p class="text-xs text-slate-500 mt-1">Audit submitted files, review exam scores, edit identity info, authorize Associates, or purge records.</p>
+                <p class="text-xs text-slate-500 mt-1">Audit submitted files, review multi-exam performance, edit identity info, or authorize Associates.</p>
             </div>
             <div class="flex items-center gap-3">
                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -62,9 +63,6 @@
                                         </div>
                                         <a href="{% url 'dashboard:supervisor-user-detail' pk=account.id %}" class="text-[10px] text-slate-400 font-mono mt-0.5 hover:text-slate-600 block">ID: #{{ account.id }}</a>
                                         <div class="text-slate-600 font-medium mt-1">{{ account.email }}</div>
-                                        {% if account.whatsapp_number %}
-                                            <div class="text-[11px] text-slate-500 mt-0.5"><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i>{{ account.whatsapp_number }}</div>
-                                        {% endif %}
                                     </div>
                                 </div>
                             </td>
@@ -97,34 +95,22 @@
                                 </div>
                             </td>
 
-                            <!-- Exam Performance Column -->
+                            <!-- Updated Exam Performance Summary Column -->
                             <td class="p-4">
-                                <div class="space-y-1">
-                                    {% if account.total_exam_attempts > 0 %}
-                                        <div class="flex items-center gap-2">
-                                            {% if account.latest_exam_passed %}
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                    <i class="fa-solid fa-circle-check text-[9px]"></i> Passed
-                                                </span>
-                                            {% else %}
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                    <i class="fa-solid fa-circle-xmark text-[9px]"></i> Failed
-                                                </span>
-                                            {% endif %}
-
-                                            <span class="font-bold text-slate-800 text-xs">
-                                                {{ account.latest_exam_score|floatformat:0 }}%
-                                            </span>
-                                        </div>
-
-                                        <div class="text-[10px] text-slate-500 font-medium">
-                                            Attempts: <span class="text-slate-700 font-bold">{{ account.total_exam_attempts }}</span>
-                                        </div>
-                                    {% else %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                                            Not Attempted
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-slate-800">
+                                            {{ account.total_passed_exams }} / {{ total_active_exams }}
                                         </span>
-                                    {% endif %}
+                                        <span class="text-[10px] text-slate-400 font-medium">Exams Passed</span>
+                                    </div>
+
+                                    <button type="button"
+                                            @click="activeUser = '{{ account.get_full_name|default:account.email|escapejs }}'; examData = {{ account.exam_summary_json }}; openModal = true;"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-sm">
+                                        <i class="fa-solid fa-chart-pie text-[9px]"></i>
+                                        <span>View Performance</span>
+                                    </button>
                                 </div>
                             </td>
 
@@ -149,9 +135,6 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    <div class="text-slate-500 italic text-[11px] border-t border-slate-100 pt-1.5">
-                                        "{{ account.ambassador_profile.bio|default:'No statement bio uploaded.'|truncatechars:100 }}"
-                                    </div>
                                 </div>
                             </td>
 
@@ -163,8 +146,6 @@
                             <!-- Actions Column -->
                             <td class="p-4 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-2">
-
-                                    <!-- Quick Verification Actions -->
                                     {% if account.ambassador_profile.id_card %}
                                         {% if account.ambassador_profile.verification_status != 'APPROVED' %}
                                             <form method="POST" action="{% url 'dashboard:supervisor-process-verification' profile_id=account.id action='verify' %}" class="inline">
@@ -185,7 +166,6 @@
                                         {% endif %}
                                     {% endif %}
 
-                                    <!-- Detail Link -->
                                     <a href="{% url 'dashboard:supervisor-user-detail' pk=account.id %}" title="View Details" class="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-lg transition border border-slate-200 shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     </a>
@@ -204,6 +184,80 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Examination Breakdown Modal -->
+    <div x-show="openModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-6" @click.away="openModal = false">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Examinations Overview</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" x-text="'Performance record for ' + activeUser"></p>
+                </div>
+                <button @click="openModal = false" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="py-3 px-4">Examination</th>
+                            <th class="py-3 px-4 text-center">Status</th>
+                            <th class="py-3 px-4 text-center">Score</th>
+                            <th class="py-3 px-4 text-center">Attempts</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <template x-for="item in examData" :key="item.exam_id">
+                            <tr class="hover:bg-slate-50/60">
+                                <td class="py-3 px-4 font-bold text-slate-800" x-text="item.exam_title"></td>
+                                <td class="py-3 px-4 text-center">
+                                    <template x-if="item.status === 'PASSED'">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <i class="fa-solid fa-circle-check"></i> Passed
+                                        </span>
+                                    </template>
+                                    <template x-if="item.status === 'FAILED'">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                            <i class="fa-solid fa-circle-xmark"></i> Failed
+                                        </span>
+                                    </template>
+                                    <template x-if="item.status === 'UNATTEMPTED'">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                                            Unattempted
+                                        </span>
+                                    </template>
+                                </td>
+                                <td class="py-3 px-4 text-center font-bold text-slate-900" x-text="item.latest_score !== null ? item.latest_score + '%' : '-'"></td>
+                                <td class="py-3 px-4 text-center text-slate-500 font-medium" x-text="item.total_attempts"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="pt-4 border-t border-slate-100 flex justify-end">
+                <button type="button" @click="openModal = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition">
+                    Close
+                </button>
+            </div>
+
+        </div>
     </div>
 </div>
 {% endblock %}

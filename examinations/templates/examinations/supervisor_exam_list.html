@@ -1,0 +1,81 @@
+{% extends "dashboards/base_supervisor.html" %}
+
+{% block title %}Exams | Supervisor Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">Examinations List</h1>
+            <p class="text-xs text-gray-500">Select an exam to manage its question pool or view the full question bank.</p>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- Global Question Bank Link -->
+            <a href="{% url 'examination:supervisor_question_list' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition border border-slate-300">
+                <i class="fa-solid fa-database text-indigo-600"></i>
+                <span>View Full Question Bank</span>
+            </a>
+
+            <!-- Create New Exam Link -->
+            <a href="{% url 'examination:supervisor_exam_create' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create New Exam</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Exam Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for exam in exams %}
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md">
+                        {{ exam.questions.count }} Questions
+                    </span>
+
+                    <form action="{% url 'examination:supervisor_exam_toggle_lock' exam_id=exam.id %}" method="POST" class="inline">
+                        {% csrf_token %}
+                        {% if exam.is_active %}
+                            <button type="submit" title="Click to Unlock Exam for Associates"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
+                                <i class="fa-solid fa-lock text-rose-600"></i>
+                                <span>Locked</span>
+                            </button>
+                        {% else %}
+                            <button type="submit" title="Click to Lock Exam from Associates"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition">
+                                <i class="fa-solid fa-lock-open text-emerald-600"></i>
+                                <span>Unlocked</span>
+                            </button>
+                        {% endif %}
+                    </form>
+
+                </div>
+                <h2 class="text-base font-bold text-gray-900">{{ exam.title }}</h2>
+                <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ exam.description|default:"No description provided." }}</p>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+                <!-- Manage Exam Questions Link -->
+                <a href="{% url 'examination:supervisor_exam_question_list' exam_id=exam.id %}" 
+                   class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>Manage Questions</span>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full bg-white border border-gray-200 rounded-2xl p-12 text-center text-gray-400">
+            No exams created yet. Click "Create New Exam" to get started.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

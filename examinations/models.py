@@ -4,6 +4,20 @@ from django.utils import timezone
 from datetime import timedelta
 
 
+class Exam(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    pass_mark_percentage = models.PositiveIntegerField(default=70)
+    duration_minutes = models.PositiveIntegerField(default=60)
+    is_active = models.BooleanField(default=True, help_text="If locked, associates cannot take or view this examination.")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_exams')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+
 class QuestionCategory(models.TextChoices):
     COMPANY_KNOWLEDGE = 'COMPANY_KNOWLEDGE', 'PFS Company Knowledge'
     SERVICES = 'SERVICES', 'PFS Services'
@@ -16,6 +30,7 @@ class QuestionCategory(models.TextChoices):
     SALES = 'SALES', 'Sales'
     CULTURE = 'CULTURE', 'PFS Culture'
 
+
 class Question(models.Model):
     OPTION_CHOICES = [
         ('A', 'Option A'),
@@ -24,6 +39,7 @@ class Question(models.Model):
         ('D', 'Option D'),
     ]
 
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='questions', null=True, blank=True)
     category = models.CharField(max_length=50, choices=QuestionCategory.choices)
     text = models.TextField()
     option_a = models.CharField(max_length=255)
@@ -43,8 +59,8 @@ class Question(models.Model):
         return f"[{self.get_category_display()}] {self.text[:40]}..."
 
 
-
 class ExamAttempt(models.Model):
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='attempts', null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exam_attempts')
     total_questions = models.IntegerField(default=0)
     correct_answers = models.IntegerField(default=0)
@@ -57,14 +73,12 @@ class ExamAttempt(models.Model):
         ordering = ['-attempt_date']
 
     def save(self, *args, **kwargs):
-        # Calculate percentage score
         if self.total_questions > 0:
             self.score_percentage = round((self.correct_answers / self.total_questions) * 100, 2)
             self.passed = self.score_percentage >= 80.0
         
-        # Set 5-day lock period if the candidate failed
+        # Set 5-minute lock period if the candidate failed
         if not self.passed and not self.next_attempt_allowed_at:
-            # Setting lock from current attempt timestamp
             base_time = self.attempt_date or timezone.now()
             self.next_attempt_allowed_at = base_time + timedelta(minutes=5)
             
@@ -72,9 +86,9 @@ class ExamAttempt(models.Model):
 
     @property
     def is_locked(self):
-        """Returns True if user is still inside the 5-day waiting period."""
+        """Returns True if user is still inside the cooldown waiting period."""
         if self.passed:
-            return True  # Exam completed, no retakes needed
+            return True
         if self.next_attempt_allowed_at and timezone.now() < self.next_attempt_allowed_at:
             return True
         return False

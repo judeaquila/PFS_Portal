@@ -63,7 +63,7 @@
                     </a>
 
                     <!-- Examinations Link -->
-                    <a href="{% url 'examination:supervisor_question_list' %}" 
+                    <a href="{% url 'examination:supervisor_exam_list' %}" 
                        class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.app_name == 'examination' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
                         <i class="fa-solid fa-file-pen w-5 text-center"></i>
                         <span>Examinations</span>
