@@ -87,7 +87,7 @@
             </a>
 
             <!-- Questions for Examination -->
-            <a href="{% url 'examination:question_list' %}" 
+            <a href="{% url 'examination:exam_list' %}" 
             class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition {% if 'examination' in request.resolver_match.namespaces or 'question' in url_name %}bg-slate-800/80 text-white border border-slate-700/50 shadow-inner{% else %}text-slate-400 hover:bg-slate-900/60 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5 text-pink-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>

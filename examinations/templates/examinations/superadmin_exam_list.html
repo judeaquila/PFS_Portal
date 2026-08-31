@@ -1,0 +1,81 @@
+{% extends "dashboards/base_superadmin.html" %}
+
+{% block title %}Exams | SuperAdmin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-white tracking-tight">Examinations List</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Select an exam to manage its question pool or view the full global question bank.</p>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- Global Question Bank Link -->
+            <a href="{% url 'examination:question_list' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition border border-slate-800">
+                <i class="fa-solid fa-database text-pink-500"></i>
+                <span>View Question Bank</span>
+            </a>
+
+            <!-- Create New Exam Link -->
+            <a href="{% url 'examination:exam_create' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-semibold text-xs transition shadow-lg shadow-pink-600/20">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create New Exam</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Exam Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for exam in exams %}
+        <div class="bg-slate-950 border border-slate-800/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4 hover:border-slate-700/60 transition duration-200">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-pink-400 border border-pink-500/20 px-2.5 py-1 rounded-md">
+                        {{ exam.questions.count }} Questions
+                    </span>
+
+                    <form action="{% url 'examination:exam_toggle_lock' exam_id=exam.id %}" method="POST" class="inline">
+                        {% csrf_token %}
+                        {% if exam.is_active %}
+                            <button type="submit" title="Click to Unlock Exam for Associates"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-950/40 text-rose-400 border border-rose-900/50 hover:bg-rose-900/50 transition">
+                                <i class="fa-solid fa-lock text-rose-400"></i>
+                                <span>Locked</span>
+                            </button>
+                        {% else %}
+                            <button type="submit" title="Click to Lock Exam from Associates"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/50 transition">
+                                <i class="fa-solid fa-lock-open text-emerald-400"></i>
+                                <span>Unlocked</span>
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+                <h2 class="text-base font-bold text-white tracking-tight">{{ exam.title }}</h2>
+                <p class="text-xs text-slate-400 mt-1.5 line-clamp-2">{{ exam.description|default:"No description provided." }}</p>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                <!-- Manage Exam Questions Link -->
+                <a href="{% url 'examination:exam_question_list' exam_id=exam.id %}" 
+                   class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-xs transition border border-slate-800 hover:border-slate-700">
+                    <i class="fa-solid fa-folder-open text-pink-500/80"></i>
+                    <span>Manage Questions</span>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full bg-slate-950 border border-slate-800/80 rounded-2xl p-12 text-center text-slate-500">
+            <i class="fa-solid fa-file-pen text-3xl text-slate-700 mb-3 block"></i>
+            <p class="text-xs">No exams created yet. Click "Create New Exam" to get started.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

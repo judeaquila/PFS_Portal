@@ -4,12 +4,21 @@ from . import views
 app_name = 'examination'
 
 urlpatterns = [
-    # Super Admin Questions
+    # Super Admin Global Questions
     path('super-admin/questions/', views.question_list, name='question_list'),
-    path('super-admin/questions/add/', views.question_create, name='question_create'),
+    path('super-admin/questions/add/', views.general_question_create, name='general_question_create'),
     path('super-admin/questions/<int:pk>/edit/', views.question_update, name='question_update'),
     path('super-admin/questions/<int:pk>/delete/', views.question_delete, name='question_delete'),
-    path('super-admin/questions/bulk-upload/', views.question_bulk_upload, name='question_bulk_upload'),
+
+    # Super Admin Exams
+    path('super-admin/exams/', views.exam_list, name='exam_list'),
+    path('super-admin/exams/add/', views.exam_create, name='exam_create'),
+    path('super-admin/exams/<int:exam_id>/toggle-lock/', views.exam_toggle_lock, name='exam_toggle_lock'),
+
+    # Super Admin Exam-Specific Questions
+    path('super-admin/exams/<int:exam_id>/questions/', views.exam_question_list, name='exam_question_list'),
+    path('super-admin/exams/<int:exam_id>/questions/add/', views.question_create, name='question_create'),
+    path('super-admin/exams/<int:exam_id>/questions/bulk-upload/', views.question_bulk_upload, name='question_bulk_upload'),
     path('super-admin/questions/sample-csv/', views.download_sample_question_csv, name='download_sample_question_csv'),
 
     # Supervisor Exams

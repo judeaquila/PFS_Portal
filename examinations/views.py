@@ -19,28 +19,119 @@ from accounts.models import UserRole
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
+def exam_list(request):
+    exams = Exam.objects.prefetch_related('questions').all()
+
+    context = {
+        'exams': exams,
+    }
+    return render(request, 'examinations/superadmin_exam_list.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def exam_create(request):
+    if request.method == 'POST':
+        form = ExamForm(request.POST)
+        if form.is_valid():
+            exam = form.save()
+            messages.success(request, f'Exam "{exam.title}" created successfully!')
+            return redirect('examination:exam_list')
+    else:
+        form = ExamForm()
+
+    context = {
+        'form': form,
+        'title': 'Create Exam',
+    }
+    return render(request, 'examinations/superadmin_exam_form.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def exam_toggle_lock(request, exam_id):
+    """Toggle the lock state of an exam."""
+    if request.method == 'POST':
+        exam = get_object_or_404(Exam, pk=exam_id)
+        exam.is_active = not exam.is_active
+        exam.save()
+
+        status = "locked" if exam.is_active else "unlocked"
+        messages.success(request, f'Exam "{exam.title}" has been successfully {status}.')
+    
+    redirect_url = request.META.get('HTTP_REFERER', 'examination:exam_list')
+    return redirect(redirect_url)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
 def question_list(request):
+    if request.method == 'POST':
+        question_id = request.POST.get('question_id')
+        exam_id = request.POST.get('exam_id')
+        
+        question = get_object_or_404(Question, pk=question_id)
+        
+        if exam_id:
+            exam = get_object_or_404(Exam, pk=exam_id)
+            question.exam = exam
+            messages.success(request, f'Question assigned to exam "{exam.title}".')
+        else:
+            question.exam = None
+            messages.info(request, 'Question unassigned from exam.')
+            
+        question.save()
+        
+        redirect_url = request.META.get('HTTP_REFERER', 'examination:question_list')
+        return redirect(redirect_url)
+
+    # Filtering Logic
     category_filter = request.GET.get('category', '')
-    questions = Question.objects.select_related('created_by', 'exam').all()
+    exam_filter = request.GET.get('exam', '')
+
+    questions = Question.objects.select_related('created_by', 'exam').all().order_by('-created_at')
 
     if category_filter:
         questions = questions.filter(category=category_filter)
+    if exam_filter:
+        if exam_filter == 'unassigned':
+            questions = questions.filter(exam__isnull=True)
+        else:
+            questions = questions.filter(exam_id=exam_filter)
 
     paginator = Paginator(questions, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    all_exams = Exam.objects.all().order_by('title')
+
     context = {
         'page_obj': page_obj,
         'categories': QuestionCategory.choices,
+        'exams': all_exams,
         'selected_category': category_filter,
+        'selected_exam': exam_filter,
     }
     return render(request, 'examinations/superadmin_question_list.html', context)
 
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
-def question_create(request):
+def exam_question_list(request, exam_id):
+    exam = get_object_or_404(Exam, pk=exam_id)
+    questions = exam.questions.select_related('created_by').all().order_by('-created_at')
+
+    context = {
+        'exam': exam,
+        'questions': questions,
+    }
+    return render(request, 'examinations/superadmin_exam_question_list.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def general_question_create(request):
+    """Creates a question directly into the global pool without binding to a specific exam."""
     if request.method == 'POST':
         form = QuestionForm(request.POST)
         if form.is_valid():
@@ -54,7 +145,37 @@ def question_create(request):
 
     context = {
         'form': form,
-        'title': 'Create Question',
+        'title': 'Add Question to Bank',
+    }
+    return render(request, 'examinations/superadmin_question_form.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def question_create(request, exam_id=None):
+    exam = None
+    if exam_id:
+        exam = get_object_or_404(Exam, pk=exam_id)
+
+    if request.method == 'POST':
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            question = form.save(commit=False)
+            if exam:
+                question.exam = exam
+            question.created_by = request.user
+            question.save()
+            messages.success(request, f'Question added successfully{" to " + exam.title if exam else ""}.')
+            if exam:
+                return redirect('examination:exam_question_list', exam_id=exam.id)
+            return redirect('examination:question_list')
+    else:
+        form = QuestionForm()
+
+    context = {
+        'form': form,
+        'exam': exam,
+        'title': f'Add Question to "{exam.title}"' if exam else 'Create Question',
     }
     return render(request, 'examinations/superadmin_question_form.html', context)
 
@@ -94,13 +215,18 @@ def question_delete(request, pk):
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
-def question_bulk_upload(request):
+def question_bulk_upload(request, exam_id=None):
+    exam = None
+    if exam_id:
+        exam = get_object_or_404(Exam, pk=exam_id)
+
     if request.method == 'POST':
         csv_file = request.FILES.get('csv_file')
 
         if not csv_file or not csv_file.name.endswith('.csv'):
             messages.error(request, "Please upload a valid .csv file.")
-            return redirect('examination:question_bulk_upload')
+            redirect_target = ('examination:question_bulk_upload', [exam.id]) if exam else ('examination:question_bulk_upload', [])
+            return redirect(redirect_target[0], *redirect_target[1])
 
         try:
             data_set = csv_file.read().decode('UTF-8')
@@ -108,7 +234,8 @@ def question_bulk_upload(request):
             reader = csv.DictReader(io_string)
         except Exception as e:
             messages.error(request, f"Error reading file: {str(e)}")
-            return redirect('examination:question_bulk_upload')
+            redirect_target = ('examination:question_bulk_upload', [exam.id]) if exam else ('examination:question_bulk_upload', [])
+            return redirect(redirect_target[0], *redirect_target[1])
 
         valid_categories = dict(QuestionCategory.choices)
         valid_options = dict(Question.OPTION_CHOICES)
@@ -138,6 +265,7 @@ def question_bulk_upload(request):
                 continue
 
             questions_to_create.append(Question(
+                exam=exam,
                 category=category,
                 text=text,
                 option_a=option_a,
@@ -151,7 +279,8 @@ def question_bulk_upload(request):
 
         if questions_to_create:
             Question.objects.bulk_create(questions_to_create)
-            messages.success(request, f"Successfully imported {len(questions_to_create)} question(s)!")
+            msg = f"Successfully imported {len(questions_to_create)} question(s) into '{exam.title}'!" if exam else f"Successfully imported {len(questions_to_create)} question(s)!"
+            messages.success(request, msg)
 
         if errors:
             for err in errors[:5]:
@@ -159,9 +288,12 @@ def question_bulk_upload(request):
             if len(errors) > 5:
                 messages.warning(request, f"...and {len(errors) - 5} more errors.")
 
+        if exam:
+            return redirect('examination:exam_question_list', exam_id=exam.id)
         return redirect('examination:question_list')
 
-    return render(request, 'examinations/superadmin_question_bulk_upload.html')
+    context = {'exam': exam}
+    return render(request, 'examinations/superadmin_question_bulk_upload.html', context)
 
 
 @login_required
@@ -447,9 +579,12 @@ def supervisor_question_bulk_upload(request, exam_id):
                 messages.warning(request, f"...and {len(errors) - 5} more errors.")
 
         return redirect('examination:supervisor_exam_question_list', exam_id=exam.id)
+    
+    context = {
+        'exam': exam
+    }
 
-    return render(request, 'examinations/supervisor_question_bulk_upload.html', {'exam': exam})
-
+    return render(request, 'examinations/supervisor_question_bulk_upload.html', context)
 
 
 # ---------------------------------------------------------------------------------------- #
@@ -461,10 +596,8 @@ def supervisor_question_bulk_upload(request, exam_id):
 def exam_landing(request):
     exams = Exam.objects.all().prefetch_related('questions')
     
-    # Get all previous attempts by this associate indexed by exam_id
     user_attempts = ExamAttempt.objects.filter(user=request.user).order_by('-attempt_date')
     
-    # Process exam status metadata per exam
     exam_cards = []
     for exam in exams:
         attempts_for_exam = user_attempts.filter(exam=exam)
@@ -501,7 +634,6 @@ def exam_landing(request):
 def take_exam(request, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id)
 
-    # Check whether exams is locked
     if exam.is_active:
         messages.error(request, f"'{exam.title}' is currently locked by administrators and unavailable for testing.")
         return redirect('examination:ambassador_landing')
@@ -516,7 +648,6 @@ def take_exam(request, exam_id):
             messages.warning(request, "This examination is currently locked. Please wait for the cooldown period to end.")
             return redirect('examination:ambassador_landing')
 
-    # Fetch active questions specific to THIS exam
     questions = list(exam.questions.filter(is_active=True))
     random.shuffle(questions)
 
@@ -539,7 +670,6 @@ def submit_exam(request, exam_id):
 
     exam = get_object_or_404(Exam, pk=exam_id)
 
-    # Re-verify if exams is locked
     if exam.is_active:
         messages.error(request, f"Submission failed: '{exam.title}' has been locked by supervisors.")
         return redirect('examination:ambassador_landing')

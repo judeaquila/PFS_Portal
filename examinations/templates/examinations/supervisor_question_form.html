@@ -18,8 +18,8 @@
                 <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to Exam Questions
             </a>
         {% else %}
-            <a href="{% url 'examination:supervisor_question_list' %}" class="text-xs font-semibold text-gray-500 hover:text-gray-800 transition flex items-center gap-1">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to Questions
+            <a href="{% url 'examination:supervisor_question_list' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition border border-slate-300">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i> <span>Back to Questions</span>
             </a>
         {% endif %}
     </div>
