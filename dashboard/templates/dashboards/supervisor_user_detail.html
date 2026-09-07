@@ -9,7 +9,7 @@
         <!-- Header Bar -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <a href="{% url 'dashboard:supervisor-associates' %}" class="p-2.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-xl border border-slate-200 transition shadow-sm">
+                <a href="{% url 'dashboard:supervisor-user-list' %}" class="p-2.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 rounded-xl border border-slate-200 transition shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 </a>
                 <div>
@@ -22,6 +22,12 @@
                     <p class="text-xs text-slate-500 mt-0.5">ID: <span class="font-mono text-slate-700">#{{ target_user.pk }}</span> • Created on {{ target_user.created_at|date:"M d, Y" }}</p>
                 </div>
             </div>
+
+            <!-- Edit User Action Button -->
+            <a href="{% url 'dashboard:supervisor-user-update' target_user.pk %}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition shadow-sm active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Edit User
+            </a>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -31,14 +37,10 @@
                 <!-- User Profile Card -->
                 <div class="bg-white rounded-2xl border border-slate-200 p-6 text-center space-y-4 shadow-sm">
                     <div class="relative inline-block">
-                        {% if target_user.is_consultant and target_user.consultant_profile.avatar %}
-                            <img src="{{ target_user.consultant_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-md mx-auto">
-                        {% elif target_user.is_ambassador and target_user.ambassador_profile.avatar %}
-                            <img src="{{ target_user.ambassador_profile.avatar.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-md mx-auto">
-                        {% elif target_user.is_regular_user and target_user.company_logo %}
+                        {% if target_user.company_logo %}
                             <img src="{{ target_user.company_logo.url }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-md mx-auto">
                         {% else %}
-                            <div class="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-2xl font-black text-pink-600 mx-auto shadow-inner">
+                            <div class="w-24 h-24 rounded-2xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center text-2xl font-black text-blue-600 mx-auto shadow-inner">
                                 {{ target_user.first_name|default:target_user.email|slice:":1"|upper }}
                             </div>
                         {% endif %}
@@ -53,8 +55,6 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold tracking-wider border
                             {% if target_user.is_superuser %}bg-purple-50 text-purple-700 border-purple-200
                             {% elif target_user.is_supervisor %}bg-indigo-50 text-indigo-700 border-indigo-200
-                            {% elif target_user.is_consultant %}bg-sky-50 text-sky-700 border-sky-200
-                            {% elif target_user.is_ambassador %}bg-pink-50 text-pink-700 border-pink-200
                             {% else %}bg-slate-100 text-slate-700 border-slate-200{% endif %}">
                             {{ target_user.get_role_display|default:"Client" }}
                         </span>
@@ -108,8 +108,7 @@
             <!-- Main Content Area -->
             <div class="lg:col-span-8 space-y-6">
 
-                <!-- Client & Business Details Card -->
-                {% if target_user.is_regular_user or not target_user.role %}
+                <!-- Business Details Card -->
                 <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <h3 class="text-sm font-bold text-slate-900">Client & Business Details</h3>
@@ -135,13 +134,13 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
                         <div>
                             <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 114 0z"/></svg>
                                 <span>Payment & Service Billing History</span>
                             </h3>
                             <p class="text-[11px] text-slate-500 mt-0.5">Package subscriptions & custom historical payments</p>
                         </div>
                         
-                        <a href="{% url 'dashboard:admin-add-historical-payment' target_user.pk %}" class="px-3.5 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm">
+                        <a href="{% url 'dashboard:supervisor-add-historical-payment' target_user.pk %}" class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5 shadow-sm">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Log Past Payment
                         </a>
@@ -214,361 +213,15 @@
                     {% else %}
                         <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center space-y-2">
                             <p class="text-xs text-slate-500">No payment records or package subscriptions found for this account.</p>
-                            <a href="{% url 'dashboard:admin-add-historical-payment' target_user.pk %}" class="inline-block text-xs text-pink-600 hover:text-pink-700 font-semibold">
+                            <a href="{% url 'dashboard:supervisor-add-historical-payment' target_user.pk %}" class="inline-block text-xs text-blue-600 hover:text-blue-700 font-semibold">
                                 + Add a historical/past payment
                             </a>
                         </div>
                     {% endif %}
                 </div>
-                {% endif %}
-
-                <!-- Consultant Details Card -->
-                {% if target_user.is_consultant and target_user.consultant_profile %}
-                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h3 class="text-sm font-bold text-slate-900">Consultant Details</h3>
-                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
-                            {% if target_user.consultant_profile.verification_status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
-                            {% elif target_user.consultant_profile.verification_status == 'DECLINED' %}bg-rose-50 text-rose-700 border-rose-200
-                            {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
-                            {{ target_user.consultant_profile.get_verification_status_display|default:"PENDING" }}
-                        </span>
-                    </div>
-
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <span class="text-xs font-semibold text-slate-800 block">Verification Status</span>
-                            <p class="text-[11px] text-slate-500">Approve or decline this consultant's credentials.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            {% if target_user.consultant_profile.verification_status != 'APPROVED' %}
-                            <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' profile_id=target_user.id action='verify' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    Approve
-                                </button>
-                            </form>
-                            {% endif %}
-
-                            {% if target_user.consultant_profile.verification_status != 'DECLINED' %}
-                            <form method="POST" action="{% url 'dashboard:superadmin-consultant-verification' profile_id=target_user.id action='decline' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium text-xs rounded-lg transition flex items-center gap-1 shadow-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    Decline
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <span class="text-slate-500 block">Bio</span>
-                            <p class="text-slate-700 mt-1 font-medium">{{ target_user.consultant_profile.bio|default:"No bio provided." }}</p>
-                        </div>
-                        <div>
-                            <span class="text-slate-500 block">Status</span>
-                            <span class="inline-block mt-1 font-semibold {% if target_user.consultant_profile.is_active_consultant %}text-emerald-600{% else %}text-amber-600{% endif %}">
-                                {% if target_user.consultant_profile.is_active_consultant %}Active{% else %}Inactive{% endif %}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Verification Document Cards -->
-                    <div>
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Verification Assets</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            
-                            <!-- ID Card Preview -->
-                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Government ID Card</span>
-                                    {% if target_user.consultant_profile.id_card %}
-                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
-                                    {% else %}
-                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
-                                    {% endif %}
-                                </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
-                                    {% if target_user.consultant_profile.id_card %}
-                                        <img src="{{ target_user.consultant_profile.id_card.url }}" alt="National ID" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <a href="{{ target_user.consultant_profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            View Full Document
-                                        </a>
-                                    {% else %}
-                                        <div class="text-center p-4 text-slate-400 space-y-1">
-                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6"></path></svg>
-                                            <span class="text-xs font-medium block">No ID uploaded</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Verification Selfie Preview -->
-                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Selfie</span>
-                                    {% if target_user.consultant_profile.verification_selfie %}
-                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
-                                    {% else %}
-                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
-                                    {% endif %}
-                                </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
-                                    {% if target_user.consultant_profile.verification_selfie %}
-                                        <img src="{{ target_user.consultant_profile.verification_selfie.url }}" alt="Verification Selfie" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <a href="{{ target_user.consultant_profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            View Full Selfie
-                                        </a>
-                                    {% else %}
-                                        <div class="text-center p-4 text-slate-400 space-y-1">
-                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-                                            <span class="text-xs font-medium block">No selfie uploaded</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Curriculum Vitae (CV) Preview -->
-                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Curriculum Vitae</span>
-                                    {% if target_user.consultant_profile.cv %}
-                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
-                                    {% else %}
-                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
-                                    {% endif %}
-                                </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group flex items-center justify-center">
-                                    {% if target_user.consultant_profile.cv %}
-                                        <div class="text-center p-4 space-y-1">
-                                            <svg class="w-8 h-8 mx-auto text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            <span class="text-xs font-medium text-slate-700 block">Document Available</span>
-                                        </div>
-                                        <a href="{{ target_user.consultant_profile.cv.url }}" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                            Download CV
-                                        </a>
-                                    {% else %}
-                                        <div class="text-center p-4 text-slate-400 space-y-1">
-                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                            <span class="text-xs font-medium block">No CV uploaded</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Associate Details Card -->
-                {% if target_user.is_ambassador and target_user.ambassador_profile %}
-                <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-sm">
-                    
-                    <!-- Title & Verification Status Badge -->
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h3 class="text-sm font-bold text-slate-900">Associate Details</h3>
-                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold border
-                            {% if target_user.ambassador_profile.verification_status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
-                            {% elif target_user.ambassador_profile.verification_status == 'DECLINED' %}bg-rose-50 text-rose-700 border-rose-200
-                            {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
-                            {{ target_user.ambassador_profile.get_verification_status_display|default:"PENDING" }}
-                        </span>
-                    </div>
-
-                    <!-- Quick Action Bar -->
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <span class="text-xs font-semibold text-slate-800 block">Verification Status</span>
-                            <p class="text-[11px] text-slate-500">Approve or decline this Associate's credentials.</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            {% if target_user.ambassador_profile.verification_status != 'APPROVED' %}
-                            <form method="POST" action="{% url 'dashboard:superadmin-process-verification' profile_id=target_user.id action='verify' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    Approve
-                                </button>
-                            </form>
-                            {% endif %}
-
-                            {% if target_user.ambassador_profile.verification_status != 'DECLINED' %}
-                            <form method="POST" action="{% url 'dashboard:superadmin-process-verification' profile_id=target_user.id action='decline' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-medium text-xs rounded-lg transition flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    Decline
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Basic Associate Metadata -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <span class="text-slate-400 font-semibold uppercase text-[10px] block">Bio</span>
-                            <p class="text-slate-700 mt-1 font-medium">{{ target_user.ambassador_profile.bio|default:"No bio provided." }}</p>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 font-semibold uppercase text-[10px] block">Field Status</span>
-                            <span class="inline-block mt-1 font-semibold {% if target_user.ambassador_profile.is_active_field_agent %}text-emerald-600{% else %}text-amber-600{% endif %}">
-                                {% if target_user.ambassador_profile.is_active_field_agent %}Active Associate{% else %}Inactive Associate{% endif %}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Certification Exam Performance Section -->
-                    <div class="border-t border-slate-100 pt-5 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Certification Exam Overview</h3>
-                            {% if has_passed_exam %}
-                                <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    Certified
-                                </span>
-                            {% elif exam_attempts %}
-                                <span class="text-[10px] bg-rose-50 text-rose-700 border border-rose-200 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    Not Certified
-                                </span>
-                            {% else %}
-                                <span class="text-[10px] bg-slate-100 text-slate-600 font-medium px-2.5 py-0.5 rounded-full border border-slate-200">
-                                    No Attempts
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        {% if exam_attempts %}
-                            <!-- Exam Stats Cards -->
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                    <span class="text-[10px] text-slate-500 font-semibold block uppercase">Total Attempts</span>
-                                    <span class="text-base font-bold text-slate-900 mt-0.5 block">{{ exam_attempts|length }}</span>
-                                </div>
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                    <span class="text-[10px] text-slate-500 font-semibold block uppercase">Latest Score</span>
-                                    <span class="text-base font-bold {% if latest_exam_attempt.passed %}text-emerald-600{% else %}text-rose-600{% endif %} mt-0.5 block">
-                                        {{ latest_exam_attempt.score_percentage }}%
-                                    </span>
-                                </div>
-                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 col-span-2 sm:col-span-1">
-                                    <span class="text-[10px] text-slate-500 font-semibold block uppercase">Last Attempt Date</span>
-                                    <span class="text-xs font-bold text-slate-700 mt-1 block">
-                                        {{ latest_exam_attempt.attempt_date|date:"M d, Y" }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Detailed Attempts Table -->
-                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50 border-b border-slate-200 text-[10px] text-slate-500 uppercase font-bold">
-                                        <tr>
-                                            <th class="p-3">Attempt Date</th>
-                                            <th class="p-3">Score</th>
-                                            <th class="p-3 text-right">Result</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100 text-slate-700">
-                                        {% for attempt in exam_attempts %}
-                                        <tr class="hover:bg-slate-50/80 transition">
-                                            <td class="p-3 font-mono text-[11px] text-slate-500">
-                                                {{ attempt.attempt_date|date:"Y-m-d H:i" }}
-                                            </td>
-                                            <td class="p-3 font-bold text-slate-900">
-                                                {{ attempt.score_percentage }}%
-                                            </td>
-                                            <td class="p-3 text-right">
-                                                {% if attempt.passed %}
-                                                    <span class="text-[10px] font-bold text-emerald-600">PASS</span>
-                                                {% else %}
-                                                    <span class="text-[10px] font-bold text-rose-600">FAIL</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
-                                <p class="text-xs text-slate-500 italic">This associate has not taken the certification exam yet.</p>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Verification Document Cards -->
-                    <div class="border-t border-slate-100 pt-5">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Verification Assets</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            
-                            <!-- ID Card Preview -->
-                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Government ID Card</span>
-                                    {% if target_user.ambassador_profile.id_card %}
-                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
-                                    {% else %}
-                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
-                                    {% endif %}
-                                </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300 group flex items-center justify-center">
-                                    {% if target_user.ambassador_profile.id_card %}
-                                        <img src="{{ target_user.ambassador_profile.id_card.url }}" alt="National ID" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <a href="{{ target_user.ambassador_profile.id_card.url }}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1 backdrop-blur-[2px]">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            View Full Document
-                                        </a>
-                                    {% else %}
-                                        <div class="text-center p-4 text-slate-400 space-y-1">
-                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6"></path></svg>
-                                            <span class="text-xs font-medium block">No ID uploaded</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Verification Selfie Preview -->
-                            <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Verification Selfie</span>
-                                    {% if target_user.ambassador_profile.verification_selfie %}
-                                        <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Uploaded</span>
-                                    {% else %}
-                                        <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">Missing</span>
-                                    {% endif %}
-                                </div>
-                                <div class="relative aspect-video rounded-xl overflow-hidden bg-slate-200 border border-slate-300 group flex items-center justify-center">
-                                    {% if target_user.ambassador_profile.verification_selfie %}
-                                        <img src="{{ target_user.ambassador_profile.verification_selfie.url }}" alt="Verification Selfie" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                                        <a href="{{ target_user.ambassador_profile.verification_selfie.url }}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1 backdrop-blur-[2px]">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            View Full Selfie
-                                        </a>
-                                    {% else %}
-                                        <div class="text-center p-4 text-slate-400 space-y-1">
-                                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-                                            <span class="text-xs font-medium block">No selfie uploaded</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
 
                 <!-- Admin Access Card -->
-                {% if target_user.is_super_admin or target_user.is_supervisor %}
+                {% if target_user.is_superuser or target_user.is_supervisor %}
                 <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <h3 class="text-sm font-bold text-slate-900">Administrative Access</h3>
@@ -577,7 +230,7 @@
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 leading-relaxed">
-                        This user holds platform management privileges. Administrative accounts have elevated system permissions and are not required to complete standard client or field agent verification steps.
+                        This user holds platform management privileges. Administrative accounts have elevated system permissions across the portal.
                     </p>
                 </div>
                 {% endif %}

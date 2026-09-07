@@ -62,6 +62,15 @@
                         <span>Manage Associates</span>
                     </a>
 
+                    <!-- User Management -->
+                    <a href="{% url 'dashboard:supervisor-user-list' %}" 
+                    class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if url_name == 'supervisor-user-list' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
+                        <svg class="w-5 h-5 text-white-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0-6a3 3 0 110-6m3.343 1.1a3.343 3.343 0 110 6.686M17.657 15a8.967 8.967 0 013.343 6v1h-3.343v-1a6.882 6.882 0 00-3.343-6z"></path>
+                        </svg>
+                        <span>Manage Clients</spon>
+                    </a>
+
                     <!-- Examinations Link -->
                     <a href="{% url 'examination:supervisor_exam_list' %}" 
                        class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition hover:bg-slate-800 {% if request.resolver_match.app_name == 'examination' %}bg-indigo-600 text-white{% else %}text-slate-300{% endif %}">
@@ -135,6 +144,26 @@
         </div>
 
     </div>
+
+    <script>
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; 
+        let logoutTimer;
+
+        function resetTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => {
+                alert("You have been logged out due to inactivity.");
+                window.location.href = "{% url 'accounts:login' %}";
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        // Reset the timer on common user interaction events
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.onclick = resetTimer;
+        document.onscroll = resetTimer;
+    </script>
 
 </body>
 </html>

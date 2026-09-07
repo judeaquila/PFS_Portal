@@ -36,7 +36,7 @@ def initiate_package_payment(request, package_code):
             )
             return redirect("core:pricing")
 
-        # FIX: Query standard packages filtered by null custom fields to prevent MultipleObjectsReturned
+        # Query standard packages filtered by null custom fields to prevent MultipleObjectsReturned
         package = AssessmentPackage.objects.filter(
             package_type=package_code,
             custom_price__isnull=True,

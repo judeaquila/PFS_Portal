@@ -205,5 +205,25 @@
         </main>
     </div>
 
+    <script>
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; 
+        let logoutTimer;
+
+        function resetTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => {
+                alert("You have been logged out due to inactivity.");
+                window.location.href = "{% url 'accounts:login' %}";
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        // Reset the timer on common user interaction events
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.onclick = resetTimer;
+        document.onscroll = resetTimer;
+    </script>
+
 </body>
 </html>

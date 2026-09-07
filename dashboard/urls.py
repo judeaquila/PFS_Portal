@@ -21,6 +21,7 @@ urlpatterns = [
     path('super-admin/users/payments_history/', views.admin_user_payment_history, name='admin-user-payments'),
     path('super-admin/user/payment_requests/', views.admin_create_payment_request, name='admin-create-payment-request'),
     path('super-admin/user/historical_payments/<int:user_id>/', views.admin_add_historical_payment_view, name='admin-add-historical-payment'),
+    path("super-admin/review/client/<int:client_id>/", views.admin_review_client_portfolio, name='admin-review-client'),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),
     path('supervisor/associates/', views.supervisor_associates, name='supervisor-associates'),
@@ -35,6 +36,13 @@ urlpatterns = [
     path("supervisor/project-oversight/", views.supervisor_project_oversight, name="supervisor-project-oversight"),
     path("supervisor/payout-audit/", views.supervisor_payout_audit_queue, name="supervisor-payout-audit"),
     path("supervisor/staff-activity-logs/", views.supervisor_staff_activity_logs, name="supervisor-staff-activity-logs"),
+
+    path('supervisor/users/create/', views.supervisor_create_client_view, name='supervisor-create-client'),
+    path('supervisor/users/create/success/', views.supervisor_client_created_success_view, name='supervisor-client-created-success'),
+    path('supervisor/users/', views.supervisor_user_list, name='supervisor-user-list'),
+    path('supervisor/users/<int:pk>/edit/', views.supervisor_user_update, name='supervisor-user-update'),
+    path('supervisor/users/<int:pk>/toggle-active/', views.supervisor_user_toggle_active, name='supervisor-user-toggle-active'),
+    path('supervisor/users/historical_payments/<int:user_id>/', views.supervisor_add_historical_payment_view, name='supervisor-add-historical-payment'),
 
     path("consultant/", views.consultant_dashboard, name="consultant-dashboard"),
     path("consultant/submissions/", views.consultant_client_submissions, name="client-submissions"),

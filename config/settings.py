@@ -171,3 +171,10 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'PFS Online Portal <hologramdigitalx@gmail.com>'
 
 SITE_DOMAIN = 'https://portal.pfsgh.com'
+
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+SESSION_COOKIE_AGE = 1800
+
+SESSION_SAVE_EVERY_REQUEST = True

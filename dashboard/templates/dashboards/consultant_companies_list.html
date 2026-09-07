@@ -1,5 +1,5 @@
 {% extends 'dashboards/base_consultant.html' %}
-{% block title %}Client Directory | PFS{% endblock %}
+{% block title %}Client Directory | PFS Online Portal{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto space-y-6">
@@ -31,8 +31,8 @@
                 <thead>
                     <tr class="bg-slate-50/70 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-wider">
                         <th class="px-6 py-4">Company Details & Projects</th>
-                        <th class="px-6 py-4">Primary Contact</th>
-                        <th class="px-6 py-4">Audit Attention Status</th>
+                        <th class="px-6 py-4">Representative</th>
+                        <th class="px-6 py-4">Audit Status</th>
                         <th class="px-6 py-4">Required Documents Verified</th>
                         <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
@@ -147,11 +147,11 @@
                             <div class="inline-flex rounded-lg shadow-sm bg-white border border-slate-200">
                                 <a href="{% url 'dashboard:company-overview' row.client.id %}" 
                                    class="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-l-lg transition border-r border-slate-200 flex items-center gap-1">
-                                    360 Summary
+                                    Overview
                                 </a>
                                 <a href="{% url 'dashboard:review-client' row.client.id %}" 
                                    class="px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-r-lg transition flex items-center gap-1">
-                                    File Vault
+                                    Audit Documents
                                 </a>
                             </div>
                         </td>

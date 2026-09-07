@@ -40,11 +40,11 @@
                 Client Directory
             </a>
 
-            <a href="{% url 'dashboard:client-submissions' %}" 
+            {% comment %} <a href="{% url 'dashboard:client-submissions' %}" 
             class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'client-submissions' or url_name == 'review-client' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Client Submissions
-            </a>
+            </a> {% endcomment %}
 
             <a href="{% url 'dashboard:global-boards' %}" 
             class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'global-boards' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
@@ -150,6 +150,26 @@
                 }, 4000);
             });
         });
+    </script>
+
+    <script>
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; 
+        let logoutTimer;
+
+        function resetTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => {
+                alert("You have been logged out due to inactivity.");
+                window.location.href = "{% url 'accounts:login' %}";
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        // Reset the timer on common user interaction events
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.onclick = resetTimer;
+        document.onscroll = resetTimer;
     </script>
 
 </body>

@@ -11,7 +11,7 @@
         <div class="mb-6">
             <h2 class="text-xl font-bold text-slate-900 flex items-center">
                 <i class="fa-solid fa-chevron-down mr-2 text-xs text-indigo-600"></i> 
-                {{ project.get_group_display }} PIPELINE WORKSPACE
+                {{ project.get_group_display }} - {{ project.client.business_name|default:project.client.email }}
                 <span class="ml-3 text-xs font-medium text-slate-600 bg-slate-200 px-2.5 py-0.5 rounded-full">
                     Active File
                 </span>
@@ -25,14 +25,14 @@
                     <tr class="border-b border-slate-200 bg-slate-50 text-xs font-semibold tracking-wider text-slate-500 uppercase">
                         <th class="py-3.5 px-4 w-12 text-center"></th>
                         <th class="py-3.5 px-4 min-w-[220px]">Client / Business</th>
-                        <th class="py-3.5 px-4 min-w-[180px]">Primary Contact</th>
-                        <th class="py-3.5 px-4 min-w-[160px]">Assigned Service Package</th>
+                        <th class="py-3.5 px-4 min-w-[180px]">Company Representative</th>
+                        <th class="py-3.5 px-4 min-w-[160px]">Client Package</th>
                         <th class="py-3.5 px-4 min-w-[110px]">Category</th>
-                        <th class="py-3.5 px-4 min-w-[120px]">Operational Region</th>
-                        <th class="py-3.5 px-4 min-w-[140px]">Commencement Date</th>
+                        <th class="py-3.5 px-4 min-w-[120px]">Region</th>
+                        <th class="py-3.5 px-4 min-w-[140px]">Project Start Date</th>
                         <th class="py-3.5 px-4 min-w-[220px]">Registered Products</th>
                         <th class="py-3.5 px-4 text-center min-w-[130px]">Financials</th>
-                        <th class="py-3.5 px-4 text-center min-w-[130px]">Group Track</th>
+                        <th class="py-3.5 px-4 text-center min-w-[130px]">Client Group</th>
                         <th class="py-3.5 px-4 min-w-[140px]">Overall Progress</th>
                     </tr>
                 </thead>
@@ -99,15 +99,15 @@
                             <div class="pl-8 border-l-2 border-indigo-500/40">
                                 <div class="flex items-center mb-3">
                                     <i class="fa-solid fa-list-check text-xs text-indigo-600 mr-2"></i>
-                                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Operational Subitems Checklist</h3>
+                                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Subitems / Tasks</h3>
                                 </div>
                                 
                                 <div class="bg-white rounded-lg border border-slate-200 overflow-visible">
                                     <table class="w-full text-left text-xs border-collapse layout-fixed">
                                         <thead>
                                             <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
-                                                <th class="p-3 w-1/4">Subitem Milestone Task</th>
-                                                <th class="p-3 w-5/12">Activity Operational Status Notes</th>
+                                                <th class="p-3 w-1/4">Activity</th>
+                                                <th class="p-3 w-5/12">Activity Status Notes</th>
                                                 <th class="p-3 text-center w-24">Owner</th>
                                                 <th class="p-3 text-center w-36">Payment Status</th>
                                                 <th class="p-3 text-center w-36">Milestone Status</th>
@@ -230,10 +230,10 @@
                                                             <i class="fa-solid fa-plus absolute left-3 top-2.5 text-xs text-indigo-600"></i>
                                                             <input type="text" name="activity_name" required
                                                                    class="w-full bg-white border border-slate-300 rounded pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 transition"
-                                                                   placeholder="Create additional milestone subitem task...">
+                                                                   placeholder="Create additional activity / task...">
                                                         </div>
                                                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-1.5 rounded transition shadow-sm whitespace-nowrap">
-                                                            Add Subitem
+                                                            Add Activity
                                                         </button>
                                                     </form>
                                                 </td>

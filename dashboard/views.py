@@ -727,6 +727,64 @@ def admin_user_delete(request, pk):
     return render(request, 'dashboards/superadmin_user_confirm_delete.html', {'target_user': target_user})
 
 
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_review_client_portfolio(request, client_id):
+    """
+    Renders an exclusive review audit workspace tracking single client assets
+    coupled with contextual sequential pagination indexing fields.
+    """
+
+    client = get_object_or_404(User, id=client_id, role=UserRole.USER)
+    client_docs = client.documents.all()
+
+    active_projects = client.projects.all().order_by("-id")
+    
+    uploaded_dict = {
+        doc.document_type: doc for doc in client_docs 
+        if doc.document_type != DocumentType.SUPPLEMENTARY
+    }
+    
+    documents_data = []
+    for type_key, type_label in DocumentType.choices:
+        if type_key == DocumentType.SUPPLEMENTARY:
+            continue
+        documents_data.append({
+            'type_key': type_key,
+            'type_label': type_label,
+            'doc': uploaded_dict.get(type_key, None)
+        })
+
+    supplementary_documents = client_docs.filter(document_type=DocumentType.SUPPLEMENTARY).order_by('id')
+
+    # 3. Queue Switcher Calculation Pipeline
+    master_queue_ids = list(
+        User.objects.filter(role='USER').order_by('-id').values_list('id', flat=True)
+    )
+    
+    try:
+        current_idx = master_queue_ids.index(client.id)
+        prev_client_id = master_queue_ids[current_idx - 1] if current_idx > 0 else None
+        next_client_id = master_queue_ids[current_idx + 1] if current_idx < len(master_queue_ids) - 1 else None
+        queue_position = current_idx + 1
+    except ValueError:
+        prev_client_id = None
+        next_client_id = None
+        queue_position = 1
+
+    context = {
+        'client': client,
+        'documents_data': documents_data,
+        'supplementary_documents': supplementary_documents,
+        'active_projects': active_projects,
+        'prev_client_id': prev_client_id,
+        'next_client_id': next_client_id,
+        'queue_position': queue_position,
+        'total_queue_count': len(master_queue_ids),
+    }
+    return render(request, "dashboards/superadmin_audit_client.html", context)
+
+
 
 
 # ****************************************************** SUPERVISOR DASHBOARD ************************************************** #
@@ -894,39 +952,6 @@ def supervisor_process_verification(request, profile_id, action):
             messages.warning(request, f"Declined verification credentials for {target_user.email}.")
             
     return redirect('dashboard:supervisor-associates')
-
-
-
-@login_required
-@role_required([UserRole.SUPERVISOR])
-def supervisor_user_detail(request, pk):
-    """Shows full account profile including attached profiles, exam history, and payment history."""
-    target_user = get_object_or_404(User, pk=pk)
-    
-    # Fetch Exam History
-    exam_attempts = ExamAttempt.objects.filter(user=target_user).order_by('-attempt_date')
-    latest_exam_attempt = exam_attempts.first()
-    has_passed_exam = exam_attempts.filter(passed=True).exists()
-    
-    # Check related manager dynamically and optimize related package lookups
-    payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
-    onboarding_payments = payments_manager.select_related('package').all() if payments_manager else []
-    
-    custom_payments = PaymentRequest.objects.filter(user=target_user).order_by('-created_at')
-    
-    context = {
-        'target_user': target_user,
-        'ambassador_profile': getattr(target_user, 'ambassador_profile', None),
-        'consultant_profile': getattr(target_user, 'consultantprofile', None),
-        'onboarding_payments': onboarding_payments,
-        'custom_payments': custom_payments,
-        # Exam Analytics
-        'exam_attempts': exam_attempts,
-        'latest_exam_attempt': latest_exam_attempt,
-        'has_passed_exam': has_passed_exam,
-    }
-    return render(request, 'dashboards/supervisor_user_detail.html', context)
-
 
 
 
@@ -1237,6 +1262,218 @@ def supervisor_staff_activity_logs(request):
     return render(request, "dashboards/supervisor_activity_logs.html", context)
 
 
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_create_client_view(request):
+    """Allows Supervisor to manually onboard a client and generate verified payment records."""
+    
+    if request.method == "POST":
+        form = AdminClientCreationForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                # Save User Account
+                user = form.save()
+                raw_password = form.raw_password
+                
+                package_type = form.cleaned_data.get('package_type')
+                custom_amount = form.cleaned_data.get('custom_amount')
+                
+                # PERPETUAL FIX: Reuse standard packages; only create new records for custom overrides
+                if custom_amount or package_type == PackageType.CUSTOM:
+                    package = AssessmentPackage.objects.create(
+                        package_type=package_type,
+                        custom_price=custom_amount if custom_amount else None
+                    )
+                else:
+                    package, _ = AssessmentPackage.objects.get_or_create(
+                        package_type=package_type,
+                        custom_price__isnull=True,
+                        custom_title__isnull=True
+                    )
+
+                # Create Verified Payment Record
+                payment = Payment.objects.create(
+                    user=user,
+                    package=package,
+                    business_name=user.business_name or f"{user.get_full_name()}'s Business",
+                    amount=package.price,
+                    email=user.email,
+                    verified=True
+                )
+
+            # Store credentials in session for single-view retrieval
+            request.session['created_client_info'] = {
+                'email': user.email,
+                'password': raw_password,
+                'full_name': user.get_full_name(),
+                'business_name': user.business_name,
+                'package_title': package.title,
+                'amount_paid': f"GHS {payment.amount}",
+                'payment_ref': payment.ref
+            }
+
+            messages.success(request, f"Client account created successfully for {user.get_full_name()}!")
+            return redirect("dashboard:supervisor-client-created-success")
+    else:
+        form = AdminClientCreationForm()
+
+    context = {
+        "form": form,
+        "title": "Add New Client"
+    }
+    return render(request, "dashboards/supervisor_create_client.html", context)
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_add_historical_payment_view(request, user_id):
+    """Log past/historical payments for an existing user account."""
+    target_user = get_object_or_404(User, id=user_id)
+    
+    if request.method == "POST":
+        form = HistoricalPaymentRequestForm(request.POST)
+        if form.is_valid():
+            payment_req = form.save(user=target_user, created_by=request.user)
+            messages.success(
+                request, 
+                f"Historical payment of GHS {payment_req.amount} logged for {target_user.get_full_name()}."
+            )
+            return redirect("dashboard:supervisor-user-detail", pk=target_user.pk)
+    else:
+        form = HistoricalPaymentRequestForm()
+
+    context = {
+        "form": form,
+        "target_user": target_user,
+        "title": f"Log Historical Payment - {target_user.get_full_name()}"
+    }
+    return render(request, "dashboards/supervisor_add_historical_payment.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_client_created_success_view(request):
+    """Displays temporary account credentials immediately after manual client creation."""
+    client_info = request.session.pop('created_client_info', None)
+    
+    if not client_info:
+        return redirect("dashboard:supervisor-create-client")
+
+    context = {
+        "client_info": client_info,
+    }
+        
+    return render(request, "dashboards/supervisor_client_success.html", context)
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_user_list(request):
+    """Lists all clients with search by name/email/phone and filter by role."""
+    query = request.GET.get('q', '').strip()
+    role_filter = request.GET.get('role', '').strip()
+
+    users = User.objects.filter(role=UserRole.USER).order_by('-id')
+
+    if query:
+        users = users.filter(
+            Q(email__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(whatsapp_number__icontains=query)
+        )
+
+    if role_filter:
+        users = users.filter(role=role_filter)
+
+    context = {
+        'users': users,
+        'query': query,
+        'role_filter': role_filter,
+    }
+    return render(request, 'dashboards/supervisor_user_list.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_user_detail(request, pk):
+    """Shows full account profile including attached profiles, exam history, and payment history."""
+    target_user = get_object_or_404(User, pk=pk)
+    
+    # Fetch Exam History
+    exam_attempts = ExamAttempt.objects.filter(user=target_user).order_by('-attempt_date')
+    latest_exam_attempt = exam_attempts.first()
+    has_passed_exam = exam_attempts.filter(passed=True).exists()
+    
+    # Check related manager dynamically and optimize related package lookups
+    payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
+    onboarding_payments = payments_manager.select_related('package').all() if payments_manager else []
+    
+    custom_payments = PaymentRequest.objects.filter(user=target_user).order_by('-created_at')
+    
+    context = {
+        'target_user': target_user,
+        'ambassador_profile': getattr(target_user, 'ambassador_profile', None),
+        'consultant_profile': getattr(target_user, 'consultantprofile', None),
+        'onboarding_payments': onboarding_payments,
+        'custom_payments': custom_payments,
+        # Exam Analytics
+        'exam_attempts': exam_attempts,
+        'latest_exam_attempt': latest_exam_attempt,
+        'has_passed_exam': has_passed_exam,
+    }
+    return render(request, 'dashboards/supervisor_user_detail.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+def supervisor_user_update(request, pk):
+    """
+    Handles updating base User details for regular users.
+    """
+    target_user = get_object_or_404(User, pk=pk)
+    
+    user_form = AdminUserManagementForm(
+        request.POST or None, 
+        request.FILES or None, 
+        instance=target_user
+    )
+
+    if request.method == 'POST':
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, f"Account details for {target_user.email} updated successfully.")
+            return redirect('dashboard:supervisor-user-detail', pk=target_user.pk)
+
+    context = {
+        'target_user': target_user,
+        'user_form': user_form,
+    }
+    return render(request, 'dashboards/supervisor_user_edit.html', context)
+
+
+
+@login_required
+@role_required([UserRole.SUPERVISOR])
+@require_POST
+def supervisor_user_toggle_active(request, pk):
+    """Safely toggles active status to enable/disable user accounts without deleting records."""
+    target_user = get_object_or_404(User, pk=pk)
+    
+    if target_user == request.user:
+        messages.error(request, "You cannot deactivate your own administrative account.")
+        return redirect('dashboard:supervisor-user-list')
+
+    target_user.is_active = not target_user.is_active
+    target_user.save()
+
+    action = "activated" if target_user.is_active else "deactivated"
+    messages.info(request, f"Account for {target_user.email} has been {action}.")
+    return redirect('dashboard:supervisor-user-list')
+
+
 
 
 # ****************************************************** CONSULTANT DASHBOARD ************************************************** #
@@ -1386,10 +1623,7 @@ def consultant_client_submissions(request):
     Master queue view for PFS consultants.
     Fetches all accounts matching UserRole.USER with database-level pagination.
     """
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-
-    clients_queryset = User.objects.filter(role='USER').order_by('-id')
+    clients_queryset = User.objects.filter(role=UserRole.USER).order_by('-id')
     
     required_types = [
         DocumentType.BUSINESS_CERT,
@@ -1442,52 +1676,37 @@ def review_client_portfolio(request, client_id):
     coupled with contextual sequential pagination indexing fields.
     """
 
-    client = get_object_or_404(User, id=client_id, role='USER')
+    client = get_object_or_404(User, id=client_id, role=UserRole.USER)
     client_docs = client.documents.all()
 
     active_projects = client.projects.all().order_by("-id")
     
+    # Map existing uploaded documents for lookup
     uploaded_dict = {
         doc.document_type: doc for doc in client_docs 
         if doc.document_type != DocumentType.SUPPLEMENTARY
     }
     
+    # Dynamically resolve mandatory document keys for this specific client
+    required_keys = get_required_document_types(client)
+    doc_choices_dict = dict(DocumentType.choices)
+
     documents_data = []
-    for type_key, type_label in DocumentType.choices:
-        if type_key == DocumentType.SUPPLEMENTARY:
-            continue
+    for type_key in required_keys:
         documents_data.append({
             'type_key': type_key,
-            'type_label': type_label,
+            'type_label': doc_choices_dict.get(type_key, type_key),
             'doc': uploaded_dict.get(type_key, None)
         })
 
+    # Fetch supplementary documents separately
     supplementary_documents = client_docs.filter(document_type=DocumentType.SUPPLEMENTARY).order_by('id')
-
-    # 3. Queue Switcher Calculation Pipeline
-    master_queue_ids = list(
-        User.objects.filter(role='USER').order_by('-id').values_list('id', flat=True)
-    )
-    
-    try:
-        current_idx = master_queue_ids.index(client.id)
-        prev_client_id = master_queue_ids[current_idx - 1] if current_idx > 0 else None
-        next_client_id = master_queue_ids[current_idx + 1] if current_idx < len(master_queue_ids) - 1 else None
-        queue_position = current_idx + 1
-    except ValueError:
-        prev_client_id = None
-        next_client_id = None
-        queue_position = 1
 
     context = {
         'client': client,
         'documents_data': documents_data,
         'supplementary_documents': supplementary_documents,
         'active_projects': active_projects,
-        'prev_client_id': prev_client_id,
-        'next_client_id': next_client_id,
-        'queue_position': queue_position,
-        'total_queue_count': len(master_queue_ids),
     }
     return render(request, "dashboards/audit_client.html", context)
 
@@ -1550,17 +1769,17 @@ def consultant_companies_list(request):
     Master searchable directory of registered client companies assigned to the logged-in consultant.
     Dynamically computes completion rates based on sector-specific mandatory documents.
     """
-    User = get_user_model()
+    
     consultant = request.user
     search_query = request.GET.get('search', '').strip()
 
-    # 1. Filter clients strictly assigned to this consultant via active projects
+    # Filter clients strictly assigned to this consultant via active projects
     clients_qs = User.objects.filter(
-        role='USER',
+        role=UserRole.USER,
         projects__assigned_consultant=consultant
     ).distinct()
 
-    # 2. Apply search parameters if present
+    # Apply search parameters if present
     if search_query:
         clients_qs = clients_qs.filter(
             Q(business_name__icontains=search_query) | 
@@ -1569,7 +1788,7 @@ def consultant_companies_list(request):
             Q(email__icontains=search_query)
         )
 
-    # 3. Annotate high-level document stats and prefetch related documents to prevent N+1 queries
+    # Annotate high-level document stats and prefetch related documents to prevent N+1 queries
     clients_qs = clients_qs.annotate(
         total_docs=Count('documents'),
         latest_upload=Max('documents__updated_at')
@@ -1577,13 +1796,16 @@ def consultant_companies_list(request):
 
     companies_data = []
 
-    # 4. Evaluate dynamic sector-specific document requirements per client
+    # Evaluate dynamic sector-specific document requirements per client
     for client in clients_qs:
         required_types = get_required_document_types(client)
         required_count = len(required_types)
 
         # Evaluate in-memory using prefetched related objects
         client_docs = client.documents.all()
+
+        # Client Projects
+        assigned_projects = client.projects.all()
 
         approved_core = sum(
             1 for doc in client_docs 
@@ -1606,7 +1828,8 @@ def consultant_companies_list(request):
             'required_count': required_count,
             'submitted_count': submitted_core,
             'has_pending': has_pending,
-            'latest_upload': client.latest_upload
+            'latest_upload': client.latest_upload,
+            'assigned_projects': assigned_projects,
         })
 
     context = {
@@ -1623,10 +1846,7 @@ def consultant_company_overview(request, client_id):
     """
     360 degree snapshot profile for a specific client company.
     """
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-
-    client = get_object_or_404(User, id=client_id, role='USER')
+    client = get_object_or_404(User, id=client_id, role=UserRole.USER)
     
     docs = client.documents.all()
     approved_count = docs.filter(status=DocumentStatus.APPROVED).count()
@@ -1670,10 +1890,10 @@ def initiate_client_project(request, client_id):
     Audits and validates target account mandatory asset statuses, establishes the master 
     workspace model instance, and delegates task creation safely to the database layer.
     """
-    client_user = get_object_or_404(User, id=client_id, role='USER')
-    
+    client_user = get_object_or_404(User, id=client_id, role=UserRole.USER)
+
     # Confirm mandatory onboarding compliance assets are approved
-    required_types = [DocumentType.BUSINESS_CERT, DocumentType.HEALTH_CARD, DocumentType.FACILITY_SKETCH]
+    required_types = get_required_document_types(client_user)
     approved_core_count = client_user.documents.filter(
         document_type__in=required_types,
         status=DocumentStatus.APPROVED
@@ -1682,13 +1902,13 @@ def initiate_client_project(request, client_id):
     if approved_core_count < len(required_types):
         messages.error(
             request, 
-            f"Cannot initialize project board. This client has only completed {approved_core_count}/{len(required_types)} mandatory document approvals."
+            f"Cannot initialize project. This client has only completed {approved_core_count}/{len(required_types)} mandatory document approvals."
         )
         return redirect("dashboard:review-client", client_id=client_user.id)
     
     # Prevent duplicate active projects on a single user profile
     if hasattr(client_user, 'project_file'):
-        messages.warning(request, "An active project workflow already exists for this client.")
+        messages.warning(request, "An active project already exists for this client.")
         return redirect("dashboard:project-board", project_id=client_user.project_file.id)
 
     # FORM OPERATIONS HANDLER
@@ -1716,7 +1936,7 @@ def initiate_client_project(request, client_id):
                     assigned_consultant=request.user
                 )
 
-            messages.success(request, f"Project workflow board activated successfully for {client_user.business_name or client_user.email}!")
+            messages.success(request, f"Project board activated successfully for {client_user.business_name or client_user.email}!")
             return redirect("dashboard:project-board", project_id=project.id)
 
         except Exception as e:
@@ -2457,6 +2677,7 @@ def user_payment_requests(request):
     return render(request, "dashboards/user_payment_requests.html", context)
 
 
+
 @login_required
 @role_required([UserRole.USER])
 def verify_custom_payment(request):
@@ -2467,15 +2688,15 @@ def verify_custom_payment(request):
         messages.error(request, "Invalid payment verification parameters.")
         return redirect('dashboard:user-dashboard')
 
+    # Look up by ID and user; reference will match the latest attempt's reference
     payment_req = get_object_or_404(
         PaymentRequest, 
         id=request_id, 
-        reference=reference, 
         user=request.user
     )
 
     # Idempotency check: if already processed, inform user and return early
-    if payment_req.status == 'paid':
+    if payment_req.status == PaymentRequest.StatusType.PAID:
         messages.info(request, f"Payment for '{payment_req.service_name}' has already been verified.")
         return redirect('dashboard:user-dashboard')
 
@@ -2491,34 +2712,46 @@ def verify_custom_payment(request):
     
     if response.status_code == 200:
         res_data = response.json()
-        if res_data.get('data', {}).get('status') == 'success':
-            payment_req.status = PaymentRequest.StatusType.PAID
-            payment_req.save()
+        paystack_data = res_data.get('data', {})
 
-            # Create the ad-hoc AssessmentPackage instance
-            package_instance = AssessmentPackage.objects.create(
-                package_type=PackageType.CUSTOM,
-                custom_title=payment_req.service_name,
-                custom_price=payment_req.amount
-            )
+        if paystack_data.get('status') == 'success':
+            # Validate amount paid matches expected amount (converting pesewas/kobo to main currency unit)
+            amount_paid = Decimal(str(paystack_data.get('amount', 0))) / Decimal('100')
+            if amount_paid < payment_req.amount:
+                messages.error(request, "Paid amount does not match the required payment request amount.")
+                return redirect('dashboard:user-dashboard')
 
-            # 3. Create or update the Payment record with the model instance
-            Payment.objects.get_or_create(
-                ref=reference,
-                defaults={
-                    'user': payment_req.user,
-                    'amount': payment_req.amount,
-                    'email': payment_req.user.email,
-                    'verified': True,
-                    'package': package_instance,
-                    'business_name': payment_req.user.business_name,
-                }
-            )
+            # Atomic block prevents orphan AssessmentPackage records if Payment creation fails
+            with transaction.atomic():
+                # Update PaymentRequest instance
+                payment_req.status = PaymentRequest.StatusType.PAID
+                payment_req.reference = reference  # Ensure model holds the successful reference
+                payment_req.save(update_fields=['status', 'reference', 'updated_at'])
+
+                # Create the custom AssessmentPackage
+                package_instance = AssessmentPackage.objects.create(
+                    package_type=PackageType.CUSTOM,
+                    custom_title=payment_req.service_name,
+                    custom_price=payment_req.amount
+                )
+
+                # Store or retrieve the permanent Payment record using the successful reference
+                Payment.objects.get_or_create(
+                    ref=reference,
+                    defaults={
+                        'user': payment_req.user,
+                        'amount': payment_req.amount,
+                        'email': payment_req.user.email,
+                        'verified': True,
+                        'package': package_instance,
+                        'business_name': getattr(payment_req.user, 'business_name', ''),
+                    }
+                )
 
             messages.success(request, f"Payment for '{payment_req.service_name}' verified successfully!")
             return redirect('dashboard:user-dashboard')
 
-    messages.error(request, "Payment verification failed or pending. Please contact support.")
+    messages.error(request, "Payment verification failed or was not completed. You may try again.")
     return redirect('dashboard:user-dashboard')
 
 

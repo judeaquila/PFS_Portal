@@ -7,8 +7,8 @@
     
     <div class="flex justify-between items-center pb-4 border-b border-slate-200">
         <div>
-            <h1 class="text-xl font-black text-slate-900 tracking-tight">PFS Service Operations Desk</h1>
-            <p class="text-xs font-medium text-slate-500">Central workflow pipeline mapped across core category groups</p>
+            <h1 class="text-xl font-black text-slate-900 tracking-tight">Consultant Global Board</h1>
+            <p class="text-xs font-medium text-slate-500">General overview of all clients projects/packages</p>
         </div>
         <div class="flex gap-2">
             <button @click="openBoards = { 'FDA_ACTIVE': true, 'PROD_DEV': true, 'QMS_SETUP': true, 'INTERNAL': true }" class="text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold border border-slate-200 transition">Expand All</button>
@@ -30,7 +30,7 @@
                     {{ board_data.projects|length }} Client {{ board_data.projects|length|pluralize:"Project,Projects" }}
                 </span>
                 <span class="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-600 px-2.5 py-0.5 rounded-full border border-indigo-100">
-                    {{ board_data.total_subitems_count }} Active Subitems
+                    {{ board_data.total_subitems_count }} Active Activities
                 </span>
             </div>
         </div>
@@ -40,12 +40,12 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 text-slate-400 font-mono text-[9px] font-black uppercase tracking-wider bg-slate-50/30">
-                            <th class="px-6 py-3">Client Workspace / Business Portfolio</th>
-                            <th class="px-4 py-3">Assigned Track</th>
-                            <th class="px-4 py-3">Focus Category</th>
+                            <th class="px-6 py-3">Business Details</th>
+                            <th class="px-4 py-3">Package</th>
+                            <th class="px-4 py-3">Sector</th>
                             <th class="px-4 py-3">Region</th>
-                            <th class="px-4 py-3 w-40">Live Completion Progress</th>
-                            <th class="px-6 py-3 text-right">Workspace Desk</th>
+                            <th class="px-4 py-3 w-40">Project Progress</th>
+                            <th class="px-6 py-3 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
@@ -75,7 +75,7 @@
                         {% empty %}
                         <tr>
                             <td colspan="6" class="px-6 py-8 text-center text-slate-400 italic font-mono text-xs bg-slate-50/20">
-                                No operational active tracking project lines registered under this board tier.
+                                No active projects initiated yet.
                             </td>
                         </tr>
                         {% endfor %}

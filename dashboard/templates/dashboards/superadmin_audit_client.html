@@ -1,44 +1,73 @@
-{% extends 'dashboards/base_consultant.html' %}
+{% extends 'dashboards/base_superadmin.html' %}
 
 {% block title %}Audit Documents: {{ client.business_name|default:client.email }} | PFS Online Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-6" x-data="{ modalImage: null }">
+<div class="max-w-5xl mx-auto space-y-6">
     
-    <!-- Top Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
             <a href="{% url 'dashboard:companies-list' %}" class="text-xs font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition">
-                &larr; Back to My Clients
+                &larr; Back to Clients
             </a>
             <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-2">Audit Client Documents</h1>
         </div>
+
+        <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm self-start sm:self-auto">
+            <span class="text-xs font-mono font-bold text-slate-400 px-2 uppercase tracking-wider">
+                Queue Block: <span class="text-slate-800 font-black">{{ queue_position }}</span>/{{ total_queue_count }}
+            </span>
+            <div class="flex items-center gap-1 border-l border-slate-100 pl-2">
+                {% if prev_client_id %}
+                    <a href="{% url 'dashboard:review-client' client_id=prev_client_id %}" class="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title='Previous Client Portfolio'>
+                        &larr; Prev
+                    </a>
+                {% else %}
+                    <span class="p-1.5 text-slate-300 border border-slate-100 rounded-lg cursor-not-allowed">&larr; Prev</span>
+                {% endif %}
+
+                {% if next_client_id %}
+                    <a href="{% url 'dashboard:review-client' client_id=next_client_id %}" class="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition" title='Next Client Portfolio'>
+                        Next &rarr;
+                    </a>
+                {% else %}
+                    <span class="p-1.5 text-slate-300 border border-slate-100 rounded-lg cursor-not-allowed">Next &rarr;</span>
+                {% endif %}
+            </div>
+        </div>
     </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 text-sm rounded-lg font-medium shadow-sm">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        <!-- Left Sidebar: Client Info & Active Projects -->
         <div class="space-y-6 lg:col-span-1">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
                 <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">Company Overview</h3>
                 
                 <div>
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Company Name</span>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Business Name</span>
                     <span class="text-base font-bold text-slate-800 mt-0.5 block">{{ client.business_name|default:"[No Business Name Provided]" }}</span>
                 </div>
                 
                 <div>
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Company Representative</span>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Representative Handler</span>
                     <span class="text-sm font-medium text-slate-700 mt-0.5 block">{{ client.first_name }} {{ client.last_name }}</span>
                 </div>
 
                 <div>
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Email</span>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Primary Email Identifier</span>
                     <span class="text-sm text-slate-600 font-medium break-all mt-0.5 block">{{ client.email }}</span>
                 </div>
 
                 <div>
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp Number</span>
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Direct WhatsApp Connection</span>
                     <a href="https://wa.me/{{ client.whatsapp_number }}" target="_blank" class="text-sm font-bold text-emerald-600 hover:underline mt-0.5 flex items-center gap-1">
                         <span class="w-2 h-2 bg-emerald-500 rounded-full {% if client.whatsapp_number %}animate-pulse{% endif %}"></span>
                         {{ client.whatsapp_number|default:"No Number Listed" }} &nearrow;
@@ -48,12 +77,12 @@
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
                 <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">
-                    Active Projects
+                    Operations Center
                 </h3>
                 
                 <div>
                     <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                        Active Project Boards ({{ active_projects.count }})
+                        Active Workspace Boards ({{ active_projects.count }})
                     </span>
 
                     {% if active_projects %}
@@ -69,7 +98,7 @@
                                         </span>
                                     </div>
                                     <a href="{% url 'dashboard:project-board' project_id=project.id %}" 
-                                       class="text-[11px] font-bold bg-white border border-slate-200 hover:border-slate-300 text-slate-700 py-1.5 px-3 rounded-lg shadow-xs transition whitespace-nowrap">
+                                    class="text-[11px] font-bold bg-white border border-slate-200 hover:border-slate-300 text-slate-700 py-1.5 px-3 rounded-lg shadow-xs transition whitespace-nowrap">
                                         View Board &rarr;
                                     </a>
                                 </div>
@@ -77,29 +106,27 @@
                         </div>
                     {% else %}
                         <div class="p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-xs font-medium text-slate-500 text-center italic">
-                            No projects initiated yet.
+                            No active operational workflows initiated yet.
                         </div>
                     {% endif %}
                 </div>
 
                 <div class="border-t border-slate-100 pt-3 space-y-3">
                     <div class="p-3 bg-amber-50/50 border border-amber-100 rounded-xl text-[11px] font-medium text-amber-800 leading-normal">
-                        Ensure client has uploaded all required documents for their chosen sector before initializing a new project.
+                        Verify milestone files match requirements below, then trigger an auxiliary workflow board to run parallel operations.
                     </div>
                     <a href="{% url 'dashboard:initiate-project' client_id=client.id %}" 
-                       class="w-full text-center inline-block text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-xl shadow-sm transition">
-                        + Initialize New Project
+                    class="w-full text-center inline-block text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-xl shadow-sm transition">
+                        + Initialize New Service Track
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Document Audit Workspace -->
         <div class="space-y-6 lg:col-span-2">
             
-            <!-- 1. Mandatory Documents Verification -->
             <div class="space-y-4">
-                <h3 class="text-sm font-bold text-slate-400 tracking-wider uppercase pl-1">1. Mandatory Documents Verification</h3>
+                <h3 class="text-sm font-bold text-slate-400 tracking-wider uppercase pl-1">1. Mandatory Core Checklist Verification</h3>
 
                 {% for item in documents_data %}
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -110,8 +137,7 @@
                             <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border 
                                 {% if item.doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
                                 {% elif item.doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200
-                                {% elif item.doc %}bg-amber-50 text-amber-700 border-amber-200
-                                {% else %}bg-slate-100 text-slate-500 border-slate-200{% endif %}">
+                                {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
                                 {% if item.doc %}{{ item.doc.get_status_display }}{% else %}Awaiting Initial Upload{% endif %}
                             </span>
                         </div>
@@ -122,50 +148,23 @@
                             </div>
 
                             {% if item.doc %}
-                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 font-medium">
-                                        <div>
-                                            Submitted: <span class="font-bold text-slate-700">{{ item.doc.uploaded_at|timesince }} ago</span> 
-                                            <span class="text-slate-400 font-normal ml-1">({{ item.doc.uploaded_at|date:"M d, Y @ H:i" }})</span>
-                                        </div>
-                                        <a href="{{ item.doc.file.url }}" target="_blank" class="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
-                                            Open Document &nearrow;
-                                        </a>
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    <div class="text-xs text-slate-500 font-medium">
+                                        Submitted: <span class="font-bold text-slate-700">{{ item.doc.uploaded_at|timesince }} ago</span> 
+                                        <span class="text-slate-400 font-normal ml-1">({{ item.doc.uploaded_at|date:"M d, Y @ H:i" }})</span>
                                     </div>
-
-                                    <!-- PREVIEW ENGINE: IMAGES ONLY -->
-                                    {% with file_url=item.doc.file.url|lower %}
-                                        {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
-                                            <div class="mt-2">
-                                                <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-60 flex items-center justify-center cursor-pointer"
-                                                     @click="modalImage = '{{ item.doc.file.url }}'">
-                                                    <img src="{{ item.doc.file.url }}" alt="{{ item.type_label }}" class="object-cover w-full h-48 group-hover:scale-105 transition duration-200">
-                                                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                                        Click to Expand Image
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <div class="mt-2 p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
-                                                <div class="p-2 bg-slate-100 text-slate-500 rounded-md">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <div class="text-xs">
-                                                    <span class="font-bold text-slate-700 block">File Attached</span>
-                                                    <span class="text-slate-400">Click "Open Document" above to view or download.</span>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
+                                    <a href="{{ item.doc.file.url }}" target="_blank" class="inline-flex items-center text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-sm transition self-start sm:self-center">
+                                        Open Asset Scan &nearrow;
+                                    </a>
                                 </div>
 
-                                <!-- Action Controls -->
                                 <div class="space-y-4 pt-2" x-data="{ rejectOpen: {% if item.doc.status == 'REJECTED' %}true{% else %}false{% endif %} }">
                                     {% if item.doc.status == 'APPROVED' %}
                                         <div class="flex items-center gap-2.5 bg-emerald-50/60 p-4 rounded-xl border border-emerald-100 text-emerald-800 text-xs font-medium">
-                                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                            <span>This document is officially approved and has been locked. No further modifications can be made.</span>
+                                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                            </svg>
+                                            <span>This asset verification step is officially locked. No further modifications can be executed from the Consultant Audit desk.</span>
                                         </div>
                                     {% else %}
                                         <div class="flex items-center gap-2">
@@ -176,18 +175,18 @@
                                                 </button>
                                             </form>
                                             <button type="button" @click="rejectOpen = !rejectOpen" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
-                                                Reject Document
+                                                Flag Rejection Feedback...
                                             </button>
                                         </div>
 
                                         <div x-show="rejectOpen" x-transition class="pt-1" style="display: none;">
                                             <form method="POST" action="{% url 'dashboard:audit-action' item.doc.id %}" class="space-y-2">
                                                 {% csrf_token %}
-                                                <label class="block text-xs font-bold text-red-700">Provide Explanation for Document Rejection:</label>
+                                                <label class="block text-xs font-bold text-red-700">Constructive Rejection Guidance Notes:</label>
                                                 <textarea name="rejection_reason" placeholder="State exactly why this scan is invalid..." rows="3"
                                                           class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 transition">{{ item.doc.rejection_reason }}</textarea>
                                                 <button type="submit" name="action_type" value="REJECT" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm">
-                                                    Submit Rejection Notes
+                                                    Commit Rejection Rule Update
                                                 </button>
                                             </form>
                                         </div>
@@ -196,30 +195,27 @@
                                 
                                 {% if item.doc.rejection_reason and item.doc.status == 'REJECTED' %}
                                     <div class="text-xs bg-red-50 border border-red-100 rounded-xl p-4 text-red-800 mt-2 font-medium flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
                                         <div>
-                                            <strong class="font-bold">Rejection Notes:</strong> 
+                                            <strong class="font-bold">Active Rejection Feedback Note:</strong> 
                                             <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ item.doc.rejection_reason }}</p>
                                         </div>
                                     </div>
                                 {% endif %}
                             {% else %}
                                 <div class="text-xs text-slate-400 font-medium italic border border-dashed border-slate-200 rounded-xl p-5 bg-slate-50/40 text-center">
-                                    No document uploaded for this requirement yet.
+                                    This specific certification metric contains zero file asset records inside the current profile workspace context.
                                 </div>
                             {% endif %}
                         </div>
                     </div>
-                {% empty %}
-                    <div class="text-xs text-slate-400 font-medium italic border border-dashed border-slate-200 rounded-xl p-5 bg-slate-50/40 text-center">
-                        No mandatory document slots configured for this client.
-                    </div>
                 {% endfor %}
             </div>
 
-            <!-- 2. Supplementary Documents Verification -->
             <div class="space-y-4 pt-4">
-                <h3 class="text-sm font-bold text-slate-400 tracking-wider uppercase pl-1">2. Supplementary Documents Verification</h3>
+                <h3 class="text-sm font-bold text-slate-400 tracking-wider uppercase pl-1">2. Supplementary Request & Audit Evidence Reviews</h3>
 
                 {% for doc in supplementary_documents %}
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -237,54 +233,27 @@
 
                         <div class="p-6 space-y-4">
                             <div>
-                                <h4 class="font-bold text-slate-800 text-base">{{ doc.custom_title|default:"Supplementary File" }}</h4>
+                                <h4 class="font-bold text-slate-800 text-base">{{ doc.custom_title }}</h4>
                             </div>
 
                             {% if doc.file %}
-                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 font-medium">
-                                        <div>
-                                            Submitted: <span class="font-bold text-slate-700">{{ doc.uploaded_at|timesince }} ago</span> 
-                                            <span class="text-slate-400 font-normal ml-1">({{ doc.uploaded_at|date:"M d, Y @ H:i" }})</span>
-                                        </div>
-                                        <a href="{{ doc.file.url }}" target="_blank" class="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
-                                            Open Document &nearrow;
-                                        </a>
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    <div class="text-xs text-slate-500 font-medium">
+                                        Submitted: <span class="font-bold text-slate-700">{{ doc.uploaded_at|timesince }} ago</span> 
+                                        <span class="text-slate-400 font-normal ml-1">({{ doc.uploaded_at|date:"M d, Y @ H:i" }})</span>
                                     </div>
-
-                                    <!-- PREVIEW ENGINE: IMAGES ONLY -->
-                                    {% with file_url=doc.file.url|lower %}
-                                        {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
-                                            <div class="mt-2">
-                                                <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-60 flex items-center justify-center cursor-pointer"
-                                                     @click="modalImage = '{{ doc.file.url }}'">
-                                                    <img src="{{ doc.file.url }}" alt="{{ doc.custom_title }}" class="object-cover w-full h-48 group-hover:scale-105 transition duration-200">
-                                                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                                        Click to Expand Image
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <div class="mt-2 p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
-                                                <div class="p-2 bg-slate-100 text-slate-500 rounded-md">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <div class="text-xs">
-                                                    <span class="font-bold text-slate-700 block">File Attached</span>
-                                                    <span class="text-slate-400">Click "Open Document" above to view or download.</span>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
+                                    <a href="{{ doc.file.url }}" target="_blank" class="inline-flex items-center text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-sm transition self-start sm:self-center">
+                                        Open Asset Scan &nearrow;
+                                    </a>
                                 </div>
 
-                                <!-- Action Controls -->
                                 <div class="space-y-4 pt-2" x-data="{ rejectOpen: {% if doc.status == 'REJECTED' %}true{% else %}false{% endif %} }">
                                     {% if doc.status == 'APPROVED' %}
                                         <div class="flex items-center gap-2.5 bg-emerald-50/60 p-4 rounded-xl border border-emerald-100 text-emerald-800 text-xs font-medium">
-                                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                            <span>This document is officially approved and has been locked. No further modifications can be made.</span>
+                                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                            </svg>
+                                            <span>This asset verification step is officially locked. No further modifications can be executed from the Consultant Audit desk.</span>
                                         </div>
                                     {% else %}
                                         <div class="flex items-center gap-2">
@@ -295,18 +264,18 @@
                                                 </button>
                                             </form>
                                             <button type="button" @click="rejectOpen = !rejectOpen" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
-                                                Reject Document
+                                                Flag Rejection Feedback...
                                             </button>
                                         </div>
 
                                         <div x-show="rejectOpen" x-transition class="pt-1" style="display: none;">
                                             <form method="POST" action="{% url 'dashboard:audit-action' doc.id %}" class="space-y-2">
                                                 {% csrf_token %}
-                                                <label class="block text-xs font-bold text-red-700">Provide Explanation for Document Rejection:</label>
+                                                <label class="block text-xs font-bold text-red-700">Constructive Rejection Guidance Notes:</label>
                                                 <textarea name="rejection_reason" placeholder="State exactly why this scan is invalid..." rows="3"
                                                           class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 transition">{{ doc.rejection_reason }}</textarea>
                                                 <button type="submit" name="action_type" value="REJECT" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm">
-                                                    Submit Rejection Notes
+                                                    Commit Rejection Rule Update
                                                 </button>
                                             </form>
                                         </div>
@@ -315,49 +284,30 @@
 
                                 {% if doc.rejection_reason and doc.status == 'REJECTED' %}
                                     <div class="text-xs bg-red-50 border border-red-100 rounded-xl p-4 text-red-800 mt-2 font-medium flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
                                         <div>
-                                            <strong class="font-bold">Rejection Notes:</strong> 
+                                            <strong class="font-bold">Active Rejection Feedback Note:</strong> 
                                             <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ doc.rejection_reason }}</p>
                                         </div>
                                     </div>
                                 {% endif %}
                             {% else %}
                                 <div class="text-xs text-slate-400 font-medium italic border border-dashed border-slate-200 rounded-xl p-5 bg-slate-50/40 text-center">
-                                    No document uploaded for this requirement yet.
+                                    This dynamic request placeholder is awaiting a file upload submission from the client's dashboard portfolio console.
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 {% empty %}
                     <div class="text-xs text-slate-400 font-medium italic border border-dashed border-slate-200 rounded-xl p-5 bg-slate-50/40 text-center">
-                        Client has no supplementary documents to upload yet.
+                        No supplementary or custom requests have been assigned to this client context file portfolio yet.
                     </div>
                 {% endfor %}
             </div>
 
         </div>
     </div>
-
-    <!-- Image Lightbox Modal -->
-    <div x-show="modalImage" 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4"
-         style="display: none;"
-         @keydown.escape.window="modalImage = null">
-        
-        <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center" @click.away="modalImage = null">
-            <button type="button" @click="modalImage = null" class="absolute -top-10 right-0 text-white hover:text-slate-300 font-bold text-sm flex items-center gap-1">
-                Close (ESC) &times;
-            </button>
-            <img :src="modalImage" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain bg-black">
-        </div>
-    </div>
-
 </div>
 {% endblock %}

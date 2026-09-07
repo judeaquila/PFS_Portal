@@ -186,9 +186,15 @@ class PaymentRequest(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.reference:
-            # Generate a unique Paystack reference e.g., PR-7F2A9B1C
             self.reference = f"PR-{secrets.token_hex(4).upper()}"
         super().save(*args, **kwargs)
+
+    def generate_new_reference(self):
+        """Generates and saves a fresh unique Paystack reference for payment retries."""
+        self.reference = f"PR-{secrets.token_hex(4).upper()}"
+        self.save(update_fields=['reference', 'updated_at'])
+        return self.reference
+    
 
     def __str__(self):
         return f"{self.service_name} - {self.user.email} (GHS {self.amount})"
