@@ -37,3 +37,11 @@ def contact(request):
 @restrict_to_regular_users
 def faq(request):
     return render(request, 'core/faq.html')
+
+@restrict_to_regular_users
+def terms_of_service(request):
+    return render(request, 'core/terms_of_service.html')
+
+@restrict_to_regular_users
+def privacy_policy(request):
+    return render(request, 'core/privacy_policy.html')

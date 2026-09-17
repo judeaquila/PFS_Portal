@@ -124,19 +124,45 @@
     </div>
 
     <!-- Staff Availability Schedules -->
-    <div class="mt-6 bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-        <div class="flex items-center justify-between mb-5 border-b border-zinc-800/80 pb-3">
-            <div class="flex items-center gap-2">
-                <span class="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </span>
-                <h3 class="text-sm font-semibold text-white tracking-wide uppercase">Staff Weekly Schedules</h3>
+    <div class="mt-6 bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-5">
+        
+        <!-- Section Header & Week Switcher -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </span>
+                    <h3 class="text-sm font-semibold text-white tracking-wide uppercase">Staff Weekly Schedules</h3>
+                </div>
+                <p class="text-[11px] text-zinc-400 mt-1">
+                    Showing schedules for: 
+                    <strong class="text-zinc-200 font-semibold">
+                        {{ selected_monday|date:"M d, Y" }} — {{ selected_sunday|date:"M d, Y" }}
+                    </strong>
+                </p>
             </div>
-            <span class="text-[11px] text-zinc-500 font-medium">Available slots</span>
+
+            <!-- Week Switcher Controls -->
+            <div class="inline-flex p-1 bg-zinc-950 border border-zinc-800 rounded-xl text-xs font-medium">
+                <a 
+                    href="?week=0" 
+                    class="px-3 py-1.5 rounded-lg transition-all {% if week_offset == 0 %}bg-zinc-800 text-white font-semibold shadow-sm{% else %}text-zinc-400 hover:text-zinc-200{% endif %}"
+                >
+                    This Week
+                </a>
+                <a 
+                    href="?week=1" 
+                    class="px-3 py-1.5 rounded-lg transition-all {% if week_offset == 1 %}bg-zinc-800 text-white font-semibold shadow-sm{% else %}text-zinc-400 hover:text-zinc-200{% endif %}"
+                >
+                    Next Week
+                </a>
+            </div>
         </div>
 
+        <!-- Availability Lists Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             <!-- Consultants Availability List -->
@@ -148,7 +174,7 @@
                             Consultants Schedules
                         </h4>
                         <span class="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-                            {{ consultants_availability|length }} Consultant(s) Available
+                            {{ consultants_availability|length }} Consultant(s) Active
                         </span>
                     </div>
 
@@ -172,7 +198,9 @@
                                 </div>
                             </div>
                         {% empty %}
-                            <p class="text-xs text-zinc-500 italic py-4 text-center">No consultant has set their weekly availability schedule.</p>
+                            <p class="text-xs text-zinc-500 italic py-4 text-center">
+                                No consultant has set availability for {% if week_offset == 0 %}this week{% else %}next week{% endif %}.
+                            </p>
                         {% endfor %}
                     </div>
                 </div>
@@ -187,7 +215,7 @@
                             Associates Schedules
                         </h4>
                         <span class="text-[10px] text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-                            {{ associates_availability|length }} Associate(s) Available
+                            {{ associates_availability|length }} Associate(s) Active
                         </span>
                     </div>
 
@@ -197,7 +225,10 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-semibold text-white flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-sky-400/80"></span>
-                                        {{ staff_user.get_full_name|default:staff_user.first_name }} | Location: ({{ staff_user.location }})
+                                        {{ staff_user.get_full_name|default:staff_user.first_name }}
+                                        {% if staff_user.location %}
+                                            <span class="text-zinc-500 font-normal">({{ staff_user.location }})</span>
+                                        {% endif %}
                                     </span>
                                     <span class="text-[10px] text-zinc-500">{{ slots|length }} slot(s)</span>
                                 </div>
@@ -211,7 +242,9 @@
                                 </div>
                             </div>
                         {% empty %}
-                            <p class="text-xs text-zinc-500 italic py-4 text-center">No associate has set their weekly availability schedule.</p>
+                            <p class="text-xs text-zinc-500 italic py-4 text-center">
+                                No associate has set availability for {% if week_offset == 0 %}this week{% else %}next week{% endif %}.
+                            </p>
                         {% endfor %}
                     </div>
                 </div>

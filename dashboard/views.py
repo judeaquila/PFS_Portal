@@ -22,6 +22,7 @@ import requests
 from decimal import Decimal
 from payments.forms import HistoricalPaymentRequestForm
 from examinations.models import ExamAttempt, Exam
+from datetime import date, timedelta
 
 
 
@@ -31,6 +32,14 @@ User = get_user_model()
 # Activity Log Helper Code
 def create_activity_log(user, category, description):
     ActivityLog.objects.create(user=user, category=category, description=description)
+
+
+# Start of Week for Availability Schedule
+def get_monday(target_date=None):
+    if not target_date:
+        target_date = date.today()
+    return target_date - timedelta(days=target_date.weekday())
+
 
 # Dashboard Redirect
 @login_required
@@ -224,15 +233,34 @@ def superadmin_dashboard(request):
         verification_status=AmbassadorProfile.VerificationStatus.PENDING
     ).select_related('user').order_by('-id')[:5]
 
-    # ==========================================
+
+    # ------------------------------------------------------------------
+    # WEEK RANGE & QUERY PARSING
+    # ------------------------------------------------------------------
+    try:
+        week_offset = int(request.GET.get('week', 0))
+        if week_offset not in (0, 1):
+            week_offset = 0
+    except (ValueError, TypeError):
+        week_offset = 0
+
+    today = timezone.now().date()
+    # Calculate Monday of current week (weekday() returns 0 for Monday)
+    current_monday = today - timedelta(days=today.weekday())
+    selected_monday = current_monday + timedelta(weeks=week_offset)
+    selected_sunday = selected_monday + timedelta(days=6)
+
+    # ------------------------------------------------------------------
     # STAFF SCHEDULES & AVAILABILITY SLOTS
-    # ==========================================
+    # ------------------------------------------------------------------
     consult_available = Availability.objects.filter(
-        user__role=UserRole.CONSULTANT
+        user__role=UserRole.CONSULTANT,
+        week_start_date=selected_monday
     ).select_related('user').order_by('weekday', 'start_time')
 
     associate_available = Availability.objects.filter(
-        user__role=UserRole.AMBASSADOR
+        user__role=UserRole.AMBASSADOR,
+        week_start_date=selected_monday
     ).select_related('user').order_by('weekday', 'start_time')
 
     consultants_availability = defaultdict(list)
@@ -250,7 +278,12 @@ def superadmin_dashboard(request):
         'recent_projects': client_projects_list[:8],
         'recent_activity_logs': recent_activity_logs,
 
-        # Staff Availability
+        # Week state & date bounds
+        'week_offset': week_offset,
+        'selected_monday': selected_monday,
+        'selected_sunday': selected_sunday,
+
+        # Staff Availability Data
         'consultants_availability': dict(consultants_availability),
         'associates_availability': dict(associates_availability),
         
@@ -1557,31 +1590,47 @@ def consultant_dashboard(request):
 @login_required
 @role_required([UserRole.CONSULTANT])
 def consultant_availability(request):
+    current_monday = get_monday()
+        
+    # Get week selection from GET params (0 = Current Week, 1 = Next Week)
+    week_offset = int(request.GET.get("week", 0))
+    selected_monday = current_monday + timedelta(weeks=week_offset)
+    selected_sunday = selected_monday + timedelta(days=6)
+
     if request.method == "POST":
         form = AvailabilityForm(request.POST)
-
         if form.is_valid():
             availability = form.save(commit=False)
             availability.user = request.user
+            availability.week_start_date = selected_monday
             availability.save()
 
-            messages.success(request, "Availability added successfully.")
-            return redirect("dashboard:consultant-availability")
+            messages.success(request, f"Availability added for week of {selected_monday.strftime('%b %d')}.")
+            return redirect(f"{request.path}?week={week_offset}")
     else:
         form = AvailabilityForm()
 
+    # Query entries specifically for the active week
+    active_availabilities = Availability.objects.filter(
+        user=request.user,
+        week_start_date=selected_monday
+    ).order_by("start_time")
+
+    # Group availabilities by day
     grouped = {}
-
     for day, label in Availability.WeekDay.choices:
+        grouped[label] = active_availabilities.filter(weekday=day)
 
-        grouped[label] = Availability.objects.filter(
-            user=request.user,
-            weekday=day
-        ).order_by("start_time")
+    # Find when this specific week's schedule was set/updated
+    last_updated = active_availabilities.order_by("-updated_at").first()
 
     context = {
         "form": form,
         "grouped": grouped,
+        "selected_monday": selected_monday,
+        "selected_sunday": selected_sunday,
+        "week_offset": week_offset,
+        "last_updated": last_updated.updated_at if last_updated else None,
     }
     return render(request, "dashboards/consultant_availability.html", context)
 
@@ -2278,34 +2327,51 @@ def ambassador_dashboard(request):
     return render(request, 'dashboards/ambassador.html', context)
 
 
+
 @login_required
 @role_required([UserRole.AMBASSADOR])
 def associate_availability(request):
+    current_monday = get_monday()
+    
+    # Get week selection from GET params (0 = Current Week, 1 = Next Week)
+    week_offset = int(request.GET.get("week", 0))
+    selected_monday = current_monday + timedelta(weeks=week_offset)
+    selected_sunday = selected_monday + timedelta(days=6)
+
     if request.method == "POST":
         form = AvailabilityForm(request.POST)
-
         if form.is_valid():
             availability = form.save(commit=False)
             availability.user = request.user
+            availability.week_start_date = selected_monday
             availability.save()
 
-            messages.success(request, "Availability added successfully.")
-            return redirect("dashboard:associate-availability")
+            messages.success(request, f"Availability added for week of {selected_monday.strftime('%b %d')}.")
+            return redirect(f"{request.path}?week={week_offset}")
     else:
         form = AvailabilityForm()
 
+    # Query entries specifically for the active week
+    active_availabilities = Availability.objects.filter(
+        user=request.user,
+        week_start_date=selected_monday
+    ).order_by("start_time")
+
+    # Group availabilities by day
     grouped = {}
-
     for day, label in Availability.WeekDay.choices:
+        grouped[label] = active_availabilities.filter(weekday=day)
 
-        grouped[label] = Availability.objects.filter(
-            user=request.user,
-            weekday=day
-        ).order_by("start_time")
+    # Find when this specific week's schedule was set/updated
+    last_updated = active_availabilities.order_by("-updated_at").first()
 
     context = {
         "form": form,
         "grouped": grouped,
+        "selected_monday": selected_monday,
+        "selected_sunday": selected_sunday,
+        "week_offset": week_offset,
+        "last_updated": last_updated.updated_at if last_updated else None,
     }
     return render(request, "dashboards/associate_availability.html", context)
 

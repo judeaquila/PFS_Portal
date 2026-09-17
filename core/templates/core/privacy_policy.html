@@ -1,0 +1,205 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+Privacy Policy | Pneuma Food Scientifics
+{% endblock %}
+
+{% block content %}
+<body class="bg-gray-50 font-sans text-gray-800 antialiased selection:bg-rose-500 selection:text-white">
+
+  <!-- Header Banner -->
+  <header class="border-b border-gray-200 bg-white">
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-rose-600">Legal Documentation</span>
+          <h1 class="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl">Privacy Policy</h1>
+          <p class="mt-2 text-sm text-gray-500">Effective Date: July 27, 2026</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-4" x-data="{ activeSection: 'section-1' }">
+
+      <!-- Sticky Sidebar / Table of Contents -->
+      <aside class="hidden lg:block lg:col-span-1">
+        <nav class="sticky top-8 space-y-1 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <p class="px-3 pb-2 text-xs font-bold uppercase tracking-wider text-gray-400">On This Page</p>
+          <a href="#section-1" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">1. Regulatory Basis</a>
+          <a href="#section-2" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">2. Information We Collect</a>
+          <a href="#section-3" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">3. How We Use Data</a>
+          <a href="#section-4" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">4. Data Storage & Hosting</a>
+          <a href="#section-5" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">5. Third-Party Integrations</a>
+          <a href="#section-6" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">6. Confidentiality & IP</a>
+          <a href="#section-7" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">7. Your Statutory Rights</a>
+          <a href="#section-8" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">8. Retention & Deletion</a>
+          <a href="#section-9" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-rose-50 hover:text-rose-700 transition">9. Contact Data Officer</a>
+        </nav>
+      </aside>
+
+      <!-- Policy Content Body -->
+      <main class="space-y-6 lg:col-span-3">
+
+        <!-- Introduction Card -->
+        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <p class="text-base leading-relaxed text-gray-600">
+            At <strong class="text-gray-900">Pneuma Food Scientifics ("PFS", "we", "us", or "our")</strong>, we respect your privacy and are committed to protecting the proprietary technical, personal, and business information you share with us through our website, client portal, and consulting engagements.
+          </p>
+        </div>
+
+        <!-- Section 1: Legal Compliance -->
+        <section id="section-1" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">1. Regulatory Compliance (Ghana Act 843)</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>Pneuma Food Scientifics operates in strict compliance with the **Data Protection Act, 2012 (Act 843)** of the Republic of Ghana.</p>
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              <strong class="font-semibold">Data Protection Commitment:</strong> We adhere strictly to the principles of accountability, lawful processing, purpose specification, openness, and data security as mandated under Ghanaian data protection laws.
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 2: Information Collected -->
+        <section id="section-2" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">2. Information We Collect</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>To deliver technical consulting and regulatory services, we collect and process the following categories of data:</p>
+            <ul class="list-disc space-y-2 pl-5 text-sm sm:text-base">
+              <li><strong>Contact & Identity Data:</strong> Full name, official email address, phone number, physical business address, location, and administrative region.</li>
+              <li><strong>Legal & Regulatory Documents:</strong> Business registration certificates, permits, tax identification data, and associate/consultant identification credentials.</li>
+              <li><strong>Technical Proprietary Information:</strong> Food formulations, product recipes, processing specifications, dehydration guidelines, and laboratory test analytical results.</li>
+              <li><strong>Account Credentials:</strong> Client portal login credentials and user preferences.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 3: Usage of Data -->
+        <section id="section-3" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">3. How We Use Your Information</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>We process collected data solely for legitimate business operations, including:</p>
+            <ul class="list-disc space-y-2 pl-5 text-sm sm:text-base">
+              <li>Preparing and filing FDA/GSA compliance applications on your behalf.</li>
+              <li>Designing, testing, and standardizing product formulations and food establishment recipes.</li>
+              <li>Managing client portal accounts, project tracking, and onboarding workflows.</li>
+              <li>Evaluating Associate and Consultant applications via mandatory examinations and verification.</li>
+              <li>Processing service invoices, fee receipts, and customer support requests.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 4: Hosting and Infrastructure -->
+        <section id="section-4" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">4. Data Storage & Infrastructure Security</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>Your documents, portal data, and profile records are hosted on secure, encrypted cloud servers managed via cPanel on standard web hosting infrastructure (Namecheap).</p>
+            <p class="text-sm sm:text-base">We enforce industry-standard security protocols, including SSL/TLS encryption for transmitted data, strict user privilege controls, and periodic system backups to protect against unauthorized access, loss, or data corruption.</p>
+          </div>
+        </section>
+
+        <!-- Section 5: Third-Party Integrations -->
+        <section id="section-5" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">5. Third-Party Services & Payment Gateways</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>We do not sell, trade, or rent your personal or technical data to third parties.</p>
+            <p><strong>Payment Processing:</strong> All financial transactions on our platform are processed securely via <strong>Paystack</strong>. PFS does not store credit card numbers, mobile money PINs, or raw bank details on our local server database.</p>
+          </div>
+        </section>
+
+        <!-- Section 6: Confidentiality -->
+        <section id="section-6" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">6. Confidentiality of Recipes & Formulations</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>We recognize that product formulations, laboratory analyses, and proprietary recipes constitute crucial trade secrets. All staff, verified consultants, and scientific associates assigned to your projects are bound by strict Non-Disclosure Agreements (NDAs).</p>
+            <p class="text-sm sm:text-base">All rights to formulations and recipes developed or submitted remain 100% the property of the client.</p>
+          </div>
+        </section>
+
+        <!-- Section 7: Rights under Ghana Law -->
+        <section id="section-7" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">7. Your Statutory Rights</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>Under the Data Protection Act, 2012 (Act 843), you hold the right to:</p>
+            <ul class="list-disc space-y-2 pl-5 text-sm sm:text-base">
+              <li>Request access to the personal and business records we hold about you.</li>
+              <li>Request the correction or update of inaccurate or outdated business details.</li>
+              <li>Object to the processing of personal data for direct marketing or unauthorized purposes.</li>
+              <li>Request data erasure, subject to mandatory regulatory compliance retention periods.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 8: Retention -->
+        <section id="section-8" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">8. Data Retention & Account Deletion</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-4 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p>We retain client accounts and project records for as long as active services are rendered or as required by regulatory authorities (e.g., maintaining audit trails for FDA registrations). Upon project completion or engagement termination, portal access may be revoked while essential records are archived securely in accordance with legal requirements.</p>
+          </div>
+        </section>
+
+        <!-- Section 9: Contact Information -->
+        <section id="section-9" class="scroll-mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8" x-data="{ open: true }">
+          <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
+            <h2 class="text-xl font-bold text-gray-900">9. Contact Our Privacy Lead</h2>
+            <button class="text-gray-400 hover:text-gray-600 focus:outline-none">
+              <svg class="h-6 w-6 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+          <div class="mt-4 space-y-3 text-gray-600 leading-relaxed border-t border-gray-100 pt-4" x-show="open" x-collapse>
+            <p class="text-sm sm:text-base">For questions, access requests, or concerns regarding this Privacy Policy or your data protection rights, please contact:</p>
+            <div class="rounded-lg bg-gray-50 p-4 text-sm font-medium space-y-1">
+              <p class="text-gray-900"><strong>Pneuma Food Scientifics</strong></p>
+              <p>📍 Zibra Street, Pokuase, Accra, Ghana</p>
+              <p>📞 +233 (0) 24 104 3139 / +233 (0) 50 338 6203</p>
+              <p>✉️ <a href="mailto:info@pfsgh.com" class="text-rose-600 hover:underline">info@pfsgh.com</a></p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+{% endblock %}

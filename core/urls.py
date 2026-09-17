@@ -13,4 +13,6 @@ urlpatterns = [
     path('consultants/', views.consultants, name="consultants"),
     path('contact/', views.contact, name="contact"),
     path('faqs/', views.faq, name="faq"),
+    path('terms_of_service/', views.terms_of_service, name="terms"),
+    path('privacy_policy/', views.privacy_policy, name='policy'),
 ]

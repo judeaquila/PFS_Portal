@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from datetime import date, timedelta
 
 
 class ConsultantProfile(models.Model):
@@ -436,6 +437,10 @@ class AmbassadorAssignment(models.Model):
 
 
 # Consultant/Associate Availability
+def get_current_monday():
+    today = date.today()
+    return today - timedelta(days=today.weekday())
+
 class Availability(models.Model):
     class WeekDay(models.IntegerChoices):
         MONDAY = 1, "Monday"
@@ -452,14 +457,17 @@ class Availability(models.Model):
         related_name="availability"
     )
 
+    week_start_date = models.DateField(default=get_current_monday)
+
     weekday = models.PositiveSmallIntegerField(
         choices=WeekDay.choices
     )
 
     start_time = models.TimeField()
     end_time = models.TimeField()
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["weekday", "start_time"]
+        ordering = ["week_start_date", "weekday", "start_time"]

@@ -50,8 +50,8 @@ class AssessmentPackage(models.Model):
         if self.custom_price is not None:
             return self.custom_price
         prices = {
-            PackageType.STANDARD: Decimal("200.00"),
-            PackageType.PROD_DEV: Decimal("300.00"),
+            PackageType.STANDARD: Decimal("300.00"),
+            PackageType.PROD_DEV: Decimal("400.00"),
             PackageType.BUDGET_TECH: Decimal("500.00"),
             PackageType.FULL_COSTING: Decimal("1000.00"),
             PackageType.BUSINESS_PLAN: Decimal("3000.00"),

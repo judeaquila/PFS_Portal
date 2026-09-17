@@ -145,24 +145,76 @@
 
     </div>
 
+    <!-- Inactivity Logout Modal -->
+    <div 
+    id="inactivityModal" 
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-200"
+    >
+    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+        <!-- Icon Header -->
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="space-y-1">
+        <h3 class="text-base font-bold text-slate-900">Session Timeout</h3>
+        <p class="text-xs text-slate-500">
+            You have been logged out due to inactivity. Please log back in to continue working.
+        </p>
+        </div>
+
+        <!-- Action Button -->
+        <div class="pt-2">
+        <button 
+            type="button" 
+            onclick="redirectToLogin()" 
+            class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+            Login
+        </button>
+        </div>
+    </div>
+    </div>
+
     <script>
-        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; 
-        let logoutTimer;
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    let logoutTimer;
+    let isLoggedOut = false;
 
-        function resetTimer() {
-            clearTimeout(logoutTimer);
-            logoutTimer = setTimeout(() => {
-                alert("You have been logged out due to inactivity.");
-                window.location.href = "{% url 'accounts:login' %}";
-            }, INACTIVITY_TIMEOUT);
-        }
+    const modal = document.getElementById('inactivityModal');
 
-        // Reset the timer on common user interaction events
-        window.onload = resetTimer;
-        document.onmousemove = resetTimer;
-        document.onkeypress = resetTimer;
-        document.onclick = resetTimer;
-        document.onscroll = resetTimer;
+    function showInactivityModal() {
+        isLoggedOut = true;
+        clearTimeout(logoutTimer);
+
+        // Show modal using Tailwind flex display
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function redirectToLogin() {
+        window.location.href = "{% url 'accounts:login' %}";
+    }
+
+    function resetTimer() {
+        // If the modal is already visible, stop tracking activity resets
+        if (isLoggedOut) return;
+
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(showInactivityModal, INACTIVITY_TIMEOUT);
+    }
+
+    // Bind activity listeners
+    const activityEvents = ['mousemove', 'keypress', 'click', 'scroll', 'touchstart'];
+    activityEvents.forEach(event => {
+        window.addEventListener(event, resetTimer, { passive: true });
+    });
+
+    // Initialize timer on load
+    resetTimer();
     </script>
 
 </body>
