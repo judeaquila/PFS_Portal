@@ -58,6 +58,21 @@ def redirect_dashboard(request):
     
     elif role == UserRole.AMBASSADOR:
         return redirect("dashboard:ambassador-dashboard")
+
+    elif role == UserRole.ASSOCIATE_1:
+        return redirect("fda:associate-one-dashboard")
+
+    elif role == UserRole.ASSOCIATE_2:
+        return redirect("fda:associate-two-dashboard")
+
+    elif role == UserRole.ASSOCIATE_3:
+        return redirect("fda:associate-three-dashboard")
+
+    elif role == UserRole.ASSOCIATE_4:
+        return redirect("fda:associate-four-dashboard")
+
+    elif role == UserRole.ASSOCIATE_5:
+        return redirect("fda:associate-five-dashboard")
     
     elif role == UserRole.USER:
         return redirect("dashboard:user-dashboard")

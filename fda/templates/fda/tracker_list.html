@@ -1,0 +1,105 @@
+{% extends "fda/base_associate.html" %}
+
+{% block title %}Project Updates Matrix | FDA Tracker{% endblock %}
+
+{% block fda_content %}
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+  <!-- Controls Bar -->
+  <div class="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div>
+      <h3 class="text-base font-bold text-slate-800">20-Stage Client Matrix</h3>
+      <p class="text-xs text-slate-500">Update project activity statuses across all stages in real-time</p>
+    </div>
+
+    <form method="GET" class="flex items-center gap-2">
+      <input 
+        type="text" 
+        name="q" 
+        value="{{ search_query }}" 
+        placeholder="Search client business or email..." 
+        class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64"
+      />
+      <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition">
+        Filter
+      </button>
+    </form>
+  </div>
+
+  <!-- Matrix Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-left text-slate-700 border-collapse">
+      <thead class="bg-slate-100 text-slate-700 border-b border-slate-300 uppercase sticky top-0 z-10">
+        <tr>
+          <th class="p-3 border-r min-w-[200px] bg-slate-200 sticky left-0 z-20">Client Name</th>
+          {% for stage in stages %}
+            <th class="p-2 border-r text-center min-w-[130px]">
+              <div class="font-bold text-indigo-600">{{ stage.stage_percentage }}%</div>
+              <div class="text-[10px] font-normal text-slate-500 truncate" title="{{ stage.full_activity_name }}">
+                Stage {{ stage.stage_number }}: {{ stage.short_stage_name }}
+              </div>
+            </th>
+          {% endfor %}
+          <th class="p-3 border-r min-w-[100px] text-center">Highest %</th>
+          <th class="p-3 min-w-[220px]">Latest Blocker / Update</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200">
+        {% for tracker in trackers %}
+          <tr class="hover:bg-slate-50/80 transition">
+            <!-- Client Sticky Name Column -->
+            <td class="p-3 font-semibold border-r bg-white sticky left-0 z-10 shadow-xs border-slate-200">
+              <div class="text-slate-900 font-bold truncate">
+                {{ tracker.project.client.business_name|default:tracker.project.client.email }}
+              </div>
+              <div class="text-[10px] text-slate-400">
+                Contact: {{ tracker.last_contacted|default:"Not set" }}
+              </div>
+            </td>
+
+            <!-- Stage Cells 1 through 20 -->
+            {% for act in tracker.stage_activities.all %}
+              <td class="p-1 border-r text-center">
+                <form action="{% url 'fda:update_stage_status' tracker.id act.stage.id %}" method="POST" class="m-0">
+                  {% csrf_token %}
+                  <select 
+                    name="status" 
+                    onchange="this.form.submit()" 
+                    class="w-full text-[11px] font-bold py-1 px-1 rounded border-0 text-center cursor-pointer transition
+                      {% if act.status == 'COMPLETE' %}bg-emerald-100 text-emerald-800
+                      {% elif act.status == 'ONGOING' %}bg-sky-100 text-sky-800
+                      {% elif act.status == 'WAITING_EXTERNAL' %}bg-amber-100 text-amber-800
+                      {% elif act.status == 'WAITING_INTERNAL' %}bg-orange-100 text-orange-800
+                      {% elif act.status == 'DISCONTINUED' %}bg-rose-100 text-rose-800
+                      {% elif act.status == 'ON_HOLD' %}bg-slate-200 text-slate-700
+                      {% else %}bg-slate-50 text-slate-400{% endif %}"
+                  >
+                    {% for key, val in activity_statuses %}
+                      <option value="{{ key }}" {% if act.status == key %}selected{% endif %}>{{ val }}</option>
+                    {% endfor %}
+                  </select>
+                </form>
+              </td>
+            {% endfor %}
+
+            <!-- Highest Stage % -->
+            <td class="p-3 border-r font-extrabold text-center text-slate-900 bg-slate-50/50">
+              {{ tracker.highest_stage_percentage }}%
+            </td>
+
+            <!-- Latest Blocker Note -->
+            <td class="p-3 text-slate-600 text-[11px] truncate max-w-[220px]" title="{{ tracker.latest_update_blocker }}">
+              {{ tracker.latest_update_blocker|default:"—" }}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="24" class="p-8 text-center text-slate-400 font-medium">
+              No project tracker records found.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

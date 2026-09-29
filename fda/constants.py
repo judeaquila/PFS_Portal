@@ -1,0 +1,22 @@
+MASTER_WORKFLOW_STAGES = [
+    {"percentage": 5, "short_name": "First Contact", "full_activity": "Client Engagement / First Contact Logging", "assigned_role": "ASSOCIATE_1"},
+    {"percentage": 10, "short_name": "Readiness Assessment", "full_activity": "Readiness Of Business Assessment Confirmed And Paid", "assigned_role": "ASSOCIATE_1"},
+    {"percentage": 15, "short_name": "WhatsApp / Drive Setup", "full_activity": "WhatsApp Group / Drive Folder Created", "assigned_role": "ASSOCIATE_1"},
+    {"percentage": 20, "short_name": "Onboarding / Alignment", "full_activity": "Onboarding Meeting / Project Alignment", "assigned_role": "ASSOCIATE_2"},
+    {"percentage": 25, "short_name": "Sample Preparation", "full_activity": "Lab Samples Preparation", "assigned_role": "ASSOCIATE_2"},
+    {"percentage": 30, "short_name": "Quote Approval", "full_activity": "Quote Generated, Approved and Presented", "assigned_role": "ASSOCIATE_2"},
+    {"percentage": 35, "short_name": "Payment & Invoicing", "full_activity": "Payment Confirmation & Invoicing", "assigned_role": "ASSOCIATE_5"},
+    {"percentage": 40, "short_name": "Document Upload Follow-up", "full_activity": "Follow up on complete document upload", "assigned_role": "ASSOCIATE_3"},
+    {"percentage": 45, "short_name": "FDA Account Creation", "full_activity": "FDA account creation for client", "assigned_role": "ASSOCIATE_3"},
+    {"percentage": 50, "short_name": "Label Review / Redesign", "full_activity": "Label Review and Redesign Completed", "assigned_role": "ASSOCIATE_3"},
+    {"percentage": 55, "short_name": "Lab Submission / Follow-up", "full_activity": "Lab Sample Submission / Result Follow Up", "assigned_role": "ASSOCIATE_4"},
+    {"percentage": 60, "short_name": "Registration Requirements", "full_activity": "Gathering of All Registration Requirements", "assigned_role": "ASSOCIATE_3"},
+    {"percentage": 65, "short_name": "FDA Online Registration", "full_activity": "Completion of FDA Online Registration", "assigned_role": "ASSOCIATE_3"},
+    {"percentage": 70, "short_name": "Physical Submission", "full_activity": "Physical Submission / Receipt Filing", "assigned_role": "ASSOCIATE_4"},
+    {"percentage": 75, "short_name": "Facility Setup Training", "full_activity": "Facility Setup Training", "assigned_role": "CONSULTANT"},
+    {"percentage": 80, "short_name": "Forms / SOPs", "full_activity": "Forms / SOPs Drafting", "assigned_role": "CONSULTANT"},
+    {"percentage": 85, "short_name": "Audit Preparation / Training", "full_activity": "Audit Preparation / Documentation Training", "assigned_role": "CONSULTANT"},
+    {"percentage": 90, "short_name": "Portal Follow-ups", "full_activity": "Application Follow Ups on Portal", "assigned_role": "ASSOCIATE_3"},
+    {"percentage": 95, "short_name": "Post-Audit Support", "full_activity": "Post Audit Support and Corrective Actions", "assigned_role": "CONSULTANT"},
+    {"percentage": 100, "short_name": "Project Closure / Certificate", "full_activity": "Project Closure / Certificate Delivery / Feedback", "assigned_role": "CONSULTANT"}, # Shared with Associate 4
+]

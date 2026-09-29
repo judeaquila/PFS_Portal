@@ -1,0 +1,109 @@
+{% extends "fda/base_associate.html" %}
+
+{% block title %}Team Tasks & Work Clearances | FDA Tracker{% endblock %}
+
+{% block fda_content %}
+<div class="space-y-6">
+  <!-- Operational Summary Counters -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase">Ongoing Tasks</div>
+      <div class="text-2xl font-black text-sky-600 mt-1">{{ summary_counters.ongoing }}</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase">Waiting External</div>
+      <div class="text-2xl font-black text-amber-600 mt-1">{{ summary_counters.waiting_external }}</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase">Waiting Internal</div>
+      <div class="text-2xl font-black text-orange-600 mt-1">{{ summary_counters.waiting_internal }}</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase">On Hold</div>
+      <div class="text-2xl font-black text-rose-600 mt-1">{{ summary_counters.on_hold }}</div>
+    </div>
+  </div>
+
+  <!-- Operational Queue Table -->
+  <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+    <div class="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4">
+      <h3 class="text-base font-bold text-slate-800">Operational Queue</h3>
+      
+      <form method="GET" class="flex items-center gap-3">
+        <label class="text-xs font-bold text-slate-600">Filter by Role:</label>
+        <select name="handler_role" onchange="this.form.submit()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-medium focus:outline-none">
+          <option value="ALL" {% if selected_handler == 'ALL' %}selected{% endif %}>All Roles</option>
+          {% for role_key, role_label in user_roles %}
+            <option value="{{ role_key }}" {% if selected_handler == role_key %}selected{% endif %}>{{ role_label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-left text-slate-700">
+        <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 uppercase font-bold text-[11px]">
+          <tr>
+            <th class="p-3">Client</th>
+            <th class="p-3">Stage</th>
+            <th class="p-3">Assigned Handler</th>
+            <th class="p-3">Activity Status</th>
+            <th class="p-3">Payment Status</th>
+            <th class="p-3">Work Clearance</th>
+            <th class="p-3">Latest Blocker / Note</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for item in task_items %}
+            <tr class="hover:bg-slate-50 transition">
+              <td class="p-3 font-bold text-slate-900">
+                {{ item.client.business_name|default:item.client.email }}
+              </td>
+              <td class="p-3">
+                <span class="font-bold text-indigo-600">{{ item.stage.stage_percentage }}%</span> - {{ item.stage.short_stage_name }}
+              </td>
+              <td class="p-3 font-semibold text-slate-600">
+                {{ item.handler_role }}
+              </td>
+              <td class="p-3 font-bold">
+                <span class="px-2 py-1 rounded text-[10px] 
+                  {% if item.activity.status == 'ONGOING' %}bg-sky-100 text-sky-800
+                  {% elif item.activity.status == 'WAITING_EXTERNAL' %}bg-amber-100 text-amber-800
+                  {% elif item.activity.status == 'ON_HOLD' %}bg-rose-100 text-rose-800
+                  {% else %}bg-slate-100 text-slate-700{% endif %}"
+                >
+                  {{ item.activity.get_status_display }}
+                </span>
+              </td>
+              <td class="p-3 font-medium text-slate-600">{{ item.payment_status }}</td>
+
+              <!-- Dynamic Work Clearance Tag -->
+              <td class="p-3">
+                <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-2xs
+                  {% if item.work_clearance == 'CLEARED' %}bg-emerald-100 text-emerald-800 border border-emerald-300
+                  {% elif item.work_clearance == 'PAYMENT_PENDING' %}bg-rose-100 text-rose-800 border border-rose-300
+                  {% elif item.work_clearance == 'PAYMENT_FOLLOW_UP' %}bg-amber-100 text-amber-800 border border-amber-300
+                  {% elif item.work_clearance == 'ON_HOLD' %}bg-slate-200 text-slate-800 border border-slate-300
+                  {% else %}bg-sky-100 text-sky-800 border border-sky-300{% endif %}"
+                >
+                  {{ item.work_clearance_display }}
+                </span>
+              </td>
+
+              <td class="p-3 text-slate-500 max-w-xs truncate" title="{{ item.tracker.latest_update_blocker }}">
+                {{ item.tracker.latest_update_blocker|default:"—" }}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="p-8 text-center text-slate-400 font-medium">
+                No active tasks found matching criteria.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

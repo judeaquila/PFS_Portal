@@ -8,6 +8,11 @@ from dashboard.models import ProductCategory
 class UserRole(models.TextChoices):
     USER = "USER", "Client"
     AMBASSADOR = "AMBASSADOR", "Associate"
+    ASSOCIATE_1 = "ASSOCIATE_1", "Associate 1"
+    ASSOCIATE_2 = "ASSOCIATE_2", "Associate 2"
+    ASSOCIATE_3 = "ASSOCIATE_3", "Associate 3"
+    ASSOCIATE_4 = "ASSOCIATE_4", "Associate 4"
+    ASSOCIATE_5 = "ASSOCIATE_5", "Associate 5"
     CONSULTANT = "CONSULTANT", "Consultant"
     SUPERVISOR = "SUPERVISOR", "Supervisor"
     SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"    

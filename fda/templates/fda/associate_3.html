@@ -1,0 +1,63 @@
+{% extends "fda/base_associate.html" %}
+
+{% block associate_content %}
+<div class="space-y-6">
+  <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+    <div>
+      <h2 class="text-xl font-black text-slate-900">Associate 3 Dashboard</h2>
+      <p class="text-xs text-slate-500 mt-1">Scope: Document Follow-up (40%) • FDA Account (45%) • Label Review (50%) • Requirements (60%) • Online Reg (65%) • Portal Follow-ups (90%)</p>
+    </div>
+    <span class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-xs rounded-lg">
+      Active Tasks: {{ active_tasks|length }}
+    </span>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      Action Required
+    </h3>
+
+    {% if active_tasks %}
+      <div class="space-y-3">
+        {% for item in active_tasks %}
+          <div class="p-4 border-2 border-indigo-500 bg-indigo-50/30 rounded-xl flex items-center justify-between">
+            <div>
+              <span class="px-2.5 py-0.5 bg-indigo-600 text-white font-black text-[11px] rounded">
+                {{ item.activity.stage.stage_percentage }}%
+              </span>
+              <span class="ml-2 font-bold text-slate-900 text-sm">{{ item.activity.stage.full_activity_name }}</span>
+              <p class="text-xs text-slate-500 mt-1">Client: <strong>{{ item.tracker.project.client.business_name|default:item.tracker.project.client.email }}</strong></p>
+            </div>
+            <form action="{% url 'fda:update_stage_status' item.tracker.id item.activity.id %}" method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="status" value="COMPLETE">
+              <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition shadow-xs">
+                Mark Complete & Hand Off
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-xs text-slate-400 italic">No tasks currently active for Associate 3.</p>
+    {% endif %}
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Completed History (Read-Only)</h3>
+    {% if completed_tasks %}
+      <div class="space-y-2">
+        {% for item in completed_tasks %}
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs">
+            <span class="font-bold text-slate-700">{{ item.activity.stage.stage_percentage }}% - {{ item.activity.stage.short_stage_name }}</span>
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 font-extrabold text-[10px] rounded"><i class="fa-solid fa-check"></i> DONE</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-xs text-slate-400 italic">No completed tasks yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

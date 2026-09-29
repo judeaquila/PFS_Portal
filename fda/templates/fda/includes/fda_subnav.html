@@ -1,0 +1,41 @@
+<div class="bg-white p-2 mb-6 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-2">
+  <div class="flex items-center space-x-1">
+    {% with request.resolver_match.url_name as url_name %}
+      
+      <!-- Current Role Dashboard -->
+      <a href="{% url 'dashboard:redirect-dashboard' %}" 
+         class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {% if 'dashboard' in url_name %}bg-indigo-600 text-white shadow-xs{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>My Dashboard</span>
+      </a>
+
+      <!-- Project Updates Matrix Sheet -->
+      <a href="{% url 'fda:tracker_list' %}" 
+         class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {% if url_name == 'tracker_list' %}bg-indigo-600 text-white shadow-xs{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+        <i class="fa-solid fa-table-cells"></i>
+        <span>Project Updates</span>
+      </a>
+
+      <!-- Team Tasks Queue Sheet -->
+      <a href="{% url 'fda:team_tasks' %}" 
+         class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {% if url_name == 'team_tasks' %}bg-indigo-600 text-white shadow-xs{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Team Tasks</span>
+      </a>
+
+      <!-- Payment Register Sheet (Restricted) -->
+      {% if user.role == 'ASSOCIATE_5' or user.role == 'SUPERVISOR' or user.role == 'SUPER_ADMIN' %}
+      <a href="{% url 'fda:payment_register' %}" 
+         class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 {% if url_name == 'payment_register' %}bg-indigo-600 text-white shadow-xs{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+        <span>Payment Register</span>
+      </a>
+      {% endif %}
+
+    {% endwith %}
+  </div>
+
+  <div class="px-3 py-1 bg-slate-100 rounded-md border text-[11px] font-semibold text-slate-500">
+    System Clock: 2026
+  </div>
+</div>

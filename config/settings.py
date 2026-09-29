@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'dashboard',
     'payments',
     'examinations',
+    'fda',
 ]
 
 AUTH_USER_MODEL = "accounts.User"

@@ -1,135 +1,72 @@
 {% extends "core/base.html" %}
 
 {% block title %}
-PFS | Assessment Packages & Pricing
+PFS | Packages & Service Matrix
 {% endblock %}
 
 {% block content %}
 
-<!-- Paystack Inline JS SDK -->
+<!-- Alpine.js & Paystack Inline SDK -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 
-<!-- ===================================== -->
-<!-- Hero Header Section -->
-<!-- ===================================== -->
-<section class="bg-slate-950 text-white py-20 relative overflow-hidden">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-pink-900/20 via-transparent to-transparent"></div>
-    
-    <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
-        <span class="text-xs font-bold uppercase tracking-widest text-pink-500 bg-pink-500/10 px-4 py-1.5 rounded-full">
-            Our Services
-        </span>
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mt-4">
-            Expert Support for Every Stage
-        </h1>
-        <p class="mt-4 text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            From concept to certification, we help you develop safe, high quality food products and build sustainable food businesses.
-        </p>
-
-        <!-- Top Notice Banner -->
-        <div class="mt-8 max-w-2xl mx-auto bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-400 flex items-center gap-3 text-left">
-            <span class="text-pink-500 shrink-0 font-bold">ⓘ</span>
-            <p class="leading-relaxed">
-                All prices are starting rates. Final fees depend on actual project scope and requirements. Consultation fees cover the scheduled session and agreed activities.
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- ===================================== -->
-<!-- Packages Pricing Section -->
-<!-- ===================================== -->
-<section id="packages" class="py-20 bg-slate-50 border-b border-slate-100">
-    <div class="max-w-7xl mx-auto px-6">
+<div x-data="{ 
+    activeTab: 'assessment', 
+    matrixFilter: 'all' 
+}">
+    <!-- ===================================== -->
+    <!-- Hero Header & Tab Switcher Section -->
+    <!-- ===================================== -->
+    <section class="bg-slate-950 text-white pt-20 pb-16 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-pink-900/20 via-transparent to-transparent"></div>
         
-        {% if packages %}
-            <!-- DYNAMIC DB-DRIVEN GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch mb-16">
-                {% for package in packages %}
-                <div class="bg-white p-7 rounded-2xl border {% if package.is_popular %}border-2 border-pink-600 shadow-xl relative{% else %}border-slate-200 shadow-sm{% endif %} flex flex-col justify-between transition-transform duration-300 hover:scale-[1.01]">
-                    
-                    {% if package.is_popular %}
-                    <div class="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
-                        <span class="bg-pink-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-                            Most Popular
-                        </span>
-                    </div>
-                    {% endif %}
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <span class="text-xs font-bold uppercase tracking-widest text-pink-500 bg-pink-500/10 px-4 py-1.5 rounded-full">
+                Our Services
+            </span>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mt-4">
+                Expert Support for Every Stage
+            </h1>
+            <p class="mt-4 text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                From concept to certification, we help you develop safe, high quality food products and build sustainable food businesses.
+            </p>
 
-                    <div>
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-pink-600 block mb-1">
-                            {{ package.subtitle|default:"Consultation" }}
-                        </span>
-                        <h3 class="font-extrabold text-xl text-slate-900 mb-2">{{ package.name }}</h3>
-                        <p class="text-slate-500 text-xs leading-relaxed mb-4 min-h-[36px]">{{ package.description }}</p>
-                        
-                        <div class="mb-4">
-                            <span class="text-xs text-slate-400 font-medium block">From</span>
-                            <span class="text-3xl font-black text-slate-900">GHS {{ package.price }}</span>
-                        </div>
-                        
-                        <hr class="border-slate-100 my-4" />
-                        
-                        <!-- INCLUDES SECTION -->
-                        {% if package.features %}
-                        <div class="mb-5">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Includes</span>
-                            <ul class="text-xs text-slate-600 space-y-2.5">
-                                {% for feature in package.features %}
-                                <li class="flex items-start gap-2.5">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ feature }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-
-                        <!-- NOT INCLUDED SECTION -->
-                        {% if package.not_included %}
-                        <div class="mb-6 pt-3 border-t border-slate-100">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2.5">Not Included</span>
-                            <ul class="text-xs text-slate-400 space-y-2">
-                                {% for item in package.not_included %}
-                                <li class="flex items-start gap-2.5">
-                                    <span class="text-slate-300 font-bold shrink-0">✕</span>
-                                    <span>{{ item }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <form action="{% url 'payments:initiate-payment' package.package_type %}" method="POST" class="mt-4 space-y-3">
-                        {% csrf_token %}
-                        <input type="email" 
-                               name="email" 
-                               placeholder="Your Email Address" 
-                               value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"
-                               required 
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                        <input type="text" 
-                               name="business_name" 
-                               placeholder="Business Name (on Certificate)"
-                               value="{% if user.is_authenticated %}{{ user.business_name }}{% endif %}" 
-                               required 
-                               class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                        <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] text-amber-800">
-                            <p><strong>Note:</strong> Non-refundable once reserved or scheduled.</p>
-                        </div>
-                        <button type="submit" 
-                                class="w-full text-center {% if package.is_popular %}bg-pink-700 hover:bg-pink-800 text-white{% else %}border-2 border-pink-700 text-pink-700 hover:bg-pink-700 hover:text-white{% endif %} font-semibold py-3 text-sm rounded-xl transition duration-200 shadow-sm flex items-center justify-center gap-2">
-                            <span>Book Now</span>
-                            <span>→</span>
-                        </button>
-                    </form>
-                </div>
-                {% endfor %}
+            <!-- Top Notice Banner -->
+            <div class="mt-6 max-w-2xl mx-auto bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-400 flex items-center gap-3 text-left shadow-lg">
+                <span class="text-pink-500 shrink-0 font-bold text-base">ⓘ</span>
+                <p class="leading-relaxed">
+                    <strong>Note:</strong> Assessment fees cover initial guidance and technical scoping. Full implementation and statutory FDA fees are quoted according to your exact project scope.
+                </p>
             </div>
 
-        {% else %}
-            <!-- FALLBACK STATIC CARDS BASED ON VISUAL GUIDE & WORD DOC -->
+            <!-- TAB SWITCHER BUTTONS -->
+            <div class="mt-10 inline-flex p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner max-w-md w-full">
+                <button @click="activeTab = 'assessment'" 
+                        :class="activeTab === 'assessment' ? 'bg-pink-700 text-white shadow-md' : 'text-slate-400 hover:text-white'"
+                        class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all duration-200">
+                    Phase 1: Assessment
+                </button>
+                <button @click="activeTab = 'implementation'" 
+                        :class="activeTab === 'implementation' ? 'bg-pink-700 text-white shadow-md' : 'text-slate-400 hover:text-white'"
+                        class="flex-1 py-3 px-4 rounded-xl text-xs md:text-sm font-bold transition-all duration-200">
+                    Phase 2: Implementation
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================== -->
+    <!-- TAB 1: ASSESSMENT & CONSULTATION PACKAGES -->
+    <!-- ===================================== -->
+    <section x-show="activeTab === 'assessment'" x-transition:enter="transition ease-out duration-300 transform opacity-0 scale-98" x-transition:enter-start="opacity-0 scale-98" x-transition:enter-end="opacity-100 scale-100" class="py-16 bg-slate-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-6">
+            
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Project Scoping & Assessment Packages</h2>
+                <p class="text-slate-500 text-sm mt-2">Identify the support level you need before embarking on full facility setup or product registration.</p>
+            </div>
+
+            <!-- STATIC / FALLBACK CARDS -->
             <div class="space-y-8 mb-16">
                 <!-- TOP ROW: 3 CARDS -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
@@ -142,13 +79,12 @@ PFS | Assessment Packages & Pricing
                             <p class="text-slate-500 text-xs mb-4 min-h-[36px]">For clients who need to understand what they need and how to proceed.</p>
                             
                             <div class="mb-4">
-                                <span class="text-xs text-slate-400 font-medium block">From</span>
+                                <span class="text-xs text-slate-400 font-medium block">Starting Rate</span>
                                 <span class="text-3xl font-black text-slate-900">GHS 300</span>
                             </div>
                             
                             <hr class="border-slate-100 my-4" />
                             
-                            <!-- INCLUDES -->
                             <div class="mb-5">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Includes</span>
                                 <ul class="text-xs text-slate-600 space-y-2.5">
@@ -162,7 +98,6 @@ PFS | Assessment Packages & Pricing
                                 </ul>
                             </div>
 
-                            <!-- NOT INCLUDED -->
                             <div class="mb-6 pt-3 border-t border-slate-100">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2.5">Not Included</span>
                                 <ul class="text-xs text-slate-400 space-y-2">
@@ -178,9 +113,6 @@ PFS | Assessment Packages & Pricing
                             {% csrf_token %}
                             <input type="email" name="email" placeholder="Your Email Address" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
                             <input type="text" name="business_name" placeholder="Business Name (on Certificate)" value="{% if user.is_authenticated %}{{ user.business_name }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                            <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] text-amber-800">
-                                <p><strong>Note:</strong> Non-refundable once reserved or scheduled.</p>
-                            </div>
                             <button type="submit" class="w-full text-center border-2 border-pink-700 text-pink-700 font-semibold py-3 text-sm rounded-xl hover:bg-pink-700 hover:text-white transition flex items-center justify-center gap-2">
                                 <span>Book Consultation</span>
                                 <span>›</span>
@@ -196,13 +128,12 @@ PFS | Assessment Packages & Pricing
                             <p class="text-slate-500 text-xs mb-4 min-h-[36px]">For clients who need technical guidance to develop or improve a food product.</p>
                             
                             <div class="mb-4">
-                                <span class="text-xs text-slate-400 font-medium block">From</span>
+                                <span class="text-xs text-slate-400 font-medium block">Starting Rate</span>
                                 <span class="text-3xl font-black text-slate-900">GHS 400</span>
                             </div>
                             
                             <hr class="border-slate-100 my-4" />
                             
-                            <!-- INCLUDES -->
                             <div class="mb-5">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Includes</span>
                                 <ul class="text-xs text-slate-600 space-y-2.5">
@@ -215,7 +146,6 @@ PFS | Assessment Packages & Pricing
                                 </ul>
                             </div>
 
-                            <!-- NOT INCLUDED -->
                             <div class="mb-6 pt-3 border-t border-slate-100">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2.5">Not Included</span>
                                 <ul class="text-xs text-slate-400 space-y-2">
@@ -231,9 +161,6 @@ PFS | Assessment Packages & Pricing
                             {% csrf_token %}
                             <input type="email" name="email" placeholder="Your Email Address" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
                             <input type="text" name="business_name" placeholder="Business Name (on Certificate)" value="{% if user.is_authenticated %}{{ user.business_name }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                            <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] text-amber-800">
-                                <p><strong>Note:</strong> Non-refundable once reserved or scheduled.</p>
-                            </div>
                             <button type="submit" class="w-full text-center border-2 border-pink-700 text-pink-700 font-semibold py-3 text-sm rounded-xl hover:bg-pink-700 hover:text-white transition flex items-center justify-center gap-2">
                                 <span>Book Session</span>
                                 <span>›</span>
@@ -241,7 +168,7 @@ PFS | Assessment Packages & Pricing
                         </form>
                     </div>
 
-                    <!-- 03 TECHNICAL & CERTIFICATION (MOST POPULAR) -->
+                    <!-- 03 TECHNICAL & CERTIFICATION -->
                     <div class="bg-white p-7 rounded-2xl border-2 border-pink-600 shadow-xl relative flex flex-col justify-between transition-transform duration-300 hover:scale-[1.01]">
                         <div class="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
                             <span class="bg-pink-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
@@ -255,27 +182,25 @@ PFS | Assessment Packages & Pricing
                             <p class="text-slate-500 text-xs mb-4 min-h-[36px]">For clients who need technical, regulatory guidance and an immediate scope estimate.</p>
                             
                             <div class="mb-4">
-                                <span class="text-xs text-slate-400 font-medium block">From</span>
-                                <span class="text-3xl font-black text-slate-900">GHS 500</span>
+                                <span class="text-xs text-slate-400 font-medium block">Starting Rate</span>
+                                <span class="text-3xl font-black text-slate-900">GHS 500–700</span>
                             </div>
                             
                             <hr class="border-slate-100 my-4" />
                             
-                            <!-- INCLUDES -->
                             <div class="mb-5">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Includes</span>
                                 <ul class="text-xs text-slate-600 space-y-2.5">
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Product and processing requirements</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>FDA &amp; GSA requirements</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Document and label review</span></li>
-                                    <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Laboratory testing</span></li>
+                                    <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Laboratory testing guidance</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Immediate project requirements</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Estimated costs for immediate scope</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Timelines and next steps</span></li>
                                 </ul>
                             </div>
 
-                            <!-- NOT INCLUDED -->
                             <div class="mb-6 pt-3 border-t border-slate-100">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2.5">Not Included</span>
                                 <ul class="text-xs text-slate-400 space-y-2">
@@ -290,9 +215,6 @@ PFS | Assessment Packages & Pricing
                             {% csrf_token %}
                             <input type="email" name="email" placeholder="Your Email Address" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
                             <input type="text" name="business_name" placeholder="Business Name (on Certificate)" value="{% if user.is_authenticated %}{{ user.business_name }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                            <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] text-amber-800">
-                                <p><strong>Note:</strong> Non-refundable once reserved or scheduled.</p>
-                            </div>
                             <button type="submit" class="w-full text-center bg-pink-700 text-white font-semibold py-3 text-sm rounded-xl hover:bg-pink-800 transition shadow-md flex items-center justify-center gap-2">
                                 <span>Book Session</span>
                                 <span>›</span>
@@ -308,22 +230,21 @@ PFS | Assessment Packages & Pricing
                     <!-- 04 PROJECT PLANNING & COSTING -->
                     <div class="bg-white p-7 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between transition-transform duration-300 hover:scale-[1.01]">
                         <div>
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-pink-600 block mb-1">04 | Project Planning & Costing Phase 1</span>
-                            <h3 class="font-extrabold text-xl text-slate-900 mb-2">Mini Project Costing</h3>
-                            <p class="text-slate-500 text-xs mb-4 min-h-[36px]">For clients ready to define and cost their complete project across two sessions.</p>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-pink-600 block mb-1">04 | Project Planning & Costing — Phase 1</span>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-2">Full Project Costing</h3>
+                            <p class="text-slate-500 text-xs mb-4 min-h-[36px]">For clients ready to plan and cost their complete project across two sessions.</p>
                             
                             <div class="mb-4">
-                                <span class="text-xs text-slate-400 font-medium block">From</span>
-                                <span class="text-3xl font-black text-slate-900">GHS 1,000</span>
+                                <span class="text-xs text-slate-400 font-medium block">Starting Rate</span>
+                                <span class="text-3xl font-black text-slate-900">GHS 1,000–1,500</span>
                             </div>
                             
                             <hr class="border-slate-100 my-4" />
                             
-                            <!-- INCLUDES -->
                             <div class="mb-5">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Includes</span>
                                 <ul class="text-xs text-slate-600 space-y-2.5">
-                                    <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Mini project scope & requirements</span></li>
+                                    <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Full project scope and requirements</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Product development pathway</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Facility and processing requirements</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Complete project cost estimation</span></li>
@@ -331,7 +252,6 @@ PFS | Assessment Packages & Pricing
                                 </ul>
                             </div>
 
-                            <!-- NOT INCLUDED -->
                             <div class="mb-6 pt-3 border-t border-slate-100">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2.5">Not Included</span>
                                 <ul class="text-xs text-slate-400 space-y-2">
@@ -345,9 +265,6 @@ PFS | Assessment Packages & Pricing
                             {% csrf_token %}
                             <input type="email" name="email" placeholder="Your Email Address" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
                             <input type="text" name="business_name" placeholder="Business Name (on Certificate)" value="{% if user.is_authenticated %}{{ user.business_name }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                            <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] text-amber-800">
-                                <p><strong>Note:</strong> Non-refundable once reserved or scheduled.</p>
-                            </div>
                             <button type="submit" class="w-full text-center border-2 border-pink-700 text-pink-700 font-semibold py-3 text-sm rounded-xl hover:bg-pink-700 hover:text-white transition flex items-center justify-center gap-2">
                                 <span>Start Project</span>
                                 <span>›</span>
@@ -358,29 +275,27 @@ PFS | Assessment Packages & Pricing
                     <!-- 05 BUSINESS PLAN & PROPOSAL -->
                     <div class="bg-white p-7 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between transition-transform duration-300 hover:scale-[1.01]">
                         <div>
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-pink-600 block mb-1">05 | Business Plan & Proposal Phase 2</span>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-pink-600 block mb-1">05 | Business Planning & Proposal — Phase 2</span>
                             <h3 class="font-extrabold text-xl text-slate-900 mb-2">Business Plan & Proposal</h3>
                             <p class="text-slate-500 text-xs mb-4 min-h-[36px]">For clients who need a complete business plan and project proposal.</p>
                             
                             <div class="mb-4">
-                                <span class="text-xs text-slate-400 font-medium block">From</span>
+                                <span class="text-xs text-slate-400 font-medium block">Starting Rate</span>
                                 <span class="text-3xl font-black text-slate-900">GHS 3,000</span>
                             </div>
                             
                             <hr class="border-slate-100 my-4" />
                             
-                            <!-- INCLUDES -->
                             <div class="mb-5">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-3">Includes</span>
                                 <ul class="text-xs text-slate-600 space-y-2.5">
-                                    <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Comprehensive business plan and project proposal</span></li>
+                                    <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Comprehensive business plan & project proposal</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Full project costing</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Financial projections</span></li>
                                     <li class="flex items-start gap-2.5"><span class="text-emerald-500 font-bold shrink-0">✓</span><span>Training & upskilling costs (where required)</span></li>
                                 </ul>
                             </div>
 
-                            <!-- NOT INCLUDED -->
                             <div class="mb-6 pt-3 border-t border-slate-100">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2.5">Not Included</span>
                                 <ul class="text-xs text-slate-400 space-y-2">
@@ -393,9 +308,6 @@ PFS | Assessment Packages & Pricing
                             {% csrf_token %}
                             <input type="email" name="email" placeholder="Your Email Address" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
                             <input type="text" name="business_name" placeholder="Business Name (on Certificate)" value="{% if user.is_authenticated %}{{ user.business_name }}{% endif %}" {% if user.is_authenticated %}readonly{% endif %} required class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50" />
-                            <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] text-amber-800">
-                                <p><strong>Note:</strong> Non-refundable once reserved or scheduled.</p>
-                            </div>
                             <button type="submit" class="w-full text-center border-2 border-pink-700 text-pink-700 font-semibold py-3 text-sm rounded-xl hover:bg-pink-700 hover:text-white transition flex items-center justify-center gap-2">
                                 <span>Get Started</span>
                                 <span>›</span>
@@ -405,35 +317,319 @@ PFS | Assessment Packages & Pricing
 
                 </div>
             </div>
-        {% endif %}
 
-        <!-- Visual Value Pillars Footer (Matching Image Bottom Banner) -->
-        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-200/80 text-xs">
-            <div class="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-200/60 shadow-sm">
-                <div class="p-2 rounded-lg bg-pink-50 text-pink-700 font-bold shrink-0">👤</div>
-                <div>
-                    <strong class="text-slate-900 block font-bold mb-0.5">Start Where You Are</strong>
-                    <p class="text-slate-500 leading-relaxed">Not sure what you need? Begin with Standard Onboarding and we will guide you.</p>
+            <!-- Value Pillars Footer -->
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-200/80 text-xs">
+                <div class="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-200/60 shadow-sm">
+                    <div class="p-2 rounded-lg bg-pink-50 text-pink-700 font-bold shrink-0">👤</div>
+                    <div>
+                        <strong class="text-slate-900 block font-bold mb-0.5">Start Where You Are</strong>
+                        <p class="text-slate-500 leading-relaxed">Not sure what you need? Begin with Standard Onboarding and we will guide you.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-200/60 shadow-sm">
+                    <div class="p-2 rounded-lg bg-pink-50 text-pink-700 font-bold shrink-0">✓</div>
+                    <div>
+                        <strong class="text-slate-900 block font-bold mb-0.5">No Surprises</strong>
+                        <p class="text-slate-500 leading-relaxed">Your final quotation is based strictly on the actual scope of work required.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-200/60 shadow-sm">
+                    <div class="p-2 rounded-lg bg-pink-50 text-pink-700 font-bold shrink-0">📊</div>
+                    <div>
+                        <strong class="text-slate-900 block font-bold mb-0.5">Scale With Your Business</strong>
+                        <p class="text-slate-500 leading-relaxed">Move seamlessly from consultation to development, planning, and full proposal as you grow.</p>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-200/60 shadow-sm">
-                <div class="p-2 rounded-lg bg-pink-50 text-pink-700 font-bold shrink-0">✓</div>
-                <div>
-                    <strong class="text-slate-900 block font-bold mb-0.5">No Surprises</strong>
-                    <p class="text-slate-500 leading-relaxed">Your final quotation is based strictly on the actual scope of work required.</p>
-                </div>
-            </div>
-            <div class="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-200/60 shadow-sm">
-                <div class="p-2 rounded-lg bg-pink-50 text-pink-700 font-bold shrink-0">📊</div>
-                <div>
-                    <strong class="text-slate-900 block font-bold mb-0.5">Scale With Your Business</strong>
-                    <p class="text-slate-500 leading-relaxed">Move seamlessly from consultation to development, planning, and full proposal as you grow.</p>
-                </div>
-            </div>
+
         </div>
+    </section>
 
-    </div>
-</section>
+    <!-- ===================================== -->
+    <!-- TAB 2: IMPLEMENTATION PACKAGES MATRIX -->
+    <!-- ===================================== -->
+    <section x-show="activeTab === 'implementation'" x-transition:enter="transition ease-out duration-300 transform opacity-0 scale-98" x-transition:enter-start="opacity-0 scale-98" x-transition:enter-end="opacity-100 scale-100" class="py-16 bg-slate-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-6">
+            
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Package Comparison Matrix</h2>
+                <p class="text-slate-500 text-sm mt-2">Compare inclusions and scopes for FDA product registrations, facility setup, and renewals.</p>
+            </div>
+
+            <!-- FILTER PILLS -->
+            <div class="flex flex-wrap items-center justify-center gap-2 mb-10">
+                <button @click="matrixFilter = 'all'" 
+                        :class="matrixFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                        class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                    All Packages
+                </button>
+                <button @click="matrixFilter = 'renewals'" 
+                        :class="matrixFilter === 'renewals' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                        class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                    Renewals Only
+                </button>
+                <button @click="matrixFilter = 'new_no_setup'" 
+                        :class="matrixFilter === 'new_no_setup' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                        class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                    New Registrations (No Facility Setup)
+                </button>
+                <button @click="matrixFilter = 'new_with_setup'" 
+                        :class="matrixFilter === 'new_with_setup' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                        class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                    New Registrations (With Facility Setup)
+                </button>
+            </div>
+
+            <!-- MATRIX TABLE WRAPPER -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-16">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                                <th class="p-4 border-b border-slate-800 min-w-[200px]">Activity</th>
+                                <th class="p-4 border-b border-slate-800 min-w-[100px]">Scope</th>
+                                
+                                <!-- Renewals -->
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="p-4 border-b border-slate-800 bg-slate-800/80 text-center min-w-[110px]">Basic<br><span class="text-[9px] text-slate-400 font-normal">All</span></th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="p-4 border-b border-slate-800 bg-slate-800/80 text-center min-w-[110px]">Standard<br><span class="text-[9px] text-slate-400 font-normal">Cosmetics</span></th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="p-4 border-b border-slate-800 bg-slate-800/80 text-center min-w-[110px]">Standard<br><span class="text-[9px] text-slate-400 font-normal">Food / Pharma</span></th>
+                                
+                                <!-- New Registrations (No Facility Setup) -->
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="p-4 border-b border-slate-800 bg-pink-950/80 text-center min-w-[110px]">Standard<br><span class="text-[9px] text-pink-300 font-normal">All</span></th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="p-4 border-b border-slate-800 bg-pink-950/80 text-center min-w-[110px]">Standard Plus<br><span class="text-[9px] text-pink-300 font-normal">Food / Pharma</span></th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="p-4 border-b border-slate-800 bg-pink-950/80 text-center min-w-[110px]">Standard Plus<br><span class="text-[9px] text-pink-300 font-normal">Cosmetics</span></th>
+                                
+                                <!-- New Registrations (With Facility Setup) -->
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="p-4 border-b border-slate-800 bg-indigo-950/80 text-center min-w-[110px]">Advanced<br><span class="text-[9px] text-indigo-300 font-normal">All</span></th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="p-4 border-b border-slate-800 bg-indigo-950/80 text-center min-w-[110px]">Advanced Plus<br><span class="text-[9px] text-indigo-300 font-normal">Food / Pharma</span></th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="p-4 border-b border-slate-800 bg-indigo-950/80 text-center min-w-[110px]">Advanced Plus<br><span class="text-[9px] text-indigo-300 font-normal">Cosmetics</span></th>
+                            </tr>
+                            <tr class="bg-slate-100 font-extrabold text-slate-900 border-b border-slate-200">
+                                <td colspan="2" class="p-3 text-slate-700">Package Price (GHS)</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="p-3 text-center">1,380</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="p-3 text-center">1,800</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="p-3 text-center">2,100</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="p-3 text-center">1,260</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="p-3 text-center">1,980</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="p-3 text-center">4,260</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="p-3 text-center">1,620</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="p-3 text-center">2,340</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="p-3 text-center">4,260</td>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            
+                            <!-- CATEGORY 1 -->
+                            <tr class="bg-slate-50 font-bold text-slate-900 uppercase text-[10px] tracking-wider">
+                                <td colspan="11" class="p-2.5 px-4 text-pink-700">Core Registration</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Review of product documentation</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Review of product label</td>
+                                <td class="p-3 text-slate-400">1 Label</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">FDA online portal account creation</td>
+                                <td class="p-3 text-slate-400">1 Account</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">FDA online product registration</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">FDA online facility registration</td>
+                                <td class="p-3 text-slate-400">1 Facility</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+
+                            <!-- CATEGORY 2 -->
+                            <tr class="bg-slate-50 font-bold text-slate-900 uppercase text-[10px] tracking-wider">
+                                <td colspan="11" class="p-2.5 px-4 text-pink-700">FDA Submission & Follow Ups</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Sample submission to the FDA</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Application follow ups</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Audit scheduling follow ups</td>
+                                <td class="p-3 text-slate-400">1 Facility</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+
+                            <!-- CATEGORY 3 -->
+                            <tr class="bg-slate-50 font-bold text-slate-900 uppercase text-[10px] tracking-wider">
+                                <td colspan="11" class="p-2.5 px-4 text-pink-700">Laboratory Support</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Lab sample preparation training</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Sample submission to a laboratory</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Laboratory test results follow up</td>
+                                <td class="p-3 text-slate-400">1 Product</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+
+                            <!-- CATEGORY 4 -->
+                            <tr class="bg-slate-50 font-bold text-slate-900 uppercase text-[10px] tracking-wider">
+                                <td colspan="11" class="p-2.5 px-4 text-pink-700">Facility Setup Support</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Facility setup and audit training</td>
+                                <td class="p-3 text-slate-400">1 Facility</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Drafting of forms</td>
+                                <td class="p-3 text-slate-400">10 Forms</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-medium">Drafting of SOPs</td>
+                                <td class="p-3 text-slate-400">10 SOPs</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'renewals'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_no_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'new_with_setup'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</div>
 
 <!-- ===================================== -->
 <!-- Call to Action Section -->
@@ -441,14 +637,14 @@ PFS | Assessment Packages & Pricing
 <section class="py-20 bg-gradient-to-br from-pink-50 via-white to-slate-100 text-center border-t border-slate-200/60">
     <div class="max-w-3xl mx-auto px-6">
         <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Let's Build Something Great Together
+            Need Help Choosing the Right Pathway?
         </h2>
-        <p class="mt-4 text-slate-600 max-w-xl mx-auto leading-relaxed">
-            Connect directly with a compliance team member to discuss your parameters and find the most efficient engagement pathway.
+        <p class="mt-4 text-slate-600 max-w-xl mx-auto leading-relaxed text-sm">
+            Connect directly with a compliance team member to discuss your product specs and determine whether you need a Phase 1 assessment or direct Phase 2 execution.
         </p>
         <div class="mt-8">
-            <a href="https://wa.me/233503386203" target="_blank" rel="noreferrer" class="inline-block px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-lg transition">
-                Contact Us
+            <a href="https://wa.me/233503386203" target="_blank" rel="noreferrer" class="inline-block px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-lg transition text-sm">
+                Speak with our Experts
             </a>
         </div>
     </div>
@@ -464,7 +660,6 @@ PFS | Assessment Packages & Pricing
             ref: "{{ payment.ref }}",
             currency: "GHS",
             callback: function(response) {
-                // Redirect on success to verify payment
                 window.location.href = "{% url 'payments:verify-payment' payment.ref %}";
             },
             onClose: function() {

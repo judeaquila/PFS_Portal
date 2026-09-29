@@ -1,0 +1,48 @@
+{% extends "fda/base_fda.html" %}
+
+{% block title %}Analytics & Metrics | FDA Tracker{% endblock %}
+
+{% block fda_content %}
+<div class="space-y-6">
+  <!-- Key Performance Metrics Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Active Projects</div>
+      <div class="text-3xl font-black text-slate-900 mt-1">{{ total_projects }}</div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Payment Alerts</div>
+      <div class="text-3xl font-black text-amber-600 mt-1">{{ alerts_count }}</div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pending Payment Gates</div>
+      <div class="text-3xl font-black text-rose-600 mt-1">{{ pending_payments_count }}</div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Clearance Gates</div>
+      <div class="text-3xl font-black text-indigo-600 mt-1">{{ payment_gates_count }}</div>
+    </div>
+  </div>
+
+  <!-- Stage Progress Bar Volume Chart -->
+  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+    <h3 class="text-base font-bold text-slate-800 mb-4">Ongoing Activity Distribution Across Stages</h3>
+    <div class="space-y-3">
+      {% for stage in stage_breakdown %}
+        <div>
+          <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+            <span>Stage {{ stage.stage_number }} ({{ stage.stage_percentage }}%): {{ stage.short_stage_name }}</span>
+            <span class="font-bold text-indigo-600">{{ stage.ongoing_count }} active</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div 
+              class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
+              style="width: {% if total_projects > 0 %}{% widthratio stage.ongoing_count total_projects 100 %}{% else %}0{% endif %}%"
+            ></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "dashboards/base_ambassador.html" %}
+
+{% block header_title %}Associate 1 Dashboard | FDA Tracker{% endblock %}
+
+{% block content %}
+  {% include "fda/includes/fda_subnav.html" %}
+  {% block associate_content %}{% endblock %}
+{% endblock %}

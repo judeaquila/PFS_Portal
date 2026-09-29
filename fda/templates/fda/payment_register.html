@@ -1,0 +1,108 @@
+{% extends "fda/base_associate.html" %}
+
+{% block title %}Payment Register & Financial Gates | FDA Tracker{% endblock %}
+
+{% block fda_content %}
+<div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+  <div class="p-4 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+    <div>
+      <h3 class="text-base font-bold text-slate-800">Payment Register Controls</h3>
+      <p class="text-xs text-slate-500">Manage financial clearance gates for stages and client projects</p>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-left text-slate-700">
+      <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 uppercase font-bold text-[11px]">
+        <tr>
+          <th class="p-3">Client</th>
+          <th class="p-3">Scope</th>
+          <th class="p-3">Stage / Activity</th>
+          <th class="p-3">Amount Due</th>
+          <th class="p-3">Amount Paid</th>
+          <th class="p-3">Payment Status</th>
+          <th class="p-3">Date Paid</th>
+          <th class="p-3">Remarks</th>
+          <th class="p-3 text-right">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200">
+        {% for gate in payment_gates %}
+          <tr class="hover:bg-slate-50 transition">
+            <form action="{% url 'fda:update_payment_gate' gate.id %}" method="POST">
+              {% csrf_token %}
+              <td class="p-3 font-bold text-slate-900">
+                {{ gate.tracker.project.client.business_name|default:gate.tracker.project.client.email }}
+              </td>
+              <td class="p-3">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 border text-slate-600">
+                  {{ gate.get_scope_display }}
+                </span>
+              </td>
+              <td class="p-3 font-medium">
+                {% if gate.stage %}
+                  Stage {{ gate.stage.stage_number }}: {{ gate.stage.short_stage_name }}
+                {% else %}
+                  Project Level
+                {% endif %}
+              </td>
+              <td class="p-3 font-bold text-slate-900">
+                GHS {{ gate.amount_due }}
+              </td>
+              <td class="p-3">
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  name="amount_paid" 
+                  value="{{ gate.amount_paid }}" 
+                  class="w-24 px-2 py-1 border border-slate-300 rounded text-xs bg-white font-semibold"
+                />
+              </td>
+              <td class="p-3">
+                <select name="status" class="px-2 py-1 border border-slate-300 rounded text-xs font-bold
+                  {% if gate.status == 'PAID' %}bg-emerald-100 text-emerald-800
+                  {% elif gate.status == 'PENDING' %}bg-rose-100 text-rose-800
+                  {% elif gate.status == 'TO_CONFIRM' %}bg-amber-100 text-amber-800
+                  {% else %}bg-slate-100 text-slate-700{% endif %}"
+                >
+                  {% for k, v in gate_statuses %}
+                    <option value="{{ k }}" {% if gate.status == k %}selected{% endif %}>{{ v }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="p-3">
+                <input 
+                  type="date" 
+                  name="date_paid" 
+                  value="{{ gate.date_paid|date:'Y-m-d' }}" 
+                  class="px-2 py-1 border border-slate-300 rounded text-xs bg-white"
+                />
+              </td>
+              <td class="p-3">
+                <input 
+                  type="text" 
+                  name="remarks" 
+                  value="{{ gate.remarks|default:'' }}" 
+                  class="w-full px-2 py-1 border border-slate-300 rounded text-xs bg-white"
+                  placeholder="Notes..."
+                />
+              </td>
+              <td class="p-3 text-right">
+                <button type="submit" class="px-3 py-1 bg-indigo-600 text-white rounded font-bold hover:bg-indigo-700 transition">
+                  Save
+                </button>
+              </td>
+            </form>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="9" class="p-8 text-center text-slate-400 font-medium">
+              No payment gates recorded.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

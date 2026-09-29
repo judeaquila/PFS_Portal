@@ -23,6 +23,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', include('core.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('fda/', include('fda.urls')),
     path('common/', include('common.urls')),
     path('payments/', include('payments.urls')),
     path('examinations/', include('examinations.urls')),

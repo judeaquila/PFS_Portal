@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FDA Associate Workspace{% endblock %}</title>
+  
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex overflow-hidden">
+
+  <!-- STATIC SIDEBAR -->
+  <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between flex-shrink-0 h-screen sticky top-0 border-r border-slate-800">
+    
+    <!-- Top Section: Brand & Navigation -->
+    <div class="flex flex-col flex-1 overflow-y-auto">
+      
+      <!-- Brand Logo / Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-white text-lg shadow-md flex-shrink-0">
+          F
+        </div>
+        <div class="overflow-hidden">
+          <h1 class="font-extrabold text-sm tracking-tight text-white truncate">FDA Tracker</h1>
+          <span class="text-[10px] font-semibold text-indigo-400 block -mt-0.5">Sequential Handoff</span>
+        </div>
+      </div>
+
+      <!-- Current User Brief Card -->
+      <div class="p-4 mx-3 my-4 bg-slate-800/60 rounded-xl border border-slate-700/50 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-bold text-xs flex-shrink-0">
+          {{ request.user.role|slice:":2" }}
+        </div>
+        <div class="overflow-hidden text-xs">
+          <p class="font-bold text-slate-200 truncate">{{ request.user.get_full_name|default:request.user.email }}</p>
+          <span class="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            {{ request.user.get_role_display|default:request.user.role }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="px-3 space-y-1">
+        <div class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          Workspace Menu
+        </div>
+
+        {% with request.resolver_match.url_name as url_name %}
+
+          <!-- My Workflow Queue (Redirect / Role Dashboard) -->
+          <a href="{% url 'dashboard:redirect-dashboard' %}" 
+             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if 'associate' in url_name or 'dashboard' in url_name %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
+            <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+            <span>My Workflow Queue</span>
+          </a>
+
+          <!-- Master Matrix Sheet -->
+          <a href="{% url 'fda:tracker_list' %}" 
+             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if url_name == 'tracker_list' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
+            <i class="fa-solid fa-table-cells w-4 text-center"></i>
+            <span>Master Matrix</span>
+          </a>
+
+          <!-- Team Tasks Queue -->
+          <a href="{% url 'fda:team_tasks' %}" 
+             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if url_name == 'team_tasks' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
+            <i class="fa-solid fa-list-check w-4 text-center"></i>
+            <span>Team Queue</span>
+          </a>
+
+          <!-- Payment Register (Associate 5 / Admin / Supervisor) -->
+          {% if user.role == 'ASSOCIATE_5' or user.role == 'SUPERVISOR' or user.role == 'SUPER_ADMIN' %}
+          <a href="{% url 'fda:payment_register' %}" 
+             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if url_name == 'payment_register' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-800 hover:text-white{% endif %}">
+            <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
+            <span>Payment Register</span>
+          </a>
+          {% endif %}
+
+        {% endwith %}
+      </nav>
+
+    </div>
+
+    <!-- Bottom Section: Pinned Logout Form -->
+    <div class="p-3 border-t border-slate-800">
+      <form action="{% url 'accounts:logout' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" 
+                class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all">
+          <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+          <span>Sign Out</span>
+        </button>
+      </form>
+    </div>
+
+  </aside>
+
+  <!-- MAIN WORKSPACE CONTENT AREA -->
+  <div class="flex-1 flex flex-col h-screen overflow-y-auto bg-slate-50">
+    
+    <!-- TOP HEADER BAR -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-xs">
+      <div>
+        <h2 class="text-base font-bold text-slate-800">
+          {% block header_title %}FDA Workspace{% endblock %}
+        </h2>
+        <p class="text-xs text-slate-400">Sequential Task Automation Engine</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-500">
+          System Active
+        </span>
+      </div>
+    </header>
+
+    <!-- MAIN PAGE CONTENT -->
+    <main class="p-6 max-w-7xl w-full mx-auto space-y-6 flex-1">
+      {% block associate_content %}{% endblock %}
+    </main>
+
+  </div>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
