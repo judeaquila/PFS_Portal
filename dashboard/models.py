@@ -136,6 +136,22 @@ class ClientDocument(models.Model):
         """Returns True if someone other than the file owner committed the upload."""
         return self.uploaded_by != self.client
 
+    @property
+    def is_supplementary(self):
+        return self.document_type == DocumentType.SUPPLEMENTARY
+
+    @property
+    def is_approved(self):
+        return self.status == DocumentStatus.APPROVED
+
+    @property
+    def is_rejected(self):
+        return self.status == DocumentStatus.REJECTED
+
+    @property
+    def is_pending(self):
+        return self.status == DocumentStatus.PENDING
+
     class Meta:
         constraints = [
             models.UniqueConstraint(

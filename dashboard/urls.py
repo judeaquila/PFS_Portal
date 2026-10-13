@@ -21,6 +21,8 @@ urlpatterns = [
     path('super-admin/users/payments_history/', views.admin_user_payment_history, name='admin-user-payments'),
     path('super-admin/user/payment_requests/', views.admin_create_payment_request, name='admin-create-payment-request'),
     path('super-admin/user/historical_payments/<int:user_id>/', views.admin_add_historical_payment_view, name='admin-add-historical-payment'),
+    path("payments/<int:payment_id>/edit/", views.admin_update_historical_payment_view, name="admin-edit-historical-payment"),
+    path("payments/<int:payment_id>/delete/", views.admin_delete_historical_payment_view, name="admin-delete-historical-payment"),
     path("super-admin/review/client/<int:client_id>/", views.admin_review_client_portfolio, name='admin-review-client'),
 
     path("supervisor/", views.supervisor_dashboard, name="supervisor-dashboard"),

@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'payments',
     'examinations',
     'fda',
+    'maintenance_mode',
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -78,6 +79,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'maintenance_mode.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -179,3 +181,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 1800
 
 SESSION_SAVE_EVERY_REQUEST = True
+
+
+MAINTENANCE_MODE_TEMPLATE = 'maintenance.html'
+
+MAINTENANCE_MODE_IGNORE_SUPERUSER = True

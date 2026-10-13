@@ -318,7 +318,7 @@ def download_sample_question_csv(request):
 # ---------------------------------------------------------------------------------------- #
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_exam_list(request):
     exams = Exam.objects.prefetch_related('questions').all()
 
@@ -329,7 +329,7 @@ def supervisor_exam_list(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_exam_create(request):
     if request.method == 'POST':
         form = ExamForm(request.POST)
@@ -348,7 +348,7 @@ def supervisor_exam_create(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_exam_toggle_lock(request, exam_id):
     """Toggle the lock state of an exam."""
     if request.method == 'POST':
@@ -364,7 +364,7 @@ def supervisor_exam_toggle_lock(request, exam_id):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_question_list(request):
     if request.method == 'POST':
         question_id = request.POST.get('question_id')
@@ -416,7 +416,7 @@ def supervisor_question_list(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_exam_question_list(request, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id)
     questions = exam.questions.select_related('created_by').all().order_by('-created_at')
@@ -429,7 +429,7 @@ def supervisor_exam_question_list(request, exam_id):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_general_question_create(request):
     """Creates a question directly into the global pool without binding to a specific exam."""
     if request.method == 'POST':
@@ -451,7 +451,7 @@ def supervisor_general_question_create(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_question_create(request, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id)
 
@@ -476,7 +476,7 @@ def supervisor_question_create(request, exam_id):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_question_update(request, pk):
     question = get_object_or_404(Question, pk=pk)
     if request.method == 'POST':
@@ -496,7 +496,7 @@ def supervisor_question_update(request, pk):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_question_delete(request, pk):
     question = get_object_or_404(Question, pk=pk)
     if request.method == 'POST':
@@ -509,7 +509,7 @@ def supervisor_question_delete(request, pk):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_question_bulk_upload(request, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id)
 

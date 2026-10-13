@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Maintenance | PFS Connect Portal</title>
+
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                        },
+                    },
+                    boxShadow: {
+                        soft: '0 10px 40px rgba(15,23,42,.08)',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen overflow-hidden flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md px-6 py-3.5 shrink-0">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            
+            <!-- Inactive Brand Header with Image -->
+            <a href="javascript:void(0)" class="flex items-center gap-3 group shrink-0 pointer-events-none cursor-default" aria-disabled="true">
+                
+                <span class="text-xl md:text-2xl font-black text-pink-700 tracking-tight">
+                    PFS Connect Portal
+                </span>
+            </a>
+
+            <!-- Maintenance Status Badge -->
+            <span class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Maintenance Mode
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content Workspace (Fills remaining height) -->
+    <main class="flex-1 flex items-center justify-center p-6 my-auto">
+        <div class="max-w-xl w-full text-center space-y-6">
+            
+            <!-- Animated Visual Graphic -->
+            <div class="relative mx-auto w-20 h-20 flex items-center justify-center">
+                <div class="absolute inset-0 bg-pink-100 rounded-full animate-ping opacity-75"></div>
+                <div class="relative z-10 w-20 h-20 bg-white rounded-2xl shadow-soft border border-pink-100 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-pink-700 animate-spin" style="animation-duration: 9s;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" 
+                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Content Copy -->
+            <div class="space-y-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 border border-pink-200">
+                    Platform Upgrades
+                </span>
+                
+                <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                    We'll Be Back Shortly
+                </h1>
+                
+                <p class="text-slate-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                    We are upgrading the PFS Online Portal in order to serve you better with improved improve document audit speeds and FDA submissions.
+                </p>
+            </div>
+
+            <!-- Maintenance Status Summary Card -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-soft text-left space-y-3">
+                <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    System Maintenance Status
+                </h2>
+                
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                        <span class="text-slate-500 font-medium">Estimated Duration:</span>
+                        <span class="font-bold text-slate-800">~ 45 Minutes</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                        <span class="text-slate-500 font-medium">Document Upload Services:</span>
+                        <span class="font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 text-[11px]">Paused</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call-to-Action Controls -->
+            <div class="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button onclick="window.location.reload();" 
+                        class="w-full sm:w-auto px-5 py-2.5 bg-pink-700 hover:bg-pink-800 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh Portal
+                </button>
+                
+                <a href="mailto:info@pfsgh.com" 
+                   class="w-full sm:w-auto px-5 py-2.5 bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-bold text-xs rounded-xl transition-all flex items-center justify-center">
+                    Contact Support
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-400 font-medium shrink-0">
+        <p>&copy; 2026 Pneuma Food Scientifics (PFS). All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

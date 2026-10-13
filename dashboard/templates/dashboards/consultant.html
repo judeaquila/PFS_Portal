@@ -97,7 +97,7 @@
                     <div class="p-5 flex items-center justify-between hover:bg-slate-50/40 transition gap-4">
                         <div class="space-y-1">
                             <span class="text-[10px] uppercase font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
-                                {% if doc.document_type == 'SUPPLEMENTARY' %}Supplementary{% else %}Mandatory Document{% endif %}
+                                {% if doc.is_supplementary %}Supplementary Document{% else %}Mandatory Document{% endif %}
                             </span>
                             <h4 class="font-bold text-slate-800 text-sm mt-1">
                                 {{ doc.get_display_name }}

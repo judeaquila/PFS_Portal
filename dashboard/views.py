@@ -595,6 +595,57 @@ def admin_add_historical_payment_view(request, user_id):
 
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
+def admin_update_historical_payment_view(request, payment_id):
+    """Update an existing historical payment record."""
+    payment_req = get_object_or_404(PaymentRequest, id=payment_id)
+    target_user = payment_req.user
+
+    if request.method == "POST":
+        form = HistoricalPaymentRequestForm(request.POST, instance=payment_req)
+        if form.is_valid():
+            payment_req = form.save(user=target_user, created_by=request.user)
+            messages.success(
+                request,
+                f"Historical payment for {target_user.get_full_name()} updated successfully."
+            )
+            return redirect("dashboard:admin-user-detail", pk=target_user.pk)
+    else:
+        form = HistoricalPaymentRequestForm(instance=payment_req)
+
+    context = {
+        "form": form,
+        "target_user": target_user,
+        "payment_req": payment_req,
+        "title": f"Edit Historical Payment - {target_user.get_full_name()}"
+    }
+    return render(request, "dashboards/superadmin_add_historical_payment.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_delete_historical_payment_view(request, payment_id):
+    """Delete a historical payment record."""
+    payment_req = get_object_or_404(PaymentRequest, id=payment_id)
+    target_user = payment_req.user
+
+    if request.method == "POST":
+        payment_req.delete()
+        messages.success(
+            request,
+            f"Historical payment record deleted successfully for {target_user.get_full_name()}."
+        )
+        return redirect("dashboard:admin-user-detail", pk=target_user.pk)
+
+    context = {
+        "payment_req": payment_req,
+        "target_user": target_user,
+        "title": f"Confirm Delete Payment - {target_user.get_full_name()}"
+    }
+    return render(request, "dashboards/superadmin_confirm_delete_payment.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
 def admin_client_created_success_view(request):
     """Displays temporary account credentials immediately after manual client creation."""
     client_info = request.session.pop('created_client_info', None)
@@ -838,13 +889,8 @@ def admin_review_client_portfolio(request, client_id):
 # ****************************************************** SUPERVISOR DASHBOARD ************************************************** #
 # ****************************************************************************************************************************** #
 
-
-# List of supervisory administrative roles that can access these views
-SUPERVISORY_ROLES = [UserRole.SUPER_ADMIN, UserRole.SUPERVISOR]
-
-
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_dashboard(request):
     """
     Supervisor operational dashboard.
@@ -925,7 +971,7 @@ def supervisor_dashboard(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_associates(request):
     """Renders directory table managing associates with per-exam performance modal data."""
     
@@ -975,7 +1021,7 @@ def supervisor_associates(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_process_verification(request, profile_id, action):
     """Processes verification assets against explicit design parameters."""
     if request.method == 'POST':
@@ -1004,7 +1050,7 @@ def supervisor_process_verification(request, profile_id, action):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_client_payments(request):
     """
     Allows supervisors to view client transaction records and filter payments.
@@ -1044,7 +1090,7 @@ def supervisor_client_payments(request):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_staff_schedules(request):
     """
     Displays weekly availability schedules for Consultants and Associates.
@@ -1073,7 +1119,7 @@ def supervisor_staff_schedules(request):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_verifications_list(request):
     """
     Lists pending, approved, and declined verifications for Associates and Consultants.
@@ -1089,7 +1135,7 @@ def supervisor_verifications_list(request):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_process_ambassador_verification(request, profile_id, action):
     """
     Approves or declines verification assets submitted by an Associate.
@@ -1117,7 +1163,7 @@ def supervisor_process_ambassador_verification(request, profile_id, action):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_process_consultant_verification(request, profile_id, action):
     """
     Approves or declines verification assets submitted by a Consultant.
@@ -1146,7 +1192,7 @@ def supervisor_process_consultant_verification(request, profile_id, action):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_reassign_associate(request, assignment_id):
     """
     Override and reassign an active or cancelled field associate assignment to another agent.
@@ -1181,7 +1227,7 @@ def supervisor_reassign_associate(request, assignment_id):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_project_oversight(request):
     """
     Read-only global operational overview monitoring all active client project boards
@@ -1216,7 +1262,7 @@ def supervisor_project_oversight(request):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_payout_audit_queue(request):
     """
     Review and audit field assignment completion sign-offs before marking payouts 
@@ -1267,7 +1313,7 @@ def supervisor_payout_audit_queue(request):
 
 
 @login_required
-@role_required(SUPERVISORY_ROLES)
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_staff_activity_logs(request):
     """
     Filtered activity log audit view displaying actions performed by Consultants and Associates.
@@ -1311,7 +1357,7 @@ def supervisor_staff_activity_logs(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_create_client_view(request):
     """Allows Supervisor to manually onboard a client and generate verified payment records."""
     
@@ -1374,7 +1420,7 @@ def supervisor_create_client_view(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_add_historical_payment_view(request, user_id):
     """Log past/historical payments for an existing user account."""
     target_user = get_object_or_404(User, id=user_id)
@@ -1400,7 +1446,7 @@ def supervisor_add_historical_payment_view(request, user_id):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_client_created_success_view(request):
     """Displays temporary account credentials immediately after manual client creation."""
     client_info = request.session.pop('created_client_info', None)
@@ -1417,7 +1463,7 @@ def supervisor_client_created_success_view(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_user_list(request):
     """Lists all clients with search by name/email/phone and filter by role."""
     query = request.GET.get('q', '').strip()
@@ -1445,7 +1491,7 @@ def supervisor_user_list(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_user_detail(request, pk):
     """Shows full account profile including attached profiles, exam history, and payment history."""
     target_user = get_object_or_404(User, pk=pk)
@@ -1476,7 +1522,7 @@ def supervisor_user_detail(request, pk):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 def supervisor_user_update(request, pk):
     """
     Handles updating base User details for regular users.
@@ -1504,7 +1550,7 @@ def supervisor_user_update(request, pk):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
 @require_POST
 def supervisor_user_toggle_active(request, pk):
     """Safely toggles active status to enable/disable user accounts without deleting records."""
@@ -1538,7 +1584,7 @@ def consultant_dashboard(request):
     User = get_user_model()
     consultant = request.user
 
-    # 1. Optimize Client Project Footprint using ORM Annotations
+    # Optimize Client Project Footprint using ORM Annotations
     annotated_projects = ClientProject.objects.filter(
         assigned_consultant=consultant
     ).annotate(
@@ -1546,7 +1592,7 @@ def consultant_dashboard(request):
         completed_activities=Count('activities', filter=Q(activities__activity_status=ActivityStatus.COMPLETED))
     )
 
-    # 2. Derive Progress Metrics on ClientProject
+    # Derive Progress Metrics on ClientProject
     completed_projects_qs = annotated_projects.filter(
         total_activities__gt=0, 
         total_activities=F('completed_activities')
@@ -1561,7 +1607,7 @@ def consultant_dashboard(request):
 
     active_onboarding_count = active_projects_qs.filter(completed_activities=0).count()
 
-    # 3. Step Phase Routing Counts
+    # Step Phase Routing Counts
     facility_phase_count = active_projects_qs.filter(
         activities__activity_name__icontains="Facility",
         activities__activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED, ActivityStatus.CLIENT_TASK]
@@ -1572,13 +1618,13 @@ def consultant_dashboard(request):
         activities__activity_status__in=[ActivityStatus.ONGOING, ActivityStatus.NOT_STARTED, ActivityStatus.CLIENT_TASK]
     ).distinct().count()
 
-    # 4. Strictly scoped Pending Documents Query for the assigned consultant
+    # Strictly scoped Pending Documents Query for the assigned consultant
     pending_assigned_documents = ClientDocument.objects.filter(
         client__projects__assigned_consultant=consultant,
         status=DocumentStatus.PENDING
     ).distinct()
 
-    # 5. Assembled Context Architecture
+    # Assembled Context Architecture
     context = {
         "metrics": {
             "total_clients": User.objects.filter(
@@ -1687,18 +1733,15 @@ def consultant_client_submissions(request):
     Master queue view for PFS consultants.
     Fetches all accounts matching UserRole.USER with database-level pagination.
     """
-    clients_queryset = User.objects.filter(role=UserRole.USER).order_by('-id')
-    
-    required_types = [
-        DocumentType.BUSINESS_CERT,
-        DocumentType.HEALTH_CARD,
-        DocumentType.FACILITY_SKETCH,
-    ]
-    required_count = len(required_types)
+    clients_queryset = (
+        User.objects.filter(role=UserRole.USER)
+        .prefetch_related('documents')
+        .order_by('-id')
+    )
 
-    # 1. Server-Side Pagination Extraction
+    # Server-Side Pagination Extraction
     page = request.GET.get('page', 1)
-    paginator = Paginator(clients_queryset, 10)  # Standardizes on 10 records per page
+    paginator = Paginator(clients_queryset, 10)
 
     try:
         paginated_clients = paginator.page(page)
@@ -1707,9 +1750,13 @@ def consultant_client_submissions(request):
     except EmptyPage:
         paginated_clients = paginator.page(paginator.num_pages)
 
-    # 2. Compile the operational dashboard data matrix
+    # Compile the operational dashboard data matrix
     clients_data = []
     for client in paginated_clients:
+        # Dynamically fetch required types & count per individual client
+        required_types = get_required_document_types(client)
+        required_count = len(required_types)
+
         uploaded_count = client.documents.filter(
             document_type__in=required_types
         ).exclude(file="").count()
@@ -2146,39 +2193,6 @@ def consultant_profile(request):
         'profile': profile,
     }
     return render(request, 'dashboards/consultant_profile.html', context)
-
-
-# @login_required
-# @role_required([UserRole.CONSULTANT])
-# def consultant_submit_verification(request):
-#     """Allows Consultants to upload required assets for verification."""
-#     profile, created = ConsultantProfile.objects.get_or_create(user=request.user)
-    
-#     if request.method == 'POST':
-#         user_form = ConsultantBaseUserForm(request.POST, instance=request.user)
-#         profile_form = ConsultantVerificationForm(request.POST, request.FILES, instance=profile)
-        
-#         if user_form.is_valid() and profile_form.is_valid():
-#             user_form.save()
-#             # Reset validation status back to pending upon resubmission
-#             profile_obj = profile_form.save(commit=False)
-#             profile_obj.verification_status = ConsultantProfile.VerificationStatus.PENDING
-#             profile_obj.save()
-            
-#             messages.success(request, "Verification documentation uploaded successfully for evaluation.")
-#             return redirect('accounts:consultant-dashboard')
-#     else:
-#         user_form = ConsultantBaseUserForm(instance=request.user)
-#         profile_form = ConsultantVerificationForm(instance=profile)
-
-#     context = {
-#         'user_form': user_form,
-#         'profile_form': profile_form,
-#         'profile': profile
-#     }
-        
-#     return render(request, 'dashboards/consultant_profile.html', context)
-
 
 
 # GLOBAL PROJECTS BOARD

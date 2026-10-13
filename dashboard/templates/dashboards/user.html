@@ -50,64 +50,67 @@
     <script>
     function payWithPaystack(reference, amount, email, requestId) {
         let handler = PaystackPop.setup({
-        key: '{{ paystack_public_key }}',
-        email: email,
-        amount: Math.round(parseFloat(amount) * 100), // Convert GHS to Pesewas
-        currency: 'GHS',
-        ref: reference,
-        callback: function(response) {
-            // Redirect to your verification view after payment completion
-            window.location.href = "{% url 'verify_custom_payment' %}?reference=" + response.reference + "&request_id=" + requestId;
-        },
-        onClose: function() {
-            alert('Payment window closed.');
-        }
+            key: '{{ paystack_public_key }}',
+            email: email,
+            amount: Math.round(parseFloat(amount) * 100), // Convert GHS to Pesewas
+            currency: 'GHS',
+            ref: reference,
+            callback: function(response) {
+                window.location.href = "{% url 'verify_custom_payment' %}?reference=" + response.reference + "&request_id=" + requestId;
+            },
+            onClose: function() {
+                alert('Payment window closed.');
+            }
         });
         handler.openIframe();
     }
     </script>
     {% endif %}
 
+    <!-- Guidance Banner -->
     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg flex gap-4 shadow-sm">
         <svg class="w-6 h-6 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
         <div>
             <h3 class="font-bold text-blue-800">Next Step: Upload Required Documents</h3>
-            <p class="text-sm text-blue-600 mt-1">Please note that online portal applications will initiate exactly 7 days after sharing a complete set of documentation below.</p>
+            <p class="text-sm text-blue-600 mt-1">Please upload each document individually below. Online portal applications will initiate exactly 7 days after sharing a complete set of documentation.</p>
         </div>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-dashboard' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        {% csrf_token %}
+    <!-- DOCUMENT UPLOAD CONTAINER -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         
         <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70 flex justify-between items-center">
             <div>
                 <h2 class="font-bold text-lg text-slate-900">Mandatory Initial Documents</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Please provide clean, legible PDF scans, Word documents or image documents.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Please provide clean, legible PDF scans, Word documents or image files.</p>
             </div>
             <span class="text-sm font-bold bg-pink-50 text-pink-700 px-3 py-1 rounded-full border border-pink-100">
                 {{ total_uploaded }} of {{ total_required }} Completed
             </span>
         </div>
         
-        <!-- DOCUMENT UPLOAD LIST -->
+        <!-- INDIVIDUAL DOCUMENT UPLOAD FORMS -->
         <div class="divide-y divide-slate-100">
             {% for doc_key in required_types %}
                 {% with doc=uploaded_dict|get_item:doc_key %}
-                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 transition">
-                    <div class="flex items-start gap-4">
+                <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-dashboard' %}" class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 transition">
+                    {% csrf_token %}
+                    
+                    <div class="flex items-start gap-4 flex-1">
                         {% if doc and doc.file %}
-                            <div class="mt-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
+                            <div class="mt-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
                         {% else %}
-                            <div class="mt-1 w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
+                            <div class="mt-1 w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
                         {% endif %}
+                        
                         <div>
-                            <h4 class="font-bold text-slate-800">
+                            <h4 class="font-bold text-slate-800 text-sm md:text-base">
                                 {{ doc_key|choice_label }}
                             </h4>
-                            <p class="text-sm text-slate-500">
-                                Upload a PDF/Word document or clear image file for {{ doc_key|choice_label }}.
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Upload clean file for {{ doc_key|choice_label }}.
                             </p>
                             
                             {% if doc and doc.file %}
@@ -115,17 +118,27 @@
                                     <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                                         Status: {{ doc.get_status_display }}
                                     </span>
-                                    <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline">Review Document ↗</a>
+                                    <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline flex items-center gap-1">
+                                        <span>Review File</span>
+                                        <span>↗</span>
+                                    </a>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                     
-                    <div class="self-start md:self-center">
-                        <input type="file" name="{{ doc_key }}" id="{{ doc_key }}"
-                               class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 file:cursor-pointer transition">
+                    <!-- Dedicated Upload Input + Button Controls -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                        <input type="file" name="{{ doc_key }}" id="{{ doc_key }}" required
+                               class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 file:cursor-pointer transition">
+                        
+                        <button type="submit" 
+                                class="px-4 py-2 bg-pink-700 hover:bg-pink-800 text-white font-bold text-xs rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            <span>{% if doc and doc.file %}Replace File{% else %}Upload File{% endif %}</span>
+                        </button>
                     </div>
-                </div>
+                </form>
                 {% endwith %}
             {% empty %}
                 <div class="p-6 text-center text-slate-500 text-sm">
@@ -133,94 +146,98 @@
                 </div>
             {% endfor %}
         </div>
+    </div>
 
-        <!-- ASSOCIATE ASSISTANCE REQUEST -->
-        <div class="p-6 bg-slate-50/70 border-t border-slate-200 space-y-4">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        <span>In-Person/Remote Associate Assistance</span>
-                        {% if existing_associate_request %}
-                            <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">
-                                Status: {{ existing_associate_request.get_status_display }}
-                            </span>
-                        {% else %}
-                            <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Optional</span>
-                        {% endif %}
-                    </h3>
-                    <p class="text-xs text-slate-500 mt-1">
-                        Would you like an assigned PFS Associate to assist you in-person or remotely with document uploads and process execution?
-                    </p>
-                </div>
-                
-                <!-- Toggle Checkbox -->
-                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                    <input type="checkbox" name="requires_associate" id="requires_associate" class="sr-only peer" 
-                        {% if existing_associate_request %}checked disabled{% endif %}
-                        onchange="document.getElementById('modality_options').classList.toggle('hidden', !this.checked)">
-                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600 peer-disabled:opacity-60 peer-disabled:cursor-not-allowed"></div>
-                </label>
+    <!-- ASSOCIATE ASSISTANCE REQUEST FORM -->
+    <form method="POST" action="{% url 'dashboard:user-dashboard' %}" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-4">
+        {% csrf_token %}
+        
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <span>In-Person/Remote Associate Assistance</span>
+                    {% if existing_associate_request %}
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">
+                            Status: {{ existing_associate_request.get_status_display }}
+                        </span>
+                    {% else %}
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">Optional</span>
+                    {% endif %}
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Would you like an assigned PFS Associate to assist you in-person or remotely with document uploads and process execution?
+                </p>
             </div>
-
-            <!-- NEW: ASSIGNED ASSOCIATE DISPLAY BANNER -->
-            {% if assignment and assignment.ambassador %}
-                {% with associate=assignment.ambassador %}
-                <div class="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-                            {{ associate.user.first_name|slice:":1"|upper|default:associate.user.email|slice:":1"|upper }}
-                        </div>
-                        <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
-                                Assigned Associate
-                            </span>
-                            <h4 class="text-xs font-bold text-slate-800 mt-1">
-                                {{ associate.user.get_full_name|default:associate.user.email }}
-                            </h4>
-                            <p class="text-[11px] text-slate-500">
-                                Email: <a href="mailto:{{ associate.user.email }}" class="text-pink-600 font-semibold hover:underline">{{ associate.user.email }}</a>
-                                {% if associate.user.phone_number %} | Phone: {{ associate.user.phone_number }}{% endif %}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Optional View Details Link -->
-                    <a href="{% url 'dashboard:assigned-associate-detail' %}" 
-                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition shadow-sm flex items-center gap-1.5 flex-shrink-0">
-                        <span>View Details</span>
-                        <span>→</span>
-                    </a>
-                </div>
-                {% endwith %}
-            {% endif %}
-
-            <!-- Assistance Modality Selection -->
-            <div id="modality_options" class="{% if not existing_associate_request %}hidden{% endif %} pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-pink-300 transition">
-                    <input type="radio" name="associate_modality" value="REMOTE" class="text-pink-600 focus:ring-pink-500" 
-                        {% if existing_associate_request %}{% if existing_associate_request.modality == 'REMOTE' %}checked{% endif %} disabled{% else %}checked{% endif %}>
-                    <div class="ml-3">
-                        <span class="block text-xs font-bold text-slate-800">Remote Assistance</span>
-                        <span class="block text-[11px] text-slate-400">Guidance via phone/video call or email.</span>
-                    </div>
-                </label>
-
-                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-pink-300 transition">
-                    <input type="radio" name="associate_modality" value="IN_PERSON" class="text-pink-600 focus:ring-pink-500"
-                        {% if existing_associate_request.modality == 'IN_PERSON' %}checked{% endif %} {% if existing_associate_request %}disabled{% endif %}>
-                    <div class="ml-3">
-                        <span class="block text-xs font-bold text-slate-800">In-Person Visit</span>
-                        <span class="block text-[11px] text-slate-400">A PFS Associate will visit your facility (You will bear cost of transportation).</span>
-                    </div>
-                </label>
-            </div>
+            
+            <!-- Toggle Checkbox -->
+            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input type="checkbox" name="requires_associate" id="requires_associate" class="sr-only peer" 
+                    {% if existing_associate_request %}checked disabled{% endif %}
+                    onchange="document.getElementById('modality_options').classList.toggle('hidden', !this.checked); document.getElementById('save_associate_btn').classList.toggle('hidden', !this.checked)">
+                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600 peer-disabled:opacity-60 peer-disabled:cursor-not-allowed"></div>
+            </label>
         </div>
 
-        <div class="p-4 bg-slate-100 border-t border-slate-200 flex justify-end">
-            <button type="submit" class="bg-pink-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
-                Upload and Save Documents
+        <!-- ASSIGNED ASSOCIATE DISPLAY BANNER -->
+        {% if assignment and assignment.ambassador %}
+            {% with associate=assignment.ambassador %}
+            <div class="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {{ associate.user.first_name|slice:":1"|upper|default:associate.user.email|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">
+                            Assigned Associate
+                        </span>
+                        <h4 class="text-xs font-bold text-slate-800 mt-1">
+                            {{ associate.user.get_full_name|default:associate.user.email }}
+                        </h4>
+                        <p class="text-[11px] text-slate-500">
+                            Email: <a href="mailto:{{ associate.user.email }}" class="text-pink-600 font-semibold hover:underline">{{ associate.user.email }}</a>
+                            {% if associate.user.phone_number %} | Phone: {{ associate.user.phone_number }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <a href="{% url 'dashboard:assigned-associate-detail' %}" 
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition shadow-sm flex items-center gap-1.5 flex-shrink-0">
+                    <span>View Details</span>
+                    <span>→</span>
+                </a>
+            </div>
+            {% endwith %}
+        {% endif %}
+
+        <!-- Assistance Modality Selection -->
+        <div id="modality_options" class="{% if not existing_associate_request %}hidden{% endif %} pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-pink-300 transition">
+                <input type="radio" name="associate_modality" value="REMOTE" class="text-pink-600 focus:ring-pink-500" 
+                    {% if existing_associate_request %}{% if existing_associate_request.modality == 'REMOTE' %}checked{% endif %} disabled{% else %}checked{% endif %}>
+                <div class="ml-3">
+                    <span class="block text-xs font-bold text-slate-800">Remote Assistance</span>
+                    <span class="block text-[11px] text-slate-400">Guidance via phone/video call or email.</span>
+                </div>
+            </label>
+
+            <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-pink-300 transition">
+                <input type="radio" name="associate_modality" value="IN_PERSON" class="text-pink-600 focus:ring-pink-500"
+                    {% if existing_associate_request.modality == 'IN_PERSON' %}checked{% endif %} {% if existing_associate_request %}disabled{% endif %}>
+                <div class="ml-3">
+                    <span class="block text-xs font-bold text-slate-800">In-Person Visit</span>
+                    <span class="block text-[11px] text-slate-400">A PFS Associate will visit your facility (You will bear cost of transportation).</span>
+                </div>
+            </label>
+        </div>
+
+        {% if not existing_associate_request %}
+        <div id="save_associate_btn" class="hidden pt-2 flex justify-end">
+            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold text-xs hover:bg-indigo-700 transition shadow-sm">
+                Submit Associate Request
             </button>
         </div>
+        {% endif %}
     </form>
+
 </div>
 {% endblock %}
