@@ -74,7 +74,7 @@
         </svg>
         <div>
             <h3 class="font-bold text-blue-800">Next Step: Upload Required Documents</h3>
-            <p class="text-sm text-blue-600 mt-1">Please upload each document individually below. Online portal applications will initiate exactly 7 days after sharing a complete set of documentation.</p>
+            <p class="text-sm text-blue-600 mt-1">Please upload your documents below. You can select multiple files at once for any category. Online portal applications will initiate exactly 7 days after sharing a complete set of documentation.</p>
         </div>
     </div>
 
@@ -94,12 +94,12 @@
         <!-- INDIVIDUAL DOCUMENT UPLOAD FORMS -->
         <div class="divide-y divide-slate-100">
             {% for doc_key in required_types %}
-                {% with doc=uploaded_dict|get_item:doc_key %}
+                {% with doc_list=uploaded_dict|get_item:doc_key %}
                 <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-dashboard' %}" class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/40 transition">
                     {% csrf_token %}
                     
                     <div class="flex items-start gap-4 flex-1">
-                        {% if doc and doc.file %}
+                        {% if doc_list %}
                             <div class="mt-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">✓</div>
                         {% else %}
                             <div class="mt-1 w-6 h-6 rounded-full border-2 border-slate-300 flex-shrink-0"></div>
@@ -110,32 +110,38 @@
                                 {{ doc_key|choice_label }}
                             </h4>
                             <p class="text-xs text-slate-500 mt-0.5">
-                                Upload clean file for {{ doc_key|choice_label }}.
+                                Upload clean files for {{ doc_key|choice_label }}.
                             </p>
                             
-                            {% if doc and doc.file %}
-                                <div class="mt-2 flex items-center gap-3">
-                                    <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                                        Status: {{ doc.get_status_display }}
-                                    </span>
-                                    <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline flex items-center gap-1">
-                                        <span>Review File</span>
-                                        <span>↗</span>
-                                    </a>
+                            <!-- List all uploaded files for this category -->
+                            {% if doc_list %}
+                                <div class="mt-2 space-y-2">
+                                    {% for doc in doc_list %}
+                                        <div class="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-200 p-2 rounded-lg">
+                                            <span class="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                                {{ doc.get_status_display }}
+                                            </span>
+                                            <span class="text-xs text-slate-600 truncate max-w-[200px]">{{ doc.file.name|default:"Uploaded File" }}</span>
+                                            <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline flex items-center gap-1 ml-auto">
+                                                <span>View File</span>
+                                                <span>↗</span>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                     
-                    <!-- Dedicated Upload Input + Button Controls -->
+                    <!-- Dedicated Upload Input + Button Controls (with 'multiple' attribute enabled) -->
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-                        <input type="file" name="{{ doc_key }}" id="{{ doc_key }}" required
+                        <input type="file" name="{{ doc_key }}" id="{{ doc_key }}" multiple {% if not doc_list %}required{% endif %}
                                class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 file:cursor-pointer transition">
                         
                         <button type="submit" 
                                 class="px-4 py-2 bg-pink-700 hover:bg-pink-800 text-white font-bold text-xs rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            <span>{% if doc and doc.file %}Replace File{% else %}Upload File{% endif %}</span>
+                            <span>{% if doc_list %}Add More Files{% else %}Upload File{% endif %}</span>
                         </button>
                     </div>
                 </form>

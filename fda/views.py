@@ -507,22 +507,29 @@ def associate_three_review_client_documents(request, client_id):
 
     active_projects = client.projects.all().order_by("-id")
     
-    # Map existing uploaded documents for lookup
-    uploaded_dict = {
-        doc.document_type: doc for doc in client_docs 
-        if doc.document_type != DocumentType.SUPPLEMENTARY
-    }
+    # Map uploaded documents into a dictionary mapping document types to lists of documents
+    uploaded_dict = {}
+    for doc in client_docs:
+        if str(doc.document_type).upper() != str(DocumentType.SUPPLEMENTARY):
+            key_clean = str(doc.document_type.value if hasattr(doc.document_type, 'value') else doc.document_type).upper()
+            uploaded_dict.setdefault(key_clean, []).append(doc)
     
     # Dynamically resolve mandatory document keys for this specific client
-    required_keys = get_required_document_types(client)
-    doc_choices_dict = dict(DocumentType.choices)
+    required_keys = [dt.value for dt in get_required_document_types(client)] if hasattr(get_required_document_types(client)[0], 'value') else get_required_document_types(client)
+    doc_choices_dict = dict(DocumentType.choices) if hasattr(DocumentType, 'choices') else {}
+
+    def get_label_for_key(raw_key):
+        if raw_key in doc_choices_dict:
+            return doc_choices_dict[raw_key]
+        return str(raw_key).replace('_', ' ').title()
 
     documents_data = []
     for type_key in required_keys:
+        type_key_clean = str(type_key).upper()
         documents_data.append({
-            'type_key': type_key,
-            'type_label': doc_choices_dict.get(type_key, type_key),
-            'doc': uploaded_dict.get(type_key, None)
+            'type_key': type_key_clean,
+            'type_label': get_label_for_key(type_key_clean),
+            'docs': uploaded_dict.get(type_key_clean, [])
         })
 
     # Fetch supplementary documents separately
@@ -556,6 +563,7 @@ def associate_three_document_review_action(request, doc_id):
         if action_type == 'APPROVE':
             document.status = DocumentStatus.APPROVED
             document.rejection_reason = ""
+            document.rejection_file = None  # Clear previous rejection files if approved now
             document.save()
             
             ActivityLog.objects.create(
@@ -567,6 +575,7 @@ def associate_three_document_review_action(request, doc_id):
 
         elif action_type == 'REJECT':
             reason = request.POST.get('rejection_reason', '').strip()
+            rejection_file = request.FILES.get('rejection_file') # Capture uploaded rejection file
             
             if not reason:
                 messages.error(request, f"You must provide a rejection reason to flag '{display_name}' as rejected.")
@@ -574,14 +583,18 @@ def associate_three_document_review_action(request, doc_id):
                 
             document.status = DocumentStatus.REJECTED
             document.rejection_reason = reason
+            
+            if rejection_file:
+                document.rejection_file = rejection_file
+                
             document.save()
             
             ActivityLog.objects.create(
                 user=document.client,
                 category=LogCategory.SYSTEM,
-                description=f"Error flagged on '{display_name}'. Revision requested."
+                description=f"Error flagged on '{display_name}'. Revision requested with notes/attachment."
             )
-            messages.warning(request, f"{display_name} document rejected. Client has been notified with the rejection notes provided.")
+            messages.warning(request, f"{display_name} document rejected. Client has been notified with the rejection notes and attachment provided.")
 
         return redirect('fda:associate-three-review-client-documents', client_id=document.client.id)
         

@@ -120,6 +120,12 @@ class ClientDocument(models.Model):
         default=DocumentStatus.PENDING
     )
     rejection_reason = models.TextField(blank=True, null=True)
+    rejection_file = models.FileField(
+        upload_to="review_attachments/%Y/%m/", 
+        blank=True, 
+        null=True,
+        help_text="Optional file attached by associate/supervisor during rejection or review."
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -128,7 +134,7 @@ class ClientDocument(models.Model):
         on_delete=models.SET_NULL, 
         null=True, 
         related_name='documents_uploaded_by_me',
-        help_text="Tracks the explicit actor (Client vs. Ambassador)."
+        help_text="Tracks the explicit actor (Client vs. Associate)."
     )
 
     @property
@@ -154,11 +160,6 @@ class ClientDocument(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=['client', 'document_type'],
-                condition=~models.Q(document_type=DocumentType.SUPPLEMENTARY),
-                name='unique_core_document_per_client'
-            ),
             models.UniqueConstraint(
                 fields=['client', 'document_type', 'custom_title'],
                 condition=models.Q(document_type=DocumentType.SUPPLEMENTARY),

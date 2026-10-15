@@ -1,134 +1,202 @@
 {% extends 'dashboards/base_user.html' %}
+{% load custom_tags %}
 
-{% block title %}Document Archives | PFS Online Portal{% endblock %}
+{% block title %}Uploaded Business Documents | PFS Connect Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
+<div class="max-w-4xl mx-auto space-y-8" x-data="{ modalImage: null }">
 
     <!-- Header & Summary Metrics -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900">Document Archives</h1>
-            <p class="text-sm text-slate-500 mt-1">Manage, upload, and review compliance documentation for your profile.</p>
+            <h1 class="text-2xl font-bold text-slate-900">Business Documents</h1>
+            <p class="text-sm text-slate-500 mt-1">Manage, upload, and review mandatory and supplementary documents for your business.</p>
         </div>
         <div class="bg-slate-900 text-white px-4 py-2 rounded-xl text-center shadow-sm flex items-center gap-3 self-start md:self-center">
             <span class="text-2xl font-bold text-pink-500">{{ total_uploaded }}</span>
-            <span class="text-xs text-slate-400 text-left leading-tight">Total Files<br><span class="font-semibold text-white">Archived</span></span>
+            <span class="text-xs text-slate-400 text-left leading-tight">Total Files<br><span class="font-semibold text-white">Uploaded</span></span>
         </div>
     </div>
 
-    <!-- Main Documents Form -->
-    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-documents' %}" class="space-y-6">
-        {% csrf_token %}
-
-        <!-- SECTION 1: Active Sector Mandatory Requirements -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70">
-                <h3 class="font-bold text-slate-800 text-base">1. Mandatory Documents</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Mandatory requirements based on your current business sector selection.</p>
-            </div>
-            
-            <div class="divide-y divide-slate-100">
-                {% for item in active_required_documents %}
-                    <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div class="space-y-1">
+    <!-- SECTION 1: Active Sector Mandatory Requirements -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70">
+            <h3 class="font-bold text-slate-800 text-base">1. Mandatory Documents</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Mandatory requirements based on your current business sector selection. Multiple files can be uploaded per category.</p>
+        </div>
+        
+        <div class="divide-y divide-slate-100">
+            {% for item in active_required_documents %}
+                <!-- Separate Form for Each Mandatory Document Field -->
+                <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-documents' %}" class="p-6 space-y-4">
+                    {% csrf_token %}
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="space-y-3 flex-1">
                             <h4 class="font-bold text-slate-800 text-sm">{{ item.label }}</h4>
                             
-                            {% if item.doc and item.doc.file %}
-                                <div class="pt-1 flex items-center gap-2">
-                                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border 
-                                        {% if item.doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
-                                        {% elif item.doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200
-                                        {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
-                                        {{ item.doc.get_status_display|default:item.doc.status }}
-                                    </span>
-                                    <a href="{{ item.doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">
-                                        View File
-                                    </a>
+                            {% if item.docs %}
+                                <div class="space-y-3">
+                                    {% for doc in item.docs %}
+                                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2">
+                                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                                <div class="flex items-center gap-2.5">
+                                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full border 
+                                                        {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                                        {% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200
+                                                        {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                                        {{ doc.get_status_display|default:doc.status }}
+                                                    </span>
+                                                    <span class="text-xs text-slate-600 truncate max-w-[220px]" title="{{ doc.file.name }}">
+                                                        {{ doc.file.name|default:"Uploaded File" }}
+                                                    </span>
+                                                </div>
+
+                                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline flex items-center gap-1">
+                                                    <span>View File</span>
+                                                    <span>↗</span>
+                                                </a>
+                                            </div>
+
+                                            {% if doc.rejection_reason %}
+                                                <div class="text-xs bg-red-50 text-red-700 p-3 rounded-lg border border-red-100 space-y-2">
+                                                    <div>
+                                                        <strong class="font-bold">Reason for Rejection:</strong> {{ doc.rejection_reason }}
+                                                    </div>
+                                                    {% if doc.rejection_file %}
+                                                        <div class="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                                                            <span class="font-medium text-red-800">Review Report:</span>
+                                                            <a href="{{ doc.rejection_file.url }}" target="_blank" class="font-bold text-red-700 hover:underline flex items-center gap-1 bg-white px-2.5 py-1 rounded border border-red-200 shadow-xs">
+                                                                <span>Download Report</span>
+                                                                <span>↗</span>
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+
+                                            <!-- Individual File Preview for Images -->
+                                            {% if doc.file %}
+                                                {% with file_url=doc.file.url|lower %}
+                                                    {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
+                                                        <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-40 flex items-center justify-center cursor-pointer mt-2"
+                                                             @click="modalImage = '{{ doc.file.url }}'">
+                                                            <img src="{{ doc.file.url }}" alt="{{ item.label }}" class="object-cover w-full h-32 group-hover:scale-105 transition duration-200">
+                                                            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
+                                                                Click to Expand Image
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
                                 </div>
-                                {% if item.doc.rejection_reason %}
-                                    <p class="text-xs bg-red-50 text-red-700 p-2 rounded border border-red-100 mt-2 font-medium">
-                                        <strong>Reason:</strong> {{ item.doc.rejection_reason }}
-                                    </p>
-                                {% endif %}
                             {% else %}
-                                <span class="text-xs text-amber-600 font-medium">Pending Upload</span>
+                                <span class="text-xs text-amber-600 font-medium block">Pending Upload</span>
                             {% endif %}
                         </div>
 
-                        <div>
-                            {% if not item.doc or item.doc.status != 'APPROVED' %}
-                                <input type="file" name="{{ item.key }}" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
-                            {% else %}
-                                <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">
-                                    Verified Document
-                                </span>
-                            {% endif %}
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                            <input type="file" name="{{ item.key }}" multiple class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                            <button type="submit" class="bg-pink-700 hover:bg-pink-800 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm whitespace-nowrap">
+                                Upload File
+                            </button>
                         </div>
                     </div>
-                {% empty %}
-                    <div class="p-6 text-center text-slate-400 text-xs">No mandatory documents defined for your sector profile.</div>
-                {% endfor %}
-            </div>
+                </form>
+            {% empty %}
+                <div class="p-6 text-center text-slate-400 text-xs">No mandatory documents defined for your sector profile.</div>
+            {% endfor %}
         </div>
+    </div>
 
-        <!-- SECTION 2: Additional Uploaded Files -->
-        {% if other_uploaded_documents %}
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70">
-                <h3 class="font-bold text-slate-800 text-base">2. Additional Uploaded Archived Documents</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Other documents you have uploaded.</p>
-            </div>
-            
-            <div class="divide-y divide-slate-100">
-                {% for item in other_uploaded_documents %}
-                    <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-slate-800 text-sm">{{ item.label }}</h4>
-                            </div>
+    <!-- SECTION 2: Additional Uploaded Files -->
+    {% if other_uploaded_documents %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="border-b border-slate-200 px-6 py-4 bg-slate-50/70">
+            <h3 class="font-bold text-slate-800 text-base">2. Additional Uploaded Archived Documents</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Other documents you have uploaded.</p>
+        </div>
+        
+        <div class="divide-y divide-slate-100">
+            {% for item in other_uploaded_documents %}
+                <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:user-documents' %}" class="p-6 space-y-4 bg-slate-50/30">
+                    {% csrf_token %}
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="space-y-3 flex-1">
+                            <h4 class="font-bold text-slate-800 text-sm">{{ item.label }}</h4>
                             
-                            {% if item.doc and item.doc.file %}
-                                <div class="pt-1 flex items-center gap-2">
-                                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border 
-                                        {% if item.doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
-                                        {% elif item.doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200
-                                        {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
-                                        {{ item.doc.get_status_display|default:item.doc.status }}
-                                    </span>
-                                    <a href="{{ item.doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline">
-                                        View File
-                                    </a>
+                            {% if item.docs %}
+                                <div class="space-y-3">
+                                    {% for doc in item.docs %}
+                                        <div class="bg-white border border-slate-200 p-3 rounded-xl space-y-2">
+                                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                                <div class="flex items-center gap-2.5">
+                                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full border 
+                                                        {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                                        {% elif doc.status == 'REJECTED' %}bg-red-50 text-red-700 border-red-200
+                                                        {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                                        {{ doc.get_status_display|default:doc.status }}
+                                                    </span>
+                                                    <span class="text-xs text-slate-600 truncate max-w-[220px]" title="{{ doc.file.name }}">
+                                                        {{ doc.file.name|default:"Uploaded File" }}
+                                                    </span>
+                                                </div>
+
+                                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline flex items-center gap-1">
+                                                    <span>View File</span>
+                                                    <span>↗</span>
+                                                </a>
+                                            </div>
+
+                                            {% if doc.rejection_reason %}
+                                                <div class="text-xs bg-red-50 text-red-700 p-3 rounded-lg border border-red-100 space-y-2">
+                                                    <div>
+                                                        <strong class="font-bold">Reason for Rejection:</strong> {{ doc.rejection_reason }}
+                                                    </div>
+                                                    {% if doc.rejection_file %}
+                                                        <div class="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                                                            <span class="font-medium text-red-800">Reviewer Attachment / Markup:</span>
+                                                            <a href="{{ doc.rejection_file.url }}" target="_blank" class="font-bold text-red-700 hover:underline flex items-center gap-1 bg-white px-2.5 py-1 rounded border border-red-200 shadow-xs">
+                                                                <span>Download Feedback File</span>
+                                                                <span>↗</span>
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+
+                                            {% if doc.file %}
+                                                {% with file_url=doc.file.url|lower %}
+                                                    {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
+                                                        <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-40 flex items-center justify-center cursor-pointer mt-2"
+                                                             @click="modalImage = '{{ doc.file.url }}'">
+                                                            <img src="{{ doc.file.url }}" alt="{{ item.label }}" class="object-cover w-full h-32 group-hover:scale-105 transition duration-200">
+                                                            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
+                                                                Click to Expand Image
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
                                 </div>
-                                {% if item.doc.rejection_reason %}
-                                    <p class="text-xs bg-red-50 text-red-700 p-2 rounded border border-red-100 mt-2 font-medium">
-                                        <strong>Reason:</strong> {{ item.doc.rejection_reason }}
-                                    </p>
-                                {% endif %}
                             {% endif %}
                         </div>
 
-                        <div>
-                            {% if item.doc.status != 'APPROVED' %}
-                                <input type="file" name="{{ item.key }}" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
-                            {% else %}
-                                <span class="text-xs text-emerald-600 font-bold bg-emerald-50/60 px-3 py-2 rounded-lg border border-emerald-100">
-                                    Verified Document
-                                </span>
-                            {% endif %}
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                            <input type="file" name="{{ item.key }}" multiple class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                            <button type="submit" class="bg-pink-700 hover:bg-pink-800 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm whitespace-nowrap">
+                                Upload File
+                            </button>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
+                </form>
+            {% endfor %}
         </div>
-        {% endif %}
-
-        <div class="flex justify-end">
-            <button type="submit" class="w-full sm:w-auto bg-pink-700 text-white px-8 py-3 rounded-lg font-bold text-sm hover:bg-pink-800 transition shadow-md">
-                Upload Documents
-            </button>
-        </div>
-    </form>
+    </div>
+    {% endif %}
 
     <!-- SECTION 3: Supplementary & External Request Assets -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
@@ -149,10 +217,10 @@
             </button>
         </form>
 
-        <div class="space-y-3">
+        <div class="space-y-4">
             {% for doc in supplementary_documents %}
-                <div class="space-y-2">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-slate-100 rounded-xl bg-white shadow-sm gap-4">
+                <div class="space-y-3 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="space-y-1">
                             <h4 class="text-sm font-bold text-slate-800">{{ doc.custom_title }}</h4>
                             <div class="flex items-center gap-2 pt-0.5">
@@ -165,38 +233,71 @@
                                 
                                 {% if doc.file %}
                                     <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-700 hover:underline flex items-center gap-0.5">
-                                        View Document
+                                        View Document &nearrow;
                                     </a>
                                 {% endif %}
                             </div>
                         </div>
                         
                         <div>
-                            {% if doc.status != 'APPROVED' %}
-                                <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:upload-asset' doc_id=doc.id %}" class="flex items-center gap-2">
-                                    {% csrf_token %}
-                                    <input type="file" name="attached_file" required class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
-                                    <button type="submit" class="bg-pink-700 hover:bg-pink-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
-                                        {% if doc.file %}Re-upload{% else %}Upload{% endif %}
-                                    </button>
-                                </form>
-                            {% else %}
-                                <span class="text-xs text-emerald-600 font-bold flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm">
-                                    Verified Document
-                                </span>
-                            {% endif %}
+                            <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:upload-asset' doc_id=doc.id %}" class="flex items-center gap-2">
+                                {% csrf_token %}
+                                <input type="file" name="attached_file" required class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer">
+                                <button type="submit" class="bg-pink-700 hover:bg-pink-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+                                    {% if doc.file %}Re-upload{% else %}Upload{% endif %}
+                                </button>
+                            </form>
                         </div>
                     </div>
 
+                    {% if doc.file %}
+                        {% with file_url=doc.file.url|lower %}
+                            {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
+                                <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-40 flex items-center justify-center cursor-pointer mt-2"
+                                     @click="modalImage = '{{ doc.file.url }}'">
+                                    <img src="{{ doc.file.url }}" alt="{{ doc.custom_title }}" class="object-cover w-full h-32 group-hover:scale-105 transition duration-200">
+                                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
+                                        Click to Expand Image
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
                     {% if doc.status == 'REJECTED' and doc.rejection_reason %}
-                        <div class="text-xs bg-red-50 text-red-700 px-4 py-2.5 rounded-xl border border-red-100 ml-2 font-medium">
-                            <strong>Reason for Rejection:</strong> {{ doc.rejection_reason }}
+                        <div class="text-xs bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 space-y-2">
+                            <div>
+                                <strong class="font-bold">Reason for Rejection:</strong> {{ doc.rejection_reason }}
+                            </div>
+                            {% if doc.rejection_file %}
+                                <div class="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                                    <span class="font-medium text-red-800">Reviewer Attachment / Markup:</span>
+                                    <a href="{{ doc.rejection_file.url }}" target="_blank" class="font-bold text-red-700 hover:underline flex items-center gap-1 bg-white px-2.5 py-1 rounded border border-red-200 shadow-xs">
+                                        <span>Download Feedback File</span>
+                                        <span>↗</span>
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
             {% empty %}
                 <p class="text-xs text-slate-400 italic text-center py-4">No supplementary documents currently included to this profile.</p>
             {% endfor %}
+        </div>
+    </div>
+
+    <!-- Image Lightbox Modal -->
+    <div x-show="modalImage" 
+         class="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-xs flex items-center justify-center p-4"
+         style="display: none;"
+         @keydown.escape.window="modalImage = null">
+        
+        <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center" @click.away="modalImage = null">
+            <button type="button" @click="modalImage = null" class="absolute -top-10 right-0 text-white hover:text-slate-300 font-bold text-sm flex items-center gap-1">
+                Close (ESC) &times;
+            </button>
+            <img :src="modalImage" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain bg-black">
         </div>
     </div>
 

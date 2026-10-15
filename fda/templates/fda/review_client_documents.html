@@ -105,14 +105,10 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         
                         <div class="px-6 py-3 border-b border-slate-100 bg-slate-50/60 flex justify-between items-center">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Document: {{ item.type_label }}</span>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Document Slot: {{ item.type_label }}</span>
                             
-                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border 
-                                {% if item.doc.is_approved %}bg-emerald-50 text-emerald-700 border-emerald-200
-                                {% elif item.doc.is_rejected %}bg-red-50 text-red-700 border-red-200
-                                {% elif item.doc %}bg-amber-50 text-amber-700 border-amber-200
-                                {% else %}bg-slate-100 text-slate-500 border-slate-200{% endif %}">
-                                {% if item.doc %}{{ item.doc.get_status_display }}{% else %}Awaiting Initial Upload{% endif %}
+                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200">
+                                {{ item.docs|length }} File(s) Uploaded
                             </span>
                         </div>
 
@@ -121,91 +117,128 @@
                                 <h4 class="font-bold text-slate-800 text-base">{{ item.type_label }}</h4>
                             </div>
 
-                            {% if item.doc %}
-                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 font-medium">
-                                        <div>
-                                            Submitted: <span class="font-bold text-slate-700">{{ item.doc.uploaded_at|timesince }} ago</span> 
-                                            <span class="text-slate-400 font-normal ml-1">({{ item.doc.uploaded_at|date:"M d, Y @ H:i" }})</span>
-                                        </div>
-                                        <a href="{{ item.doc.file.url }}" target="_blank" class="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
-                                            Open Document &nearrow;
-                                        </a>
-                                    </div>
+                            {% if item.docs %}
+                                <div class="space-y-6">
+                                    {% for doc in item.docs %}
+                                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                                            
+                                            <!-- Sub-header for individual uploaded file instance -->
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border 
+                                                        {% if doc.is_approved %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                                        {% elif doc.is_rejected %}bg-red-50 text-red-700 border-red-200
+                                                        {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                                        {{ doc.get_status_display }}
+                                                    </span>
+                                                    <span class="text-xs font-mono text-slate-500 truncate max-w-[200px]" title="{{ doc.file.name }}">
+                                                        {{ doc.file.name|default:"File" }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-slate-500 font-medium">
+                                                    Submitted <span class="font-bold text-slate-700">{{ doc.uploaded_at|timesince }} ago</span>
+                                                </div>
+                                            </div>
 
-                                    <!-- PREVIEW ENGINE: IMAGES ONLY -->
-                                    {% with file_url=item.doc.file.url|lower %}
-                                        {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
-                                            <div class="mt-2">
-                                                <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-60 flex items-center justify-center cursor-pointer"
-                                                     @click="modalImage = '{{ item.doc.file.url }}'">
-                                                    <img src="{{ item.doc.file.url }}" alt="{{ item.type_label }}" class="object-cover w-full h-48 group-hover:scale-105 transition duration-200">
-                                                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                                                        Click to Expand Image
+                                            <div class="flex justify-between items-center text-xs">
+                                                <a href="{{ doc.file.url }}" target="_blank" class="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
+                                                    Open Document &nearrow;
+                                                </a>
+                                            </div>
+
+                                            <!-- PREVIEW ENGINE: IMAGES ONLY -->
+                                            {% with file_url=doc.file.url|lower %}
+                                                {% if '.jpg' in file_url or '.jpeg' in file_url or '.png' in file_url or '.webp' in file_url %}
+                                                    <div class="mt-2">
+                                                        <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 max-h-60 flex items-center justify-center cursor-pointer"
+                                                             @click="modalImage = '{{ doc.file.url }}'">
+                                                            <img src="{{ doc.file.url }}" alt="{{ item.type_label }}" class="object-cover w-full h-48 group-hover:scale-105 transition duration-200">
+                                                            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white font-bold text-xs gap-1.5">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                                                                Click to Expand Image
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            <div class="mt-2 p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
-                                                <div class="p-2 bg-slate-100 text-slate-500 rounded-md">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <div class="text-xs">
-                                                    <span class="font-bold text-slate-700 block">File Attached</span>
-                                                    <span class="text-slate-400">Click "Open Document" above to view or download.</span>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
-                                </div>
+                                                {% else %}
+                                                    <div class="mt-2 p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
+                                                        <div class="p-2 bg-slate-100 text-slate-500 rounded-md">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                                        </div>
+                                                        <div class="text-xs">
+                                                            <span class="font-bold text-slate-700 block">File Attached</span>
+                                                            <span class="text-slate-400">Click "Open Document" above to view or download.</span>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endwith %}
 
-                                <!-- Action Controls -->
-                                <div class="space-y-4 pt-2" x-data="{ rejectOpen: {% if item.doc.is_rejected %}true{% else %}false{% endif %} }">
-                                    {% if item.doc.is_approved %}
-                                        <div class="flex items-center gap-2.5 bg-emerald-50/60 p-4 rounded-xl border border-emerald-100 text-emerald-800 text-xs font-medium">
-                                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                            <span>This document is officially approved and has been locked. No further modifications can be made.</span>
-                                        </div>
-                                    {% else %}
-                                        <div class="flex items-center gap-2">
-                                            <form method="POST" action="{% url 'fda:associate-three-document-review-action' item.doc.id %}">
-                                                {% csrf_token %}
-                                                <button type="submit" name="action_type" value="APPROVE" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
-                                                    Approve Document
-                                                </button>
-                                            </form>
-                                            <button type="button" @click="rejectOpen = !rejectOpen" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
-                                                Reject Document
-                                            </button>
-                                        </div>
+                                            <!-- Action Controls Per Document -->
+                                            <div class="space-y-4 pt-2 border-t border-slate-200/60" x-data="{ rejectOpen: {% if doc.is_rejected %}true{% else %}false{% endif %} }">
+                                                {% if doc.is_approved %}
+                                                    <div class="flex items-center gap-2.5 bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 text-emerald-800 text-xs font-medium">
+                                                        <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                                        <span>This document is officially approved and locked.</span>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="flex items-center gap-2">
+                                                        <form method="POST" action="{% url 'fda:associate-three-document-review-action' doc.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" name="action_type" value="APPROVE" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition">
+                                                                Approve File
+                                                            </button>
+                                                        </form>
+                                                        <button type="button" @click="rejectOpen = !rejectOpen" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition">
+                                                            Reject File
+                                                        </button>
+                                                    </div>
 
-                                        <div x-show="rejectOpen" x-transition class="pt-1" style="display: none;">
-                                            <form method="POST" action="{% url 'fda:associate-three-document-review-action' item.doc.id %}" class="space-y-2">
-                                                {% csrf_token %}
-                                                <label class="block text-xs font-bold text-red-700">Provide Explanation for Document Rejection:</label>
-                                                <textarea name="rejection_reason" placeholder="State exactly why this scan is invalid..." rows="3"
-                                                          class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 transition">{{ item.doc.rejection_reason }}</textarea>
-                                                <button type="submit" name="action_type" value="REJECT" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm">
-                                                    Submit Rejection Notes
-                                                </button>
-                                            </form>
+                                                    <div x-show="rejectOpen" x-transition class="pt-1" style="display: none;">
+                                                        <form method="POST" enctype="multipart/form-data" action="{% url 'fda:associate-three-document-review-action' doc.id %}" class="space-y-3">
+                                                            {% csrf_token %}
+                                                            <div>
+                                                                <label class="block text-xs font-bold text-red-700 mb-1">Provide Explanation for Rejection:</label>
+                                                                <textarea name="rejection_reason" placeholder="State why this specific file scan is invalid..." rows="2"
+                                                                          class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 transition">{{ doc.rejection_reason }}</textarea>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Attach Feedback / Report (Optional):</label>
+                                                                <input type="file" name="rejection_file" class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer">
+                                                            </div>
+                                                            <button type="submit" name="action_type" value="REJECT" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm">
+                                                                Submit Rejection Notes & File
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if doc.rejection_reason and doc.is_rejected %}
+                                                <div class="text-xs bg-red-50 border border-red-100 rounded-xl p-3 text-red-800 font-medium space-y-2">
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                        <div>
+                                                            <strong class="font-bold">Rejection Notes:</strong> 
+                                                            <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ doc.rejection_reason }}</p>
+                                                        </div>
+                                                    </div>
+                                                    {% if doc.rejection_file %}
+                                                        <div class="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                                                            <span class="font-medium text-red-800">Attached Report:</span>
+                                                            <a href="{{ doc.rejection_file.url }}" target="_blank" class="font-bold text-red-700 hover:underline flex items-center gap-1 bg-white px-2.5 py-1 rounded border border-red-200 shadow-xs">
+                                                                <span>Download Report</span>
+                                                                <span>↗</span>
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+
                                         </div>
-                                    {% endif %}
+                                    {% endfor %}
                                 </div>
-                                
-                                {% if item.doc.rejection_reason and item.doc.is_rejected %}
-                                    <div class="text-xs bg-red-50 border border-red-100 rounded-xl p-4 text-red-800 mt-2 font-medium flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                        <div>
-                                            <strong class="font-bold">Rejection Notes:</strong> 
-                                            <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ item.doc.rejection_reason }}</p>
-                                        </div>
-                                    </div>
-                                {% endif %}
                             {% else %}
                                 <div class="text-xs text-slate-400 font-medium italic border border-dashed border-slate-200 rounded-xl p-5 bg-slate-50/40 text-center">
-                                    No document uploaded for this requirement yet.
+                                    No documents uploaded for this requirement yet.
                                 </div>
                             {% endif %}
                         </div>
@@ -300,13 +333,19 @@
                                         </div>
 
                                         <div x-show="rejectOpen" x-transition class="pt-1" style="display: none;">
-                                            <form method="POST" action="{% url 'fda:associate-three-document-review-action' doc.id %}" class="space-y-2">
+                                            <form method="POST" enctype="multipart/form-data" action="{% url 'fda:associate-three-document-review-action' doc.id %}" class="space-y-3">
                                                 {% csrf_token %}
-                                                <label class="block text-xs font-bold text-red-700">Provide Explanation for Document Rejection:</label>
-                                                <textarea name="rejection_reason" placeholder="State exactly why this scan is invalid..." rows="3"
-                                                          class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 transition">{{ doc.rejection_reason }}</textarea>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-red-700 mb-1">Provide Explanation for Document Rejection:</label>
+                                                    <textarea name="rejection_reason" placeholder="State exactly why this scan is invalid..." rows="3"
+                                                              class="w-full text-xs p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 transition">{{ doc.rejection_reason }}</textarea>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Attach Feedback / Markup File (Optional):</label>
+                                                    <input type="file" name="rejection_file" class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer">
+                                                </div>
                                                 <button type="submit" name="action_type" value="REJECT" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm">
-                                                    Submit Rejection Notes
+                                                    Submit Rejection Notes & File
                                                 </button>
                                             </form>
                                         </div>
@@ -314,12 +353,23 @@
                                 </div>
 
                                 {% if doc.rejection_reason and doc.is_rejected %}
-                                    <div class="text-xs bg-red-50 border border-red-100 rounded-xl p-4 text-red-800 mt-2 font-medium flex items-start gap-2">
-                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                        <div>
-                                            <strong class="font-bold">Rejection Notes:</strong> 
-                                            <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ doc.rejection_reason }}</p>
+                                    <div class="text-xs bg-red-50 border border-red-100 rounded-xl p-4 text-red-800 mt-2 font-medium space-y-2">
+                                        <div class="flex items-start gap-2">
+                                            <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            <div>
+                                                <strong class="font-bold">Rejection Notes:</strong> 
+                                                <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ doc.rejection_reason }}</p>
+                                            </div>
                                         </div>
+                                        {% if doc.rejection_file %}
+                                            <div class="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                                                <span class="font-medium text-red-800">Attached Feedback File:</span>
+                                                <a href="{{ doc.rejection_file.url }}" target="_blank" class="font-bold text-red-700 hover:underline flex items-center gap-1 bg-white px-2.5 py-1 rounded border border-red-200 shadow-xs">
+                                                    <span>Download Feedback File</span>
+                                                    <span>↗</span>
+                                                </a>
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 {% endif %}
                             {% else %}

@@ -1,9 +1,9 @@
 from dashboard.models import DocumentType, ProductCategory
 
-def get_required_document_types(user):
+def get_required_document_types(user, is_initial=False):
     """
     Returns a list of DocumentType choices mandatory for the given user 
-    based on their business sector.
+    based on their business sector and registration stage.
     """
     # Base mandatory documents for ALL users
     required = [
@@ -37,13 +37,16 @@ def get_required_document_types(user):
 
     # Sector-specific logic
     if sector_str in [food_val, pharma_val, herbal_val]:
-        required.extend([
-            DocumentType.HEALTH_CARD,
-            DocumentType.LAB_RESULTS,
-        ])
+        if not is_initial:
+            required.extend([
+                DocumentType.HEALTH_CARD,
+                DocumentType.LAB_RESULTS,
+            ])
     elif sector_str == food_service_val:
+        if not is_initial:
+            required.append(DocumentType.HEALTH_CARD)
+        
         required.extend([
-            DocumentType.HEALTH_CARD,
             DocumentType.MENU,
             DocumentType.RECIPE_STEPS,
         ])

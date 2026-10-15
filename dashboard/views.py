@@ -2616,21 +2616,20 @@ def user_dashboard(request):
     if request.method == 'POST':
         files_saved = 0
         
-        # Process File Uploads
+        # Process File Uploads (Supports multiple files per document type)
         for doc_key in required_types:
             if doc_key in request.FILES:
-                uploaded_file = request.FILES[doc_key]
+                uploaded_files = request.FILES.getlist(doc_key)
                 
-                ClientDocument.objects.update_or_create(
-                    client=request.user,
-                    document_type=doc_key,
-                    defaults={
-                        'file': uploaded_file,
-                        'status': DocumentStatus.PENDING,
-                        'uploaded_by': request.user
-                    }
-                )
-                files_saved += 1
+                for uploaded_file in uploaded_files:
+                    ClientDocument.objects.create(
+                        client=request.user,
+                        document_type=doc_key,
+                        file=uploaded_file,
+                        status=DocumentStatus.PENDING,
+                        uploaded_by=request.user
+                    )
+                    files_saved += 1
 
         # Process Associate Assistance Request
         requires_associate = request.POST.get('requires_associate') == 'on'
@@ -2669,13 +2668,19 @@ def user_dashboard(request):
 
     # --- EVALUATE & RENDER CURRENT VIEW STATE ---
     client_docs = request.user.documents.all()
-    uploaded_dict = {doc.document_type: doc for doc in client_docs}
+    
+    # Since a category can now have multiple files, map a list of documents or the latest set if needed, 
+    # or keep a dictionary mapping document_type to its collection of uploads.
+    uploaded_dict = {}
+    for doc in client_docs:
+        uploaded_dict.setdefault(doc.document_type, []).append(doc)
     
     total_required = len(required_types)
+    # Count how many required categories have at least one valid uploaded document
     total_uploaded = client_docs.filter(
         document_type__in=required_types,
         status__in=[DocumentStatus.PENDING, DocumentStatus.APPROVED]
-    ).exclude(file="").count()
+    ).exclude(file="").values('document_type').distinct().count()
     
     active_projects = request.user.projects.all()
 
@@ -2859,25 +2864,18 @@ def user_documents_vault(request):
     Manages explicit standalone updates for baseline FDA document types.
     Supports sector switching by maintaining visibility for non-mandatory uploaded assets.
     """
-    # Fetch current sector's required document types
     required_doc_types = get_required_document_types(request.user)
+    required_keys = [dt.value for dt in required_doc_types]
 
-    # Convert required doc types into clean upper-case string keys
-    required_keys = [
-        dt.value for dt in required_doc_types
-    ]
-
-    # Fetch all client documents
     client_docs = request.user.documents.all()
 
-    # Map uploaded non-supplementary documents into a lookup dictionary
-    uploaded_dict = {
-        str(doc.document_type.value if hasattr(doc.document_type, 'value') else doc.document_type).upper(): doc
-        for doc in client_docs
-        if str(doc.document_type).upper() != DocumentType.SUPPLEMENTARY
-    }
+    # Map uploaded non-supplementary documents into a dictionary mapping keys to lists of documents
+    uploaded_dict = {}
+    for doc in client_docs:
+        if str(doc.document_type).upper() != DocumentType.SUPPLEMENTARY:
+            key_clean = str(doc.document_type.value if hasattr(doc.document_type, 'value') else doc.document_type).upper()
+            uploaded_dict.setdefault(key_clean, []).append(doc)
 
-    # Helper function to extract human-readable labels
     def get_label_for_key(raw_key):
         if hasattr(DocumentType, 'choices'):
             choices_dict = dict(DocumentType.choices)
@@ -2885,47 +2883,43 @@ def user_documents_vault(request):
                 return choices_dict[raw_key]
         return raw_key.replace('_', ' ').title()
 
-    # Handle Document Upload POST Requests
     if request.method == 'POST':
         saved_count = 0
 
-        # Process any uploaded file key present in request.FILES
-        for doc_key, uploaded_file in request.FILES.items():
+        # Iterate through keys in request.FILES to handle multiple file inputs
+        for doc_key in request.FILES:
             if doc_key == 'attached_file':  # Skip supplementary form input
                 continue
 
             doc_key_clean = str(doc_key).upper()
-            existing_doc = uploaded_dict.get(doc_key_clean)
+            uploaded_files = request.FILES.getlist(doc_key)
 
-            # Block editing if document is already approved
-            if existing_doc and existing_doc.status == DocumentStatus.APPROVED:
-                doc_label = existing_doc.get_document_type_display() if hasattr(existing_doc, 'get_document_type_display') else doc_key_clean
+            # Check if any existing document in this category is approved (optional protection)
+            existing_docs = uploaded_dict.get(doc_key_clean, [])
+            if any(d.status == DocumentStatus.APPROVED for d in existing_docs):
+                doc_label = get_label_for_key(doc_key_clean)
                 messages.error(
                     request, 
-                    f"Modifications blocked: Your {doc_label} is already approved and cannot be altered."
+                    f"Modifications blocked: Your {doc_label} contains an approved document and cannot be altered."
                 )
                 return redirect('dashboard:user-documents')
 
-            # Create or update document asset
-            doc, created = ClientDocument.objects.update_or_create(
-                client=request.user,
-                document_type=doc_key_clean,
-                defaults={
-                    'file': uploaded_file,
-                    'status': DocumentStatus.PENDING,
-                    'uploaded_by': request.user
-                }
-            )
-            saved_count += 1
+            for uploaded_file in uploaded_files:
+                doc = ClientDocument.objects.create(
+                    client=request.user,
+                    document_type=doc_key_clean,
+                    file=uploaded_file,
+                    status=DocumentStatus.PENDING,
+                    uploaded_by=request.user
+                )
+                saved_count += 1
 
-            doc_label = doc.get_document_type_display() if hasattr(doc, 'get_document_type_display') else doc_key_clean
-            action = "Submitted initial draft of" if created else "Uploaded a new version of"
-            
-            create_activity_log(
-                user=request.user,
-                category=LogCategory.DOCUMENT,
-                description=f"{action} {doc_label}."
-            )
+                doc_label = doc.get_document_type_display() if hasattr(doc, 'get_document_type_display') else doc_key_clean
+                create_activity_log(
+                    user=request.user,
+                    category=LogCategory.DOCUMENT,
+                    description=f"Uploaded a new version of {doc_label}."
+                )
 
         if saved_count > 0:
             messages.success(
@@ -2935,29 +2929,25 @@ def user_documents_vault(request):
         return redirect('dashboard:user-documents')
 
     # Categorize Documents for Rendering
-    
-    # Active Sector Required Documents
     active_required_documents = []
     for raw_key in required_keys:
         active_required_documents.append({
             'key': raw_key,
             'label': get_label_for_key(raw_key),
-            'doc': uploaded_dict.get(raw_key),
+            'docs': uploaded_dict.get(raw_key, []),
             'is_required': True
         })
 
-    # Other Uploaded Documents (Uploaded files NOT in the current sector's required list)
     other_uploaded_documents = []
-    for key_str, doc in uploaded_dict.items():
-        if key_str not in required_keys and doc.file:
+    for key_str, docs in uploaded_dict.items():
+        if key_str not in required_keys and any(d.file for d in docs):
             other_uploaded_documents.append({
                 'key': key_str,
-                'label': doc.get_document_type_display() if hasattr(doc, 'get_document_type_display') else get_label_for_key(key_str),
-                'doc': doc,
+                'label': docs[0].get_document_type_display() if hasattr(docs[0], 'get_document_type_display') else get_label_for_key(key_str),
+                'docs': docs,
                 'is_required': False
             })
 
-    # Supplementary Custom Request Docs
     supplementary_documents = client_docs.filter(document_type=DocumentType.SUPPLEMENTARY).order_by('id')
 
     context = {
