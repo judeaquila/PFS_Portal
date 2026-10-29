@@ -364,30 +364,56 @@ def admin_user_payment_history(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def admin_create_payment_request(request):
-    """View for superadmin to create and monitor custom client payment requests."""
+    """View for superadmin to create, read, update, and delete custom client payment requests."""
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        service_name = request.POST.get('service_name', '').strip()
-        amount = request.POST.get('amount')
-        note = request.POST.get('note', '').strip()
+        action = request.POST.get('action', 'create')
 
-        if user_id and service_name and amount:
-            client = get_object_or_404(User, id=user_id)
-            PaymentRequest.objects.create(
-                user=client,
-                service_name=service_name,
-                amount=amount,
-                note=note,
-                created_by=request.user
-            )
-            messages.success(request, f"Payment request of GHS {amount} issued to {client.get_full_name() or client.email}.")
-            return redirect('dashboard:admin-create-payment-request')
-        else:
-            messages.error(request, "Please fill in all required fields.")
+        if action == 'create':
+            user_id = request.POST.get('user_id')
+            service_name = request.POST.get('service_name', '').strip()
+            amount = request.POST.get('amount')
+            note = request.POST.get('note', '').strip()
 
-    # Fetch all clients to populate the selection dropdown
+            if user_id and service_name and amount:
+                client = get_object_or_404(User, id=user_id)
+                PaymentRequest.objects.create(
+                    user=client,
+                    service_name=service_name,
+                    amount=amount,
+                    note=note,
+                    created_by=request.user
+                )
+                messages.success(request, f"Payment request of GHS {amount} issued to {client.get_full_name() or client.email}.")
+            else:
+                messages.error(request, "Please fill in all required fields.")
+
+        elif action == 'update':
+            req_id = request.POST.get('request_id')
+            payment_req = get_object_or_404(PaymentRequest, id=req_id)
+            service_name = request.POST.get('service_name', '').strip()
+            amount = request.POST.get('amount')
+            note = request.POST.get('note', '').strip()
+
+            if service_name and amount:
+                payment_req.service_name = service_name
+                payment_req.amount = amount
+                payment_req.note = note
+                payment_req.save()
+                messages.success(request, f"Payment request ({payment_req.reference}) updated successfully.")
+            else:
+                messages.error(request, "Service name and amount are required.")
+
+        elif action == 'delete':
+            req_id = request.POST.get('request_id')
+            payment_req = get_object_or_404(PaymentRequest, id=req_id)
+            ref = payment_req.reference
+            payment_req.delete()
+            messages.success(request, f"Payment request ({ref}) deleted successfully.")
+
+        return redirect('dashboard:admin-create-payment-request')
+
     clients = User.objects.filter(role=UserRole.USER).order_by('first_name', 'email')
-    payment_requests = PaymentRequest.objects.select_related('user', 'created_by').all()
+    payment_requests = PaymentRequest.objects.select_related('user', 'created_by').all().order_by('-created_at')
 
     context = {
         'clients': clients,

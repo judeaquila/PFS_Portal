@@ -1,15 +1,15 @@
 {% extends "dashboards/base_superadmin.html" %}
 
-{% block title %}Issue Payment Request | Superadmin Portal{% endblock %}
+{% block title %}Manage Payment Requests | Superadmin Portal{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-8" x-data="{ modalOpen: false, detailsModalOpen: false, selectedRequest: null }">
+<div class="max-w-7xl mx-auto space-y-8" x-data="{ modalOpen: false, editModalOpen: false, detailsModalOpen: false, deleteModalOpen: false, selectedRequest: null }">
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-white tracking-tight mt-1">Client Payment Requests</h1>
-            <p class="text-sm text-slate-400">Issue custom service charges directly to client dashboards for instant Paystack checkout.</p>
+            <p class="text-sm text-slate-400">Issue and manage custom service charges directly on client dashboards for instant checkout.</p>
         </div>
         <button @click="modalOpen = true" 
                 class="inline-flex items-center gap-2 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-pink-600/20 transition shrink-0">
@@ -28,9 +28,8 @@
             </span>
         </div>
 
-        <!-- Horizontal Scroll Container -->
         <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-            <table class="w-full text-left border-collapse min-w-[700px]">
+            <table class="w-full text-left border-collapse min-w-[850px]">
                 <thead>
                     <tr class="bg-slate-900/80 border-b border-slate-800/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider">
                         <th class="py-3.5 px-6 whitespace-nowrap">Client</th>
@@ -38,8 +37,8 @@
                         <th class="py-3.5 px-6 whitespace-nowrap">Reference</th>
                         <th class="py-3.5 px-6 whitespace-nowrap">Amount</th>
                         <th class="py-3.5 px-6 whitespace-nowrap">Status</th>
-                        <th class="py-3.5 px-6 whitespace-nowrap">Date</th>
-                        <th class="py-3.5 px-6 text-right whitespace-nowrap">Action</th>
+                        <th class="py-3.5 px-6 whitespace-nowrap">Timestamps</th>
+                        <th class="py-3.5 px-6 text-right whitespace-nowrap">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/60 text-xs">
@@ -59,39 +58,59 @@
                         <td class="py-4 px-6 font-bold text-white whitespace-nowrap">GHS {{ pr.amount|floatformat:2 }}</td>
                         <td class="py-4 px-6 whitespace-nowrap">
                             {% if pr.is_paid %}
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
-                                    Paid
-                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">Paid</span>
                             {% elif pr.is_pending %}
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800">
-                                    Pending Payment
-                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800">Pending Payment</span>
                             {% else %}
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900 text-slate-400 border border-slate-800">
-                                    Cancelled
-                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-900 text-slate-400 border border-slate-800">Cancelled</span>
                             {% endif %}
                         </td>
-                        <td class="py-4 px-6 text-slate-400 whitespace-nowrap">{{ pr.created_at|date:"M d, Y" }}</td>
-                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                        <td class="py-4 px-6 text-slate-400 whitespace-nowrap">
+                            <span class="block text-[11px]"><strong>Created:</strong> {{ pr.created_at|date:"M d, Y H:i" }}</span>
+                            {% if pr.updated_at %}
+                                <span class="block text-[10px] text-slate-500"><strong>Updated:</strong> {{ pr.updated_at|date:"M d, Y H:i" }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap space-x-1">
+                            <!-- View Button -->
                             <button @click="selectedRequest = {
+                                id: '{{ pr.id }}',
                                 client: '{{ pr.user.get_full_name|default:pr.user.email|escapejs }}',
                                 email: '{{ pr.user.email|escapejs }}',
                                 service: '{{ pr.service_name|escapejs }}',
                                 reference: '{{ pr.reference|escapejs }}',
                                 amount: '{{ pr.amount|floatformat:2 }}',
+                                rawAmount: '{{ pr.amount }}',
                                 status: '{% if pr.is_paid %}Paid{% elif pr.is_pending %}Pending Payment{% else %}Cancelled{% endif %}',
                                 statusClass: '{% if pr.is_paid %}bg-emerald-950 text-emerald-400 border-emerald-800{% elif pr.is_pending %}bg-amber-950 text-amber-400 border-amber-800{% else %}bg-slate-900 text-slate-400 border-slate-800{% endif %}',
-                                date: '{{ pr.created_at|date:"M d, Y H:i" }}',
+                                createdAt: '{{ pr.created_at|date:"M d, Y H:i" }}',
+                                updatedAt: '{{ pr.updated_at|date:"M d, Y H:i" }}',
+                                createdBy: '{{ pr.created_by.get_full_name|default:pr.created_by.email|escapejs }}',
                                 note: '{{ pr.note|default:""|escapejs }}'
                             }; detailsModalOpen = true;" 
-                            class="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition inline-flex items-center gap-1.5"
-                            title="View Details">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                <span class="hidden md:inline text-[11px] font-semibold">View</span>
+                            class="p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition inline-flex items-center gap-1" title="View Details">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+
+                            <!-- Edit Button -->
+                            <button @click="selectedRequest = {
+                                id: '{{ pr.id }}',
+                                service: '{{ pr.service_name|escapejs }}',
+                                amount: '{{ pr.amount }}',
+                                note: '{{ pr.note|default:""|escapejs }}'
+                            }; editModalOpen = true;" 
+                            class="p-2 bg-slate-900 hover:bg-slate-800 text-blue-400 hover:text-blue-300 rounded-lg border border-slate-800 transition inline-flex items-center gap-1" title="Edit Request">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </button>
+
+                            <!-- Delete Trigger Button -->
+                            <button @click="selectedRequest = {
+                                id: '{{ pr.id }}',
+                                service: '{{ pr.service_name|escapejs }}',
+                                reference: '{{ pr.reference|escapejs }}'
+                            }; deleteModalOpen = true;" 
+                            class="p-2 bg-slate-900 hover:bg-slate-800 text-red-400 hover:text-red-300 rounded-lg border border-slate-800 transition inline-flex items-center gap-1" title="Delete Request">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </td>
                     </tr>
@@ -115,15 +134,34 @@
             
             <form method="POST" action="." class="p-6 space-y-4 text-xs">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="create">
                 
-                <div>
+                <!-- Searchable Client Dropdown Component -->
+                <div x-data="{ open: false, search: '', selectedId: '', selectedName: '-- Choose Client --' }" class="relative">
                     <label class="block text-slate-300 font-semibold mb-1">Select Client</label>
-                    <select name="user_id" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:ring-2 focus:ring-pink-500 focus:outline-none">
-                        <option value="">-- Choose Client --</option>
-                        {% for client in clients %}
-                            <option value="{{ client.id }}">{{ client.get_full_name|default:client.email }} ({{ client.email }})</option>
-                        {% endfor %}
-                    </select>
+                    <input type="hidden" name="user_id" x-model="selectedId" required>
+                    <div @click="open = !open" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 cursor-pointer flex justify-between items-center">
+                        <span x-text="selectedName"></span>
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <div x-show="open" @click.away="open = false" class="absolute z-10 mt-1 w-full bg-slate-950 border border-slate-800 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                        <div class="p-2 border-b border-slate-800 sticky top-0 bg-slate-950">
+                            <input type="text" x-model="search" placeholder="Search client by name or email..." class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-pink-500">
+                        </div>
+                        <div class="p-1">
+                            <template x-for="client in [
+                                {% for client in clients %}
+                                { id: '{{ client.id }}', name: '{{ client.get_full_name|default:client.email|escapejs }}', email: '{{ client.email|escapejs }}' },
+                                {% endfor %}
+                            ].filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()))">
+                                <div @click="selectedId = client.id; selectedName = client.name + ' (' + client.email + ')'; open = false;" 
+                                     class="px-3 py-2 hover:bg-slate-900 rounded-lg cursor-pointer text-slate-300 hover:text-white text-xs">
+                                    <span class="font-semibold" x-text="client.name"></span>
+                                    <span class="block text-[10px] text-slate-500" x-text="client.email"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -152,7 +190,74 @@
         </div>
     </div>
 
-    <!-- View Details Modal -->
+    <!-- Edit Request Modal -->
+    <div x-show="editModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 max-w-lg w-full overflow-hidden shadow-2xl" @click.away="editModalOpen = false">
+            <div class="bg-slate-950 p-6 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-base font-bold text-white">Edit Payment Request</h3>
+                <button @click="editModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            
+            <form method="POST" action="." class="p-6 space-y-4 text-xs" x-if="selectedRequest">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="request_id" x-model="selectedRequest.id">
+
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-1">Service / Title</label>
+                    <input type="text" name="service_name" x-model="selectedRequest.service" required
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-1">Amount (GHS)</label>
+                    <input type="number" step="0.01" name="amount" x-model="selectedRequest.amount" required
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-1">Note / Instructions for Client (Optional)</label>
+                    <textarea name="note" rows="3" x-model="selectedRequest.note"
+                              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:ring-2 focus:ring-pink-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" @click="editModalOpen = false" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-semibold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-bold shadow-lg shadow-pink-600/20">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal (Pink Accent) -->
+    <div x-show="deleteModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 max-w-md w-full overflow-hidden shadow-2xl" @click.away="deleteModalOpen = false">
+            <div class="bg-slate-950 p-6 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Confirm Deletion
+                </h3>
+                <button @click="deleteModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+            
+            <div class="p-6 space-y-4 text-xs" x-if="selectedRequest">
+                <p class="text-slate-300 leading-relaxed">
+                    Are you sure you want to delete the payment request for <strong class="text-white" x-text="selectedRequest.service"></strong> (<span class="font-mono text-pink-400" x-text="selectedRequest.reference"></span>)? This action cannot be undone.
+                </p>
+
+                <form method="POST" action="." class="pt-2 flex justify-end gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="request_id" x-model="selectedRequest.id">
+                    
+                    <button type="button" @click="deleteModalOpen = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-bold shadow-lg shadow-pink-600/20 transition">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Details Modal (Includes created_by, created_at, updated_at) -->
     <div x-show="detailsModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
         <div class="bg-slate-900 rounded-2xl border border-slate-800 max-w-lg w-full overflow-hidden shadow-2xl" @click.away="detailsModalOpen = false">
             <div class="bg-slate-950 p-6 border-b border-slate-800 flex justify-between items-center">
@@ -195,8 +300,19 @@
                         <p class="text-xs font-mono text-slate-300 mt-0.5" x-text="selectedRequest.reference"></p>
                     </div>
                     <div>
-                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date Issued</span>
-                        <p class="text-xs text-slate-300 mt-0.5" x-text="selectedRequest.date"></p>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Issued By (Admin)</span>
+                        <p class="text-xs text-slate-300 font-medium mt-0.5" x-text="selectedRequest.createdBy"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-800/80">
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Created At</span>
+                        <p class="text-xs text-slate-300 mt-0.5" x-text="selectedRequest.createdAt"></p>
+                    </div>
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Last Updated</span>
+                        <p class="text-xs text-slate-300 mt-0.5" x-text="selectedRequest.updatedAt || 'Never'"></p>
                     </div>
                 </div>
 
