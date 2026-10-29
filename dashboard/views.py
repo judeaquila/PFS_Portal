@@ -2,6 +2,8 @@ import json
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from itertools import chain
+from operator import attrgetter
 from accounts.models import UserRole
 from accounts.forms import AdminClientCreationForm
 from common.decorators import role_required, mandatory_docs_required
@@ -316,47 +318,131 @@ def superadmin_dashboard(request):
 @role_required([UserRole.SUPER_ADMIN])
 def admin_user_payment_history(request):
     """
-    Superadmin view to monitor all platform transactions, filter by search query or status,
-    and review revenue aggregates.
+    Superadmin view to monitor platform transactions (Payments & Payment Requests),
+    filter by search query or status, review revenue aggregates, and execute CRUD operations.
     """
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'create':
+            user_id = request.POST.get('user_id')
+            service_name = request.POST.get('service_name', '').strip()
+            amount = request.POST.get('amount')
+            note = request.POST.get('note', '').strip()
+
+            if user_id and service_name and amount:
+                client = get_object_or_404(User, id=user_id)
+                PaymentRequest.objects.create(
+                    user=client,
+                    service_name=service_name,
+                    amount=amount,
+                    note=note,
+                    created_by=request.user
+                )
+                messages.success(request, f"Custom payment request of GHS {amount} issued successfully.")
+            else:
+                messages.error(request, "Please fill in all required fields.")
+
+        elif action == 'update':
+            req_id = request.POST.get('request_id')
+            payment_req = get_object_or_404(PaymentRequest, id=req_id)
+            service_name = request.POST.get('service_name', '').strip()
+            amount = request.POST.get('amount')
+            note = request.POST.get('note', '').strip()
+
+            if service_name and amount:
+                payment_req.service_name = service_name
+                payment_req.amount = amount
+                payment_req.note = note
+                payment_req.save()
+                messages.success(request, f"Payment request ({payment_req.reference}) updated successfully.")
+            else:
+                messages.error(request, "Service name and amount are required.")
+
+        elif action == 'delete':
+            item_id = request.POST.get('request_id')
+            
+            # Check if it's a pending PaymentRequest
+            payment_req = PaymentRequest.objects.filter(id=item_id, status=PaymentRequest.StatusType.PENDING).first()
+            if payment_req:
+                ref = payment_req.reference
+                payment_req.delete()
+                messages.success(request, f"Payment request ({ref}) deleted successfully.")
+            else:
+                # Otherwise, check if it's an unverified/pending Payment record
+                payment = Payment.objects.filter(id=item_id, verified=False).first()
+                if payment:
+                    ref = payment.ref
+                    payment.delete()
+                    messages.success(request, f"Pending payment record ({ref}) deleted successfully.")
+                else:
+                    messages.error(request, "Transaction not found or cannot be deleted.")
+
+        return redirect('dashboard:admin-user-payments')
+
     query = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status', '').strip()
 
-    # Base queryset with select_related for optimized queries
-    payments = Payment.objects.select_related('user', 'package').all().order_by('-created_at')
+    # Fetch both standard payments and custom payment requests
+    payments_qs = Payment.objects.select_related('user', 'package').all()
+    requests_qs = PaymentRequest.objects.select_related('user', 'created_by').all()
 
-    # Apply search filter across reference, email, company, or user name
+    # Apply search filter if present
     if query:
-        payments = payments.filter(
+        payments_qs = payments_qs.filter(
             Q(ref__icontains=query) |
             Q(email__icontains=query) |
             Q(business_name__icontains=query) |
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query)
         )
+        requests_qs = requests_qs.filter(
+            Q(reference__icontains=query) |
+            Q(service_name__icontains=query) |
+            Q(user__email__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query)
+        )
 
-    # Apply status filter using the 'verified' boolean field
+    # Apply status filter
     if status_filter:
         if status_filter.lower() == 'success':
-            payments = payments.filter(verified=True)
+            payments_qs = payments_qs.filter(verified=True)
+            requests_qs = requests_qs.filter(status=PaymentRequest.StatusType.PAID)
         elif status_filter.lower() == 'pending':
-            payments = payments.filter(verified=False)
+            payments_qs = payments_qs.filter(verified=False)
+            requests_qs = requests_qs.filter(status=PaymentRequest.StatusType.PENDING)
 
-    # Aggregate key metrics across all records
+    # Combine and sort unified transaction history by creation date
+    combined_transactions = sorted(
+        chain(payments_qs, requests_qs),
+        key=attrgetter('created_at'),
+        reverse=True
+    )
+
+    # Calculate global financial aggregates across all records
     all_payments = Payment.objects.all()
-    
-    total_revenue = all_payments.filter(verified=True).aggregate(total=Sum('amount'))['total'] or 0.00
-    successful_count = all_payments.filter(verified=True).count()
-    pending_count = all_payments.filter(verified=False).count()
+    all_requests = PaymentRequest.objects.all()
+
+    rev_payments = all_payments.filter(verified=True).aggregate(total=Sum('amount'))['total'] or 0.00
+    rev_requests = all_requests.filter(status=PaymentRequest.StatusType.PAID).aggregate(total=Sum('amount'))['total'] or 0.00
+    total_revenue = rev_payments + rev_requests
+
+    successful_count = all_payments.filter(verified=True).count() + all_requests.filter(status=PaymentRequest.StatusType.PAID).count()
+    pending_count = all_payments.filter(verified=False).count() + all_requests.filter(status=PaymentRequest.StatusType.PENDING).count()
+    total_transactions_count = all_payments.count() + all_requests.count()
+
+    clients = User.objects.filter(role=UserRole.USER).order_by('first_name', 'email')
 
     context = {
-        'payments': payments,
+        'payments': combined_transactions,
+        'clients': clients,
         'query': query,
         'status_filter': status_filter,
         'total_revenue': total_revenue,
         'successful_count': successful_count,
         'pending_count': pending_count,
-        'total_transactions_count': all_payments.count(),
+        'total_transactions_count': total_transactions_count,
     }
     return render(request, 'dashboards/superadmin_user_payments_history.html', context)
 
