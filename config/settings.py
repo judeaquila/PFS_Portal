@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'payments',
     'examinations',
     'fda',
+    'bookings',
     'maintenance_mode',
 ]
 

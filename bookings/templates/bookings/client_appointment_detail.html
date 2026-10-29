@@ -1,0 +1,108 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}Appointment Details - {{ appointment.title }} {% endblock title %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+  
+  <!-- Top Navigation / Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200 dark:border-gray-700 gap-4">
+    <div>
+      <a href="{% url 'bookings:client-booking-dashboard' %}" class="text-xs font-semibold text-pink-600 dark:text-pink-400 hover:underline">
+        &larr; Back to My Appointments
+      </a>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl mt-1">
+        {{ appointment.title }}
+      </h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        Scheduled Date: {{ appointment.slot.date|date:"l, F j, Y" }} ({{ appointment.slot.start_time|time:"H:i" }} - {{ appointment.slot.end_time|time:"H:i" }})
+      </p>
+    </div>
+
+    <div>
+      <span class="px-3 py-1 text-xs font-semibold rounded-full 
+        {% if appointment.status == 'SCHEDULED' %}bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300
+        {% elif appointment.status == 'COMPLETED' %}bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300
+        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+        {{ appointment.get_status_display }}
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Left Column: Meeting Link & Summary Details -->
+    <div class="md:col-span-2 space-y-6">
+      
+      <!-- Virtual Meeting Link Card -->
+      <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Virtual Meeting Room</h3>
+        {% if appointment.meeting_link %}
+          <div class="flex items-center space-x-3">
+            <a href="{{ appointment.meeting_link }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              Join Virtual Meeting
+            </a>
+            <span class="text-xs text-gray-400 break-all">{{ appointment.meeting_link }}</span>
+          </div>
+        {% else %}
+          <p class="text-xs text-amber-600 dark:text-amber-400 italic font-medium">A meeting link will be shared with you prior to the call.</p>
+        {% endif %}
+      </div>
+
+      <!-- Meeting Summary & Notes Card -->
+      {% if appointment.summary_document or appointment.meeting_notes %}
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Post-Meeting Summary & Notes</h3>
+          
+          {% if appointment.meeting_notes %}
+            <div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-750 p-4 rounded-lg">
+              {{ appointment.meeting_notes|linebreaks }}
+            </div>
+          {% endif %}
+
+          {% if appointment.summary_document %}
+            <div>
+              <a href="{{ appointment.summary_document.url }}" target="_blank" class="inline-flex items-center px-3.5 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-800 dark:text-gray-200 text-xs font-bold rounded-lg transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="root" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Download Summary Document ({{ appointment.summary_filename }})
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <!-- Client Expectations / Notes Provided -->
+      {% if appointment.client_notes %}
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Your Initial Expectations / Notes</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-300">{{ appointment.client_notes }}</p>
+        </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Right Column: Read-Only Action Plan -->
+    <div class="md:col-span-1">
+      <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4 sticky top-6">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Action Plan To-Do List</h3>
+          <p class="text-xs text-gray-400">Tasks assigned from this consultation.</p>
+        </div>
+
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          {% for item in action_items %}
+            <div class="py-2.5 flex items-center space-x-2 text-xs text-gray-700 dark:text-gray-300">
+              <input type="checkbox" disabled {% if item.is_completed %}checked{% endif %} class="rounded border-gray-300 text-pink-600">
+              <span class="{% if item.is_completed %}line-through text-gray-400 dark:text-gray-500{% endif %}">{{ item.task }}</span>
+            </div>
+          {% empty %}
+            <p class="text-xs text-gray-400 text-center py-4">No action items assigned for this meeting yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

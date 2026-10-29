@@ -1,0 +1,234 @@
+{% extends "fda/base_associate_2.html" %}
+
+{% block title %}Client Appointments - Project Assessment Assistant {% endblock title %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeTab: 'upcoming' }">
+  
+  <!-- Header -->
+  <div class="md:flex md:items-center md:justify-between mb-8">
+    <div class="min-w-0 flex-1">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+        Client Appointments
+      </h2>
+      <p class="mt-1 text-sm text-gray-500">
+        Review booked meetings, add virtual room links, upload post-meeting documents, and manage action items.
+      </p>
+    </div>
+    <div class="mt-4 flex md:ml-4 md:mt-0">
+      <a href="{% url 'bookings:associate-two-availability' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all shadow-sm">
+        Set Availability
+      </a>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="border-b border-gray-200 mb-6">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <button 
+        @click="activeTab = 'upcoming'"
+        :class="activeTab === 'upcoming' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
+        Upcoming / Imminent
+        <span class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-semibold" :class="activeTab === 'upcoming' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'">
+          {{ upcoming_appointments|length }}
+        </span>
+      </button>
+
+      <button 
+        @click="activeTab = 'past'"
+        :class="activeTab === 'past' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
+        Past & Completed
+        <span class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-semibold" :class="activeTab === 'past' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'">
+          {{ past_appointments|length }}
+        </span>
+      </button>
+
+      <button 
+        @click="activeTab = 'cancelled'"
+        :class="activeTab === 'cancelled' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
+        Cancelled
+        <span class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-semibold" :class="activeTab === 'cancelled' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600'">
+          {{ cancelled_appointments|length }}
+        </span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Main Content Card -->
+  <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+    
+    <!-- UPCOMING TAB CONTENT -->
+    <div x-show="activeTab === 'upcoming'" class="divide-y divide-gray-100">
+      {% if upcoming_appointments %}
+        {% for apt in upcoming_appointments %}
+          <div class="px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-gray-50/80 transition-colors">
+            <!-- Date & Client Details -->
+            <div class="flex items-start space-x-4 mb-4 md:mb-0">
+              <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-center min-w-[70px]">
+                <span class="block text-[10px] uppercase font-semibold text-indigo-600 tracking-wider mb-0.5">{{ apt.slot.date|date:"l" }}</span>
+                <span class="block text-xs font-bold uppercase">{{ apt.slot.date|date:"M" }}</span>
+                <span class="block text-xl font-black leading-none">{{ apt.slot.date|date:"d" }}</span>
+                <span class="block text-[10px] text-indigo-500 mt-1">{{ apt.slot.date|date:"Y" }}</span>
+              </div>
+
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h4 class="text-base font-bold text-gray-900">{{ apt.title }}</h4>
+                  <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full 
+                    {% if apt.status == 'SCHEDULED' %}bg-blue-50 text-blue-700 border border-blue-200
+                    {% elif apt.status == 'COMPLETED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% else %}bg-gray-100 text-gray-700 border border-gray-200{% endif %}">
+                    {{ apt.get_status_display }}
+                  </span>
+                </div>
+
+                <div class="text-xs text-gray-600 mt-1">
+                  <span class="font-semibold text-gray-800">Client:</span> {{ apt.client.get_full_name|default:apt.client.first_name }} ({{ apt.client.business_name|default:apt.client.email }})
+                </div>
+
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <span class="font-semibold text-gray-700">Time:</span> {{ apt.slot.start_time|time:"H:i" }} - {{ apt.slot.end_time|time:"H:i" }}
+                </div>
+
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <span class="font-semibold text-gray-700">Expectations:</span> {{ apt.client_notes }}
+                </div>
+
+                {% if apt.meeting_link %}
+                  <div class="mt-2 text-xs text-emerald-600 font-medium flex items-center">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    Meeting link set
+                  </div>
+                {% else %}
+                  <div class="mt-2 text-xs text-amber-600 italic font-medium">
+                    ⚠ Missing meeting link
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center space-x-3 self-end md:self-center">
+              <a href="{% url 'bookings:associate-two-appointment-detail' apt.id %}" class="inline-flex items-center px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-lg transition-colors border border-indigo-100">
+                Manage Details &rarr;
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-12 text-center text-gray-500">
+          <p class="text-sm font-medium text-gray-900">No upcoming appointments</p>
+          <p class="text-xs text-gray-500 mt-1">New client bookings will appear here automatically.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- PAST TAB CONTENT -->
+    <div x-show="activeTab === 'past'" class="divide-y divide-gray-100" style="display: none;">
+      {% if past_appointments %}
+        {% for apt in past_appointments %}
+          <div class="px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-gray-50/80 transition-colors">
+            <!-- Date & Client Details -->
+            <div class="flex items-start space-x-4 mb-4 md:mb-0">
+              <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-center min-w-[70px]">
+                <span class="block text-[10px] uppercase font-semibold text-indigo-600 tracking-wider mb-0.5">{{ apt.slot.date|date:"l" }}</span>
+                <span class="block text-xs font-bold uppercase">{{ apt.slot.date|date:"M" }}</span>
+                <span class="block text-xl font-black leading-none">{{ apt.slot.date|date:"d" }}</span>
+                <span class="block text-[10px] text-indigo-500 mt-1">{{ apt.slot.date|date:"Y" }}</span>
+              </div>
+
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h4 class="text-base font-bold text-gray-900">{{ apt.title }}</h4>
+                  <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full 
+                    {% if apt.status == 'SCHEDULED' %}bg-blue-50 text-blue-700 border border-blue-200
+                    {% elif apt.status == 'COMPLETED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% else %}bg-gray-100 text-gray-700 border border-gray-200{% endif %}">
+                    {{ apt.get_status_display }}
+                  </span>
+                </div>
+
+                <div class="text-xs text-gray-600 mt-1">
+                  <span class="font-semibold text-gray-800">Client:</span> {{ apt.client.get_full_name|default:apt.client.first_name }} ({{ apt.client.business_name|default:apt.client.email }})
+                </div>
+
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <span class="font-semibold text-gray-700">Time:</span> {{ apt.slot.start_time|time:"H:i" }} - {{ apt.slot.end_time|time:"H:i" }}
+                </div>
+
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <span class="font-semibold text-gray-700">Expectations:</span> {{ apt.client_notes }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center space-x-3 self-end md:self-center">
+              <a href="{% url 'bookings:associate-two-appointment-detail' apt.id %}" class="inline-flex items-center px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-lg transition-colors border border-indigo-100">
+                Manage Details &rarr;
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-12 text-center text-gray-500">
+          <p class="text-sm font-medium text-gray-900">No past appointments found</p>
+          <p class="text-xs text-gray-500 mt-1">Completed or older sessions will be listed here.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- CANCELLED TAB CONTENT -->
+    <div x-show="activeTab === 'cancelled'" class="divide-y divide-gray-100" style="display: none;">
+      {% if cancelled_appointments %}
+        {% for apt in cancelled_appointments %}
+          <div class="px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between hover:bg-gray-50/80 transition-colors">
+            <!-- Date & Client Details -->
+            <div class="flex items-start space-x-4 mb-4 md:mb-0">
+              <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-center min-w-[70px]">
+                <span class="block text-[10px] uppercase font-semibold text-indigo-600 tracking-wider mb-0.5">{{ apt.slot.date|date:"l" }}</span>
+                <span class="block text-xs font-bold uppercase">{{ apt.slot.date|date:"M" }}</span>
+                <span class="block text-xl font-black leading-none">{{ apt.slot.date|date:"d" }}</span>
+                <span class="block text-[10px] text-indigo-500 mt-1">{{ apt.slot.date|date:"Y" }}</span>
+              </div>
+
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h4 class="text-base font-bold text-gray-900">{{ apt.title }}</h4>
+                  <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                    {{ apt.get_status_display }}
+                  </span>
+                </div>
+
+                <div class="text-xs text-gray-600 mt-1">
+                  <span class="font-semibold text-gray-800">Client:</span> {{ apt.client.get_full_name|default:apt.client.first_name }} ({{ apt.client.business_name|default:apt.client.email }})
+                </div>
+
+                <div class="text-xs text-gray-500 mt-0.5">
+                  <span class="font-semibold text-gray-700">Time:</span> {{ apt.slot.start_time|time:"H:i" }} - {{ apt.slot.end_time|time:"H:i" }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center space-x-3 self-end md:self-center">
+              <a href="{% url 'bookings:associate-two-appointment-detail' apt.id %}" class="inline-flex items-center px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-lg transition-colors border border-indigo-100">
+                Manage Details &rarr;
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-12 text-center text-gray-500">
+          <p class="text-sm font-medium text-gray-900">No cancelled appointments</p>
+          <p class="text-xs text-gray-500 mt-1">Cancelled bookings will show up here for your reference.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

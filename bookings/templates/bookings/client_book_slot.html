@@ -1,0 +1,89 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}Book an Appointment {% endblock title %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ selectedSlot: null, selectedDate: null, selectedTime: null }">
+  <a href="{% url 'bookings:client-booking-dashboard' %}" class="text-xs font-semibold text-pink-600 hover:underline dark:text-pink-400">
+        &larr; Back to My Appointments
+      </a>
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Book an Appointment</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Select an available date and time slot below to meet with our experts.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Available Slots Browser -->
+    <div class="lg:col-span-2 space-y-6">
+      {% if grouped_slots %}
+        {% for date, slots in grouped_slots.items %}
+          <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 mb-4">
+              {{ date|date:"l, F j, Y" }}
+            </h3>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {% for slot in slots %}
+                <button 
+                  type="button"
+                  @click="selectedSlot = {{ slot.id }}; selectedDate = '{{ slot.date|date:'l, F j, Y' }}'; selectedTime = '{{ slot.start_time|time:'H:i' }} - {{ slot.end_time|time:'H:i' }}'"
+                  :class="{ 
+                    'bg-pink-600 text-white ring-2 ring-pink-600': selectedSlot === {{ slot.id }}, 
+                    'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-pink-50 dark:hover:bg-gray-650': selectedSlot !== {{ slot.id }} 
+                  }"
+                  class="px-3 py-2.5 rounded-lg text-xs font-semibold text-center border border-gray-200 dark:border-gray-600 transition-all">
+                  {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow text-center text-gray-500 dark:text-gray-400">
+          No available appointment slots at this moment. Please check back later!
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Selected Slot Confirmation Form -->
+    <div class="lg:col-span-1">
+      <div class="bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-100 dark:border-gray-700 sticky top-6">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Booking Details</h3>
+
+        <!-- Empty State -->
+        <div x-show="!selectedSlot" class="text-center py-8 text-xs text-gray-400">
+          Select a time slot on the left to complete your appointment.
+        </div>
+
+        <!-- Form Displayed on Selection -->
+        <div x-show="selectedSlot" x-cloak>
+          <div class="p-3 mb-4 rounded-lg bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-800 text-xs">
+            <span class="block font-semibold text-pink-900 dark:text-pink-300">Selected Slot:</span>
+            <span class="text-pink-700 dark:text-pink-400" x-text="selectedDate + ' @ ' + selectedTime"></span>
+          </div>
+
+          <form :action="`{% url 'bookings:client-confirm-booking' 0 %}`.replace('0', selectedSlot)" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="slot_id" :value="selectedSlot">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Meeting Topic</label>
+              {{ booking_form.title }}
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Expectations</label>
+              {{ booking_form.client_notes }}
+            </div>
+
+            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-semibold text-xs rounded-lg uppercase tracking-wider transition-all">
+              Book Meeting
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

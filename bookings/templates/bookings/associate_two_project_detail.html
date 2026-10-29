@@ -1,0 +1,199 @@
+{% extends 'fda/base_associate_2.html' %}
+
+{% block title %}{{ project.title }} — Project Detail | PFS Connect Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header & Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <a href="{% url 'bookings:associate-two-projects-list' %}" 
+               class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 mb-1">
+                &larr; Back to Projects List
+            </a>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ project.title }}</h1>
+            <p class="text-xs text-slate-500 mt-1">
+                Client: <strong class="text-slate-700">{{ project.client.business_name|default:project.client.get_full_name }}</strong> 
+                ({{ project.client.email }})
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            {% include 'bookings/partials/project_financial_badge.html' %}
+        </div>
+
+        <!-- Progress Badge & Package Info -->
+        <div class="flex items-center gap-3">
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-3 px-5 shadow-sm text-right">
+                <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Package Tier</span>
+                <span class="text-xs font-bold text-indigo-900 block mt-0.5">
+                    {{ project.client_package.name }}
+                </span>
+            </div>
+            <div class="bg-indigo-600 text-white rounded-2xl p-3 px-5 shadow-sm text-center">
+                <span class="block text-[10px] font-bold uppercase tracking-wider text-indigo-200">Overall Progress</span>
+                <span class="text-base font-black block mt-0.5">{{ progress_percentage }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+        <a href="{% url 'bookings:associate-two-edit-project' project.id %}" 
+        class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+            Edit Project
+        </a>
+        
+        <form action="{% url 'bookings:associate-two-delete-project' project.id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this project workspace?');">
+            {% csrf_token %}
+            <button type="submit" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition">
+                Delete
+            </button>
+        </form>
+    </div>
+
+    <!-- Progress Bar Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-3">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+            <span>Milestone Completion Status</span>
+            <span class="text-indigo-600">{{ completed_activities }} of {{ total_activities }} Milestones Completed</span>
+        </div>
+        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+            <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: {{ progress_percentage }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+        <!-- Left Column: Generated Project Sub-Activities & Milestones -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex justify-between items-center">
+                    <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Package Blueprint Activities & Milestones
+                    </h2>
+                    <span class="text-[10px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">
+                        {{ activities|length }} Items
+                    </span>
+                </div>
+
+                <div class="divide-y divide-slate-100">
+                    {% for activity in activities %}
+                        <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition">
+                            <!-- Activity Name & Scope -->
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-slate-800">{{ activity.activity_name }}</span>
+                                    {% if activity.scope %}
+                                        <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                                            Scope: {{ activity.scope }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-3 text-xs text-slate-500">
+                                    <span>Status: 
+                                        <strong class="{% if activity.activity_status == 'COMPLETED' %}text-emerald-600{% elif activity.activity_status == 'IN_PROGRESS' %}text-indigo-600{% else %}text-slate-500{% endif %}">
+                                            {{ activity.get_activity_status_display }}
+                                        </strong>
+                                    </span>
+                                    <span>&bull;</span>
+                                    <span>Payment: 
+                                        <strong class="text-slate-700">{{ activity.get_payment_status_display }}</strong>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Individual Activity Update Form -->
+                            <form action="{% url 'bookings:update-project-activity-status' activity.id %}" method="POST" class="flex items-center gap-2 shrink-0">
+                                {% csrf_token %}
+                                
+                                <select name="activity_status" class="rounded-xl border border-slate-200 text-xs text-slate-800 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white">
+                                    {% for val, label in activity.ActivityStatus.choices %}
+                                        <option value="{{ val }}" {% if activity.activity_status == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <select name="payment_status" class="rounded-xl border border-slate-200 text-xs text-slate-800 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white">
+                                    {% for val, label in activity.PaymentStatus.choices %}
+                                        <option value="{{ val }}" {% if activity.payment_status == val %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                                    Save
+                                </button>
+                            </form>
+                        </div>
+                    {% empty %}
+                        <div class="p-8 text-center text-xs text-slate-400 italic">
+                            No blueprint sub-activities have been generated for this project.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Project Meta & Add-On Services Catalog -->
+        <div class="space-y-6 lg:col-span-1">
+            
+            <!-- Assigned Staff Info Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4">
+                <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">
+                    Project Management & Staff
+                </h3>
+
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Associate</span>
+                    <span class="text-sm font-bold text-slate-800 block mt-0.5">
+                        {{ project.assigned_staff.get_full_name|default:project.assigned_staff.first_name|default:"Unassigned" }}
+                    </span>
+                    <span class="text-xs text-slate-500 font-mono block mt-0.5">
+                        {{ project.assigned_staff.email|default:"" }}
+                    </span>
+                </div>
+
+                {% if project.description %}
+                    <div class="pt-2 border-t border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Project Scope Notes</span>
+                        <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                            {{ project.description }}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Available Add-On Services -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase">
+                        Available Add-On Services
+                    </h3>
+                    <a href="{% url 'bookings:package-comparison-matrix' %}" class="text-[10px] font-bold text-indigo-600 hover:underline">
+                        Matrix View &rarr;
+                    </a>
+                </div>
+
+                <div class="divide-y divide-slate-100 max-h-80 overflow-y-auto space-y-2">
+                    {% for addon in add_ons %}
+                        <div class="pt-2 pb-1 space-y-0.5">
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-800">
+                                <span>{{ addon.name }}</span>
+                                <span class="text-indigo-600 font-mono">GHS {{ addon.price_ghs|floatformat:2 }}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 leading-snug">
+                                {{ addon.description }}
+                            </p>
+                        </div>
+                    {% empty %}
+                        <p class="text-xs text-slate-400 italic">No add-on services configured.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

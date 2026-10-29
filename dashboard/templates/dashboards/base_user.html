@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Client Portal | PFS Online Portal{% endblock %}</title>
+    <title>{% block title %}{% endblock %} | Client Portal | PFS Online Portal</title>
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/img/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/img/favicon-32x32.png' %}">
@@ -101,6 +101,15 @@
                 </div>
             {% endif %}
 
+            <!-- Bookings -->
+            <a href="{% url 'bookings:client-booking-dashboard' %}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition {% if url_name == 'client-booking-dashboard' or url_name == 'client-booking' %}bg-pink-700 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                My Appointments
+            </a>
+
             <!-- Payments History -->
             <a href="{% url 'dashboard:user-payments' %}" 
                class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition {% if url_name == 'user-payments' %}bg-pink-700 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
@@ -161,9 +170,65 @@
 
             <!-- Right Section: Profile & Actions Dropdown -->
             <div class="flex items-center gap-3" x-data="{ profileDropdownOpen: false }">
+                <div class="relative" x-data="{ 
+                    open: false, 
+                    unreadCount: 0, 
+                    notifications: [],
+                    fetchNotifications() {
+                    fetch('{% url 'bookings:unread_notifications_count' %}')
+                        .then(res => res.json())
+                        .then(data => {
+                        this.unreadCount = data.unread_count;
+                        this.notifications = data.notifications;
+                        });
+                    },
+                    markRead() {
+                    fetch('{% url 'bookings:mark_notifications_as_read' %}', {
+                        method: 'POST',
+                        headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                        }
+                    }).then(() => {
+                        this.unreadCount = 0;
+                        this.fetchNotifications();
+                    });
+                    }
+                    }" 
+                    x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)">
+
+                    <!-- Bell Trigger Icon -->
+                    <button @click="open = !open; if(open) markRead();" class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span x-show="unreadCount > 0" x-text="unreadCount" class="absolute top-1 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"></span>
+                    </button>
+
+                    <!-- Notification Dropdown Panel -->
+                    <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50">
+                        <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700 font-bold text-xs uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                        Notifications
+                        </div>
+                        
+                        <div class="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                        <template x-for="item in notifications" :key="item.id">
+                            <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                            <div class="text-xs font-bold text-gray-900 dark:text-white" x-text="item.title"></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5" x-text="item.message"></div>
+                            <div class="text-[10px] text-gray-400 mt-1" x-text="item.created_at"></div>
+                            </div>
+                        </template>
+                        
+                        <div x-show="notifications.length === 0" class="p-4 text-center text-xs text-gray-400">
+                            No recent notifications.
+                        </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Role Badge -->
                 <span class="hidden sm:inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">
-                    Client
+                    Logged in as: {{ user.first_name }}
                 </span>
 
                 <!-- Profile Dropdown Trigger Button -->

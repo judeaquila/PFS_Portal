@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied
 from functools import wraps
 from django.shortcuts import redirect
 from django.contrib import messages
-from dashboard.models import DocumentType, DocumentStatus
+from dashboard.models import DocumentStatus
 from .utils import get_required_document_types
 from accounts.models import UserRole
 

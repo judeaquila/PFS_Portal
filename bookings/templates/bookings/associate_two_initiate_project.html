@@ -1,0 +1,271 @@
+{% extends 'fda/base_associate_2.html' %}
+
+{% block title %}Initiate Project{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6" x-data="{ 
+    selectedPackageCode: '{{ form.client_package.value|default:"" }}',
+    blueprints: {
+        'BASIC_ALL': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration'
+        ],
+        'BASIC_PLUS_COSMETICS': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'Sample submission to the FDA',
+            'Application follow ups'
+        ],
+        'BASIC_PLUS_FOOD': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'Sample submission to the FDA',
+            'Application follow ups',
+            'Lab sample preparation training',
+            'Sample submission to a laboratory',
+            'Laboratory test results follow up'
+        ],
+        'STANDARD_ALL': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'FDA online facility registration'
+        ],
+        'STANDARD_PLUS_FOOD': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'FDA online facility registration',
+            'Sample submission to the FDA',
+            'Application follow ups',
+            'Audit scheduling follow ups'
+        ],
+        'STANDARD_PLUS_COSMETICS': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'FDA online facility registration',
+            'Sample submission to the FDA',
+            'Application follow ups',
+            'Audit scheduling follow ups',
+            'Facility setup and audit training',
+            'Drafting of forms',
+            'Drafting of SOPs'
+        ],
+        'ADVANCED_ALL': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'FDA online facility registration',
+            'Lab sample preparation training'
+        ],
+        'ADVANCED_PLUS_FOOD': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'FDA online facility registration',
+            'Lab sample preparation training',
+            'Sample submission to the FDA',
+            'Application follow ups',
+            'Audit scheduling follow ups',
+            'Sample submission to a laboratory',
+            'Laboratory test results follow up'
+        ],
+        'ADVANCED_PLUS_COSMETICS': [
+            'Review of product documentation',
+            'Review of product label',
+            'FDA online portal account creation',
+            'FDA online product registration',
+            'FDA online facility registration',
+            'Lab sample preparation training',
+            'Sample submission to the FDA',
+            'Application follow ups',
+            'Audit scheduling follow ups',
+            'Sample submission to a laboratory',
+            'Laboratory test results follow up',
+            'Facility setup and audit training',
+            'Drafting of forms',
+            'Drafting of SOPs'
+        ],
+        'OTHERS': [
+            'Custom Service Scopes & Tailored Compliance Tracks'
+        ]
+    }
+}">
+
+    <!-- Header & Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Initiate New Client Project</h1>
+            <p class="text-xs text-slate-500 mt-1">Setup project parameters, assign staff, and auto-populate tracking activities.</p>
+        </div>
+        <a href="{% url 'bookings:associate-two-projects-list' %}" 
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition shadow-sm self-start">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Back to Projects
+        </a>
+    </div>
+
+    <!-- Main Card Form -->
+    <form method="POST" action="{% if client_obj %}{% url 'bookings:associate-two-initiate-project-client' client_id=client_obj.id %}{% else %}{% url 'bookings:associate-two-initiate-project' %}{% endif %}" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {% csrf_token %}
+
+        <!-- Hidden Client Field -->
+        {{ form.client }}
+
+        <!-- Left Column: Client Details Summary & Package Blueprint -->
+        <div class="space-y-6 lg:col-span-1">
+            
+            <!-- Target Client Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4">
+                <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">
+                    Client Details
+                </h3>
+
+                {% if client_obj %}
+                    <div class="space-y-2">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Business Name (Client)</span>
+                            <span class="text-sm font-bold text-slate-900 block mt-0.5">
+                                {{ client_obj.business_name }} ({{ client_obj.get_full_name }})
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email Address</span>
+                            <span class="text-xs text-slate-600 font-mono block break-all mt-0.5">
+                                {{ client_obj.email }}
+                            </span>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-xs text-slate-500 italic">No target client selected.</p>
+                {% endif %}
+            </div>
+
+            <!-- Dynamic Package Scope & Blueprint Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-4">
+                <h3 class="font-bold text-slate-800 text-xs tracking-wide uppercase border-b border-slate-100 pb-2">
+                    Package Scope & Blueprint
+                </h3>
+
+                <div class="space-y-3">
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Sub-activities Preview</span>
+                    
+                    <div x-show="!selectedPackageCode" class="p-4 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-500 italic">
+                        Select a service package tier to preview generated tasks.
+                    </div>
+
+                    <div x-show="selectedPackageCode" class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden" x-cloak>
+                        <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Subactivities</span>
+                            <span class="text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full" 
+                                  x-text="blueprints[selectedPackageCode] ? blueprints[selectedPackageCode].length + ' Tasks' : '0 Tasks'"></span>
+                        </div>
+                        <ul class="divide-y divide-slate-200 max-h-64 overflow-y-auto text-xs text-slate-700 font-medium">
+                            <template x-for="(task, index) in blueprints[selectedPackageCode]" :key="index">
+                                <li class="px-3.5 py-2.5 flex items-center gap-2 bg-white">
+                                    <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full flex-shrink-0"></span>
+                                    <span x-text="task" class="truncate"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Project Configuration Form -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 sm:p-8 space-y-6 lg:col-span-2">
+            
+            <!-- Package Selection & Assigned Staff -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div class="space-y-2">
+                    <label for="{{ form.client_package.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                        PFS Service Package <span class="text-red-500">*</span>
+                    </label>
+                    <!-- Loop through ChoiceField choices instead of queryset -->
+                    <select id="{{ form.client_package.id_for_label }}" name="{{ form.client_package.html_name }}" x-model="selectedPackageCode" required class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                        <option value="" disabled selected>Select service package tier...</option>
+                        {% for code, label in form.client_package.field.choices %}
+                            {% if code %}
+                                <option value="{{ code }}">{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.client_package.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.client_package.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="space-y-2">
+                    <label for="{{ form.assigned_staff.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                        Assigned Staff / Consultant
+                    </label>
+                    {{ form.assigned_staff }}
+                    {% if form.assigned_staff.errors %}
+                        <p class="text-xs text-red-600 mt-1">{{ form.assigned_staff.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Amount Paid Field -->
+            <div class="space-y-2">
+                <label for="{{ form.amount_paid_ghs.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Amount Paid (GHS)
+                </label>
+                {{ form.amount_paid_ghs }}
+                {% if form.amount_paid_ghs.errors %}
+                    <p class="text-xs text-red-600 mt-1">{{ form.amount_paid_ghs.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Project Title -->
+            <div class="space-y-2">
+                <label for="{{ form.title.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Project Title / Product Name <span class="text-red-500">*</span>
+                </label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <p class="text-xs text-red-600 mt-1">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-2">
+                <label for="{{ form.description.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Project Notes & Scope Overview
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="text-xs text-red-600 mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="{% url 'bookings:associate-two-projects-list' %}" 
+                   class="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Initiate Project
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

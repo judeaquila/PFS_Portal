@@ -664,7 +664,7 @@ def admin_client_created_success_view(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def admin_user_list(request):
-    """Lists all users with search by name/email/phone and filter by role."""
+    """Lists all users with search by name/email/phone/business and filter by role."""
     query = request.GET.get('q', '').strip()
     role_filter = request.GET.get('role', '').strip()
 
@@ -675,6 +675,7 @@ def admin_user_list(request):
             Q(email__icontains=query) |
             Q(first_name__icontains=query) |
             Q(last_name__icontains=query) |
+            Q(business_name__icontains=query) |
             Q(whatsapp_number__icontains=query)
         )
 
@@ -687,6 +688,7 @@ def admin_user_list(request):
         'role_filter': role_filter,
     }
     return render(request, 'dashboards/superadmin_user_list.html', context)
+
 
 
 @login_required

@@ -74,7 +74,10 @@
                     <tr class="hover:bg-slate-900/40 transition">
                         <td class="py-4 px-5">
                             <div class="flex items-center gap-3">
-                                {% if u.consultant_profile.avatar %}
+                                <!-- Avatar Logic -->
+                                {% if u.is_regular_user and u.company_logo %}
+                                    <img src="{{ u.company_logo.url }}" class="w-9 h-9 rounded-full object-cover border border-slate-700">
+                                {% elif u.consultant_profile.avatar %}
                                     <img src="{{ u.consultant_profile.avatar.url }}" class="w-9 h-9 rounded-full object-cover border border-slate-700">
                                 {% elif u.ambassador_profile.avatar %}
                                     <img src="{{ u.ambassador_profile.avatar.url }}" class="w-9 h-9 rounded-full object-cover border border-slate-700">
@@ -85,9 +88,16 @@
                                         {{ u.first_name|default:u.email|slice:":1"|upper }}
                                     </div>
                                 {% endif %}
+
+                                <!-- Name and Email Logic -->
                                 <div>
-                                    <div class="font-semibold text-white">{{ u.get_full_name|default:"Unnamed User" }}</div>
-                                    <div class="text-xs text-slate-400">{{ u.email }}</div>
+                                    {% if u.is_regular_user %}
+                                        <div class="font-semibold text-white">{{ u.business_name|default:"Unnamed Business" }}</div>
+                                        <div class="text-xs text-slate-300">{{ u.representative_name|default:u.get_full_name|default:"Unnamed Rep" }}</div>
+                                    {% else %}
+                                        <div class="font-semibold text-white">{{ u.get_full_name|default:"Unnamed User" }}</div>
+                                    {% endif %}
+                                    <div class="text-xs text-slate-400 mt-0.5">{{ u.email }}</div>
                                 </div>
                             </div>
                         </td>

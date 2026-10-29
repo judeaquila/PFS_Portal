@@ -1,63 +1,187 @@
-{% extends "fda/base_associate.html" %}
+{% extends "fda/base_associate_2.html" %}
 
-{% block associate_content %}
-<div class="space-y-6">
-  <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-    <div>
-      <h2 class="text-xl font-black text-slate-900">Associate 2 Dashboard</h2>
-      <p class="text-xs text-slate-500 mt-1">Scope: Onboarding Alignment (20%) • Sample Prep (25%) • Quote Approval (30%)</p>
+{% block title %}Dashboard Overview - Project Assessment Assistant {% endblock title %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+  <!-- Header & Quick Actions -->
+  <div class="md:flex md:items-center md:justify-between">
+    <div class="min-w-0 flex-1">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+        Admin Overview
+      </h2>
+      <p class="mt-1 text-sm text-gray-500">
+        System metrics, upcoming schedules, and actionable tasks for {{ today|date:"l, F j, Y" }}.
+      </p>
     </div>
-    <span class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-xs rounded-lg">
-      Active Tasks: {{ active_tasks|length }}
-    </span>
+    <div class="mt-4 flex space-x-3 md:ml-4 md:mt-0">
+      <a href="{% url 'bookings:associate-two-availability' %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all">
+        + Create Schedule Slots
+      </a>
+      <a href="{% url 'bookings:associate-two-appointments' %}" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border border-gray-200">
+        View All Bookings
+      </a>
+    </div>
   </div>
 
-  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-      Action Required (Handoff Received)
-    </h3>
+  <!-- KPI Cards Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    
+    <!-- Total Upcoming -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase text-gray-500">Upcoming Meetings</span>
+        <span class="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </span>
+      </div>
+      <div class="mt-4 flex items-baseline">
+        <span class="text-3xl font-black text-gray-900">{{ upcoming_appointments_count }}</span>
+        <span class="ml-2 text-xs text-gray-500">Scheduled</span>
+      </div>
+    </div>
 
-    {% if active_tasks %}
-      <div class="space-y-3">
-        {% for item in active_tasks %}
-          <div class="p-4 border-2 border-indigo-500 bg-indigo-50/30 rounded-xl flex items-center justify-between">
-            <div>
-              <span class="px-2.5 py-0.5 bg-indigo-600 text-white font-black text-[11px] rounded">
-                {{ item.activity.stage.stage_percentage }}%
-              </span>
-              <span class="ml-2 font-bold text-slate-900 text-sm">{{ item.activity.stage.full_activity_name }}</span>
-              <p class="text-xs text-slate-500 mt-1">Client: <strong>{{ item.tracker.project.client.business_name|default:item.tracker.project.client.email }}</strong></p>
+    <!-- Missing Links Alert -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase text-gray-500">Missing Links</span>
+        <span class="p-2 rounded-lg bg-amber-50 text-amber-600 border border-amber-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </span>
+      </div>
+      <div class="mt-4 flex items-baseline">
+        <span class="text-3xl font-black text-amber-600">{{ missing_links_count }}</span>
+        <span class="ml-2 text-xs text-gray-500">Needs Link</span>
+      </div>
+    </div>
+
+    <!-- Active Available Slots -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase text-gray-500">Open Slots</span>
+        <span class="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </span>
+      </div>
+      <div class="mt-4 flex items-baseline">
+        <span class="text-3xl font-black text-gray-900">{{ available_slots_count }}</span>
+        <span class="ml-2 text-xs text-gray-500">Available Slots</span>
+      </div>
+    </div>
+
+    <!-- Total Unique Clients -->
+    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase text-gray-500">Total Clients</span>
+        <span class="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </span>
+      </div>
+      <div class="mt-4 flex items-baseline">
+        <span class="text-3xl font-black text-gray-900">{{ total_clients_count }}</span>
+        <span class="ml-2 text-xs text-gray-500">Clients</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Urgent Action Banner -->
+  {% if urgent_missing_links %}
+    <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 shadow-sm">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-amber-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <div class="text-xs text-amber-800">
+          <span class="font-bold">Attention Required:</span> You have {{ urgent_missing_links.count }} meeting(s) scheduled for today that are missing a meeting URL. 
+          {% for apt in urgent_missing_links %}
+            <a href="{% url 'bookings:associate-two-appointment-detail' apt.id %}" class="underline font-semibold ml-1">Add link for {{ apt.client.business_name|default:apt.client.email }} (Meeting at {{ apt.slot.start_time|time:"H:i" }})</a>{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Main Grid: Today's Schedule + Recent Activity -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Today's Meeting Schedule Timeline -->
+    <div class="lg:col-span-2">
+      <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+          <h3 class="text-base font-bold text-gray-900">Today's Schedule</h3>
+          <span class="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
+            {{ todays_meetings.count }} Meeting(s)
+          </span>
+        </div>
+
+        <div class="divide-y divide-gray-100">
+          {% if todays_meetings %}
+            {% for apt in todays_meetings %}
+              <div class="p-6 flex items-center justify-between hover:bg-gray-50/80 transition-colors">
+                <div class="flex items-start space-x-4">
+                  <div class="p-3 rounded-lg bg-gray-100 text-gray-800 text-center min-w-[70px] border border-gray-200">
+                    <span class="block text-xs font-bold uppercase text-gray-900">{{ apt.slot.start_time|time:"H:i" }}</span>
+                    <span class="block text-[10px] text-gray-500">to {{ apt.slot.end_time|time:"H:i" }}</span>
+                  </div>
+
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900">{{ apt.title }}</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                      Client: {{ apt.client.get_full_name|default:apt.client.first_name }} ({{ apt.client.business_name }})
+                    </p>
+                    
+                    {% if apt.meeting_link %}
+                      <a href="{{ apt.meeting_link }}" target="_blank" class="inline-flex items-center text-xs text-indigo-600 hover:text-indigo-800 hover:underline mt-2 font-medium">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Launch Room
+                      </a>
+                    {% else %}
+                      <span class="inline-block text-xs text-amber-600 italic mt-2 font-medium">No meeting link set</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <a href="{% url 'bookings:associate-two-appointment-detail' apt.id %}" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg transition-colors border border-gray-200">
+                  Manage &rarr;
+                </a>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="p-8 text-center text-xs text-gray-400">
+              No meetings scheduled for today.
             </div>
-            <form action="{% url 'fda:update_stage_status' item.tracker.id item.activity.id %}" method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="status" value="COMPLETE">
-              <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition shadow-xs">
-                Mark Complete & Pass to Associate 5
-              </button>
-            </form>
-          </div>
-        {% endfor %}
+          {% endif %}
+        </div>
       </div>
-    {% else %}
-      <p class="text-xs text-slate-400 italic">No tasks currently unlocked for Associate 2. Waiting for Associate 1 completion.</p>
-    {% endif %}
+    </div>
+
+    <!-- Recent Activity Feed -->
+    <div class="lg:col-span-1">
+      <div class="bg-white shadow-sm rounded-xl border border-gray-200 p-6">
+        <h3 class="text-base font-bold text-gray-900 mb-4">Recent Activity</h3>
+
+        <div class="space-y-4">
+          {% if recent_activities %}
+            {% for act in recent_activities %}
+              <div class="flex items-start space-x-3 text-xs">
+                <div class="p-1.5 rounded-full bg-indigo-50 text-indigo-600 mt-0.5 border border-indigo-100">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900">{{ act.title }}</div>
+                  <div class="text-gray-500 mt-0.5">{{ act.message }}</div>
+                  <div class="text-[10px] text-gray-400 mt-1">{{ act.created_at|timesince }} ago</div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-xs text-gray-400 text-center py-4">No recent activity recorded.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Completed History (Read-Only)</h3>
-    {% if completed_tasks %}
-      <div class="space-y-2">
-        {% for item in completed_tasks %}
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs">
-            <span class="font-bold text-slate-700">{{ item.activity.stage.stage_percentage }}% - {{ item.activity.stage.short_stage_name }}</span>
-            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 font-extrabold text-[10px] rounded"><i class="fa-solid fa-check"></i> DONE</span>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="text-xs text-slate-400 italic">No completed tasks yet.</p>
-    {% endif %}
-  </div>
 </div>
 {% endblock %}

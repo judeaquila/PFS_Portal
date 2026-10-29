@@ -1,0 +1,233 @@
+{% extends 'dashboards/base_user.html' %}
+
+{% block title %}My Appointments {% endblock title %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeTab: 'upcoming' }">
+  
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">My Appointments</h2>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">View upcoming schedules, links, action items, and summaries.</p>
+    </div>
+    <a href="{% url 'bookings:client-booking' %}" class="inline-flex items-center justify-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all shadow-sm">
+      + Book New Meeting
+    </a>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <button 
+        @click="activeTab = 'upcoming'"
+        :class="activeTab === 'upcoming' ? 'border-pink-500 text-pink-600 dark:text-pink-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
+        Upcoming / Imminent
+        <span class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-semibold" :class="activeTab === 'upcoming' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">
+          {{ upcoming_appointments|length }}
+        </span>
+      </button>
+
+      <button 
+        @click="activeTab = 'past'"
+        :class="activeTab === 'past' ? 'border-pink-500 text-pink-600 dark:text-pink-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
+        Past & Completed
+        <span class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-semibold" :class="activeTab === 'past' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">
+          {{ past_appointments|length }}
+        </span>
+      </button>
+
+      <button 
+        @click="activeTab = 'cancelled'"
+        :class="activeTab === 'cancelled' ? 'border-pink-500 text-pink-600 dark:text-pink-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors">
+        Cancelled
+        <span class="ml-2 py-0.5 px-2.5 rounded-full text-xs font-semibold" :class="activeTab === 'cancelled' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'">
+          {{ cancelled_appointments|length }}
+        </span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Main Container Card -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    
+    <!-- UPCOMING TAB CONTENT -->
+    <div x-show="activeTab === 'upcoming'" class="divide-y divide-gray-100 dark:divide-gray-700">
+      {% if upcoming_appointments %}
+        {% for apt in upcoming_appointments %}
+          <div class="px-6 py-5 hover:bg-gray-50/80 dark:hover:bg-gray-750 transition-colors">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+              
+              <!-- Date & Meeting Details -->
+              <div class="flex items-start space-x-4 mb-4 md:mb-0">
+                <div class="p-3 rounded-lg bg-pink-50 dark:bg-pink-950/40 border border-pink-100 dark:border-pink-900/50 text-pink-700 dark:text-pink-400 text-center min-w-[70px]">
+                  <span class="block text-[10px] uppercase font-semibold text-pink-600 dark:text-pink-400 tracking-wider mb-0.5">{{ apt.slot.date|date:"l" }}</span>
+                  <span class="block text-xs font-bold uppercase">{{ apt.slot.date|date:"M" }}</span>
+                  <span class="block text-xl font-black leading-none">{{ apt.slot.date|date:"d" }}</span>
+                  <span class="block text-[10px] text-pink-500 dark:text-pink-400 mt-1">{{ apt.slot.date|date:"Y" }}</span>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center space-x-2">
+                    <h4 class="text-base font-bold text-gray-900 dark:text-white">{{ apt.title }}</h4>
+                    <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full 
+                      {% if apt.status == 'SCHEDULED' %}bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800
+                      {% elif apt.status == 'COMPLETED' %}bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800
+                      {% else %}bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300{% endif %}">
+                      {{ apt.get_status_display }}
+                    </span>
+                  </div>
+
+                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Time:</span> {{ apt.slot.start_time|time:"H:i" }} - {{ apt.slot.end_time|time:"H:i" }}
+                  </div>
+
+                  {% if apt.client_notes %}
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      <span class="font-semibold text-gray-700 dark:text-gray-300">Expectations:</span> {{ apt.client_notes }}
+                    </div>
+                  {% endif %}
+
+                  <!-- Meeting Link -->
+                  <div class="pt-1">
+                    {% if apt.meeting_link %}
+                      <a href="{{ apt.meeting_link }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs text-pink-600 dark:text-pink-400 font-semibold hover:underline">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Join Virtual Meeting &nearrow;
+                      </a>
+                    {% else %}
+                      <span class="text-xs text-amber-600 dark:text-amber-400 italic font-medium">
+                        ⚠ Meeting link will be shared with you soon.
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Controls / View Details -->
+              <div class="flex items-center space-x-3 self-end md:self-center">
+                <a href="{% url 'bookings:client-appointment-detail' apt.id %}" class="inline-flex items-center px-3.5 py-2 bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 text-pink-700 dark:text-pink-300 font-semibold text-xs rounded-lg transition-colors border border-pink-100 dark:border-pink-900/50">
+                  View Meeting Details &rarr;
+                </a>
+              </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-12 text-center text-gray-500 dark:text-gray-400">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">No upcoming appointments</p>
+          <p class="text-xs text-gray-500 mt-1">Your scheduled meetings will appear here.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- PAST TAB CONTENT -->
+    <div x-show="activeTab === 'past'" class="divide-y divide-gray-100 dark:divide-gray-700" style="display: none;">
+      {% if past_appointments %}
+        {% for apt in past_appointments %}
+          <div class="px-6 py-5 hover:bg-gray-50/80 dark:hover:bg-gray-750 transition-colors">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+              
+              <!-- Date & Details -->
+              <div class="flex items-start space-x-4 mb-4 md:mb-0">
+                <div class="p-3 rounded-lg bg-pink-50 dark:bg-pink-950/40 border border-pink-100 dark:border-pink-900/50 text-pink-700 dark:text-pink-400 text-center min-w-[70px]">
+                  <span class="block text-[10px] uppercase font-semibold text-pink-600 dark:text-pink-400 tracking-wider mb-0.5">{{ apt.slot.date|date:"l" }}</span>
+                  <span class="block text-xs font-bold uppercase">{{ apt.slot.date|date:"M" }}</span>
+                  <span class="block text-xl font-black leading-none">{{ apt.slot.date|date:"d" }}</span>
+                  <span class="block text-[10px] text-pink-500 dark:text-pink-400 mt-1">{{ apt.slot.date|date:"Y" }}</span>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center space-x-2">
+                    <h4 class="text-base font-bold text-gray-900 dark:text-white">{{ apt.title }}</h4>
+                    <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+                      {{ apt.get_status_display }}
+                    </span>
+                  </div>
+
+                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Time:</span> {{ apt.slot.start_time|time:"H:i" }} - {{ apt.slot.end_time|time:"H:i" }}
+                  </div>
+
+                  {% if apt.summary_document %}
+                    <div class="pt-1">
+                      <a href="{{ apt.summary_document.url }}" target="_blank" class="inline-flex items-center text-xs font-bold text-pink-600 dark:text-pink-400 hover:underline">
+                        📥 Download Summary Document &nearrow;
+                      </a>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Action Controls / View Details -->
+              <div class="flex items-center space-x-3 self-end md:self-center">
+                <a href="{% url 'bookings:client-appointment-detail' apt.id %}" class="inline-flex items-center px-3.5 py-2 bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 text-pink-700 dark:text-pink-300 font-semibold text-xs rounded-lg transition-colors border border-pink-100 dark:border-pink-900/50">
+                  View Meeting Details &rarr;
+                </a>
+              </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-12 text-center text-gray-500 dark:text-gray-400">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">No past or completed appointments</p>
+          <p class="text-xs text-gray-500 mt-1">Completed review summaries will be listed here.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- CANCELLED TAB CONTENT -->
+    <div x-show="activeTab === 'cancelled'" class="divide-y divide-gray-100 dark:divide-gray-700" style="display: none;">
+      {% if cancelled_appointments %}
+        {% for apt in cancelled_appointments %}
+          <div class="px-6 py-5 hover:bg-gray-50/80 dark:hover:bg-gray-750 transition-colors">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+              
+              <div class="flex items-start space-x-4 mb-4 md:mb-0">
+                <div class="p-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 text-center min-w-[70px]">
+                  <span class="block text-[10px] uppercase font-semibold text-gray-400 tracking-wider mb-0.5">{{ apt.slot.date|date:"l" }}</span>
+                  <span class="block text-xs font-bold uppercase">{{ apt.slot.date|date:"M" }}</span>
+                  <span class="block text-xl font-black leading-none">{{ apt.slot.date|date:"d" }}</span>
+                  <span class="block text-[10px] text-gray-400 mt-1">{{ apt.slot.date|date:"Y" }}</span>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex items-center space-x-2">
+                    <h4 class="text-base font-bold text-gray-900 dark:text-white">{{ apt.title }}</h4>
+                    <span class="px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                      {{ apt.get_status_display }}
+                    </span>
+                  </div>
+
+                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Time:</span> {{ apt.slot.start_time|time:"H:i" }} - {{ apt.slot.end_time|time:"H:i" }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Controls / View Details -->
+              <div class="flex items-center space-x-3 self-end md:self-center">
+                <a href="{% url 'bookings:client-appointment-detail' apt.id %}" class="inline-flex items-center px-3.5 py-2 bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 text-pink-700 dark:text-pink-300 font-semibold text-xs rounded-lg transition-colors border border-pink-100 dark:border-pink-900/50">
+                  View Meeting Details &rarr;
+                </a>
+              </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="p-12 text-center text-gray-500 dark:text-gray-400">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">No cancelled appointments</p>
+          <p class="text-xs text-gray-500 mt-1">Cancelled meetings will show up here for your reference.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

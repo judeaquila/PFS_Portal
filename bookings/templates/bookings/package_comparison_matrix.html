@@ -1,0 +1,124 @@
+{% extends 'fda/base_associate_2.html' %}
+{% load custom_filters %}
+
+{% block title %}Package Comparison Matrix | PFS Connect Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">PFS Package Comparison Matrix</h1>
+            <p class="text-xs text-slate-500 mt-1">
+                Overview of FDA compliance tracks, scope limits, pricing, and package inclusions.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                <span class="font-bold">✔</span> Included
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-700 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200">
+                <span class="font-bold">✘</span> Add-on Required
+            </span>
+        </div>
+    </div>
+
+    <!-- Package Comparison Matrix Table Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <!-- Package Tier Headers -->
+                    <tr class="bg-slate-950 text-white text-xs uppercase tracking-wider">
+                        <th class="p-4 border-b border-slate-800 font-bold min-w-[200px]">Activity Name</th>
+                        <th class="p-4 border-b border-slate-800 font-bold text-center min-w-[90px]">Scope</th>
+                        {% for pkg in packages %}
+                            <th class="p-4 border-b border-slate-800 font-bold text-center min-w-[110px] text-[11px] leading-snug">
+                                {{ pkg.name }}
+                            </th>
+                        {% endfor %}
+                    </tr>
+                    <!-- Price Row -->
+                    <tr class="bg-indigo-50/80 text-indigo-950 text-xs font-bold border-b border-indigo-100">
+                        <td class="p-3 uppercase tracking-wider text-indigo-900">Package Price (GHS)</td>
+                        <td class="p-3 text-center text-slate-400">—</td>
+                        {% for pkg in packages %}
+                            <td class="p-3 text-center text-indigo-700 font-mono text-sm">
+                                {% if pkg.price_ghs > 0 %}
+                                    {{ pkg.price_ghs|floatformat:0 }}
+                                {% else %}
+                                    Custom
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
+                    {% for row in matrix_grid %}
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <!-- Activity Title -->
+                            <td class="p-3.5 font-semibold text-slate-900">
+                                {{ row.activity_name }}
+                            </td>
+                            <!-- Scope -->
+                            <td class="p-3.5 text-center">
+                                <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                                    {{ row.scope }}
+                                </span>
+                            </td>
+                            <!-- Package Inclusions Checks -->
+                            {% for pkg in packages %}
+                                <td class="p-3.5 text-center">
+                                    {% if row.inclusions|get_item:pkg.code %}
+                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs">
+                                            ✔
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-300 font-bold text-xs">
+                                            ✘
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add-Ons Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 sm:p-8 space-y-6">
+        <div>
+            <h2 class="text-base font-bold text-slate-900 uppercase tracking-wider">
+                Add-On Services & Individual Activity Pricing
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">
+                These standalone services can be engaged separately where they fall outside of a client's chosen package.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for addon in add_ons %}
+                <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition shadow-xs flex flex-col justify-between space-y-2">
+                    <div>
+                        <div class="flex justify-between items-start gap-2">
+                            <h3 class="text-xs font-bold text-slate-900">{{ addon.name }}</h3>
+                            <span class="text-xs font-mono font-bold text-indigo-600 shrink-0 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                                GHS {{ addon.price_ghs|floatformat:2 }}
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                            {{ addon.description }}
+                        </p>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-xs text-slate-400 italic">No add-ons currently configured.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

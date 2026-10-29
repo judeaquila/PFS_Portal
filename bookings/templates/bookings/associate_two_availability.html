@@ -1,0 +1,265 @@
+{% extends "fda/base_associate_2.html" %}
+
+{% block title %}My Availability Schedule - Project Assessment Assistant{% endblock title %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeTab: 'single', scheduleView: 'upcoming', filterBooked: 'all' }">
+  
+  <!-- Header -->
+  <div class="md:flex md:items-center md:justify-between mb-8">
+    <div class="min-w-0 flex-1">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+        Manage Availability Slots
+      </h2>
+      <p class="mt-1 text-sm text-gray-500">
+        Set up periods when clients can book meetings with you and track past schedules.
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Left Column: Add Slot Forms -->
+    <div class="lg:col-span-1 space-y-6">
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-gray-200">
+        
+        <!-- Form Mode Switcher -->
+        <div class="flex border-b border-gray-200 mb-6">
+          <button 
+            @click="activeTab = 'single'" 
+            :class="{ 'border-indigo-600 text-indigo-600 font-semibold': activeTab === 'single', 'border-transparent text-gray-500 hover:text-gray-700': activeTab !== 'single' }"
+            class="w-1/2 py-2 text-center text-sm border-b-2 transition-colors duration-150">
+            Single Slot
+          </button>
+          <button 
+            @click="activeTab = 'bulk'" 
+            :class="{ 'border-indigo-600 text-indigo-600 font-semibold': activeTab === 'bulk', 'border-transparent text-gray-500 hover:text-gray-700': activeTab !== 'bulk' }"
+            class="w-1/2 py-2 text-center text-sm border-b-2 transition-colors duration-150">
+            Bulk Create
+          </button>
+        </div>
+
+        <!-- Single Slot Form -->
+        <div x-show="activeTab === 'single'" x-cloak>
+          <form action="{% url 'bookings:associate-two-create-slot' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Date</label>
+              {{ single_form.date }}
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Start Time</label>
+                {{ single_form.start_time }}
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">End Time</label>
+                {{ single_form.end_time }}
+              </div>
+            </div>
+            <button type="submit" class="w-full mt-2 inline-flex justify-center items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
+              + Add Slot
+            </button>
+          </form>
+        </div>
+
+        <!-- Bulk Slot Form -->
+        <div x-show="activeTab === 'bulk'" x-cloak>
+          <form action="{% url 'bookings:associate-two-bulk-slots' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Date</label>
+              {{ bulk_form.date }}
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Window Start</label>
+                {{ bulk_form.start_time }}
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Window End</label>
+                {{ bulk_form.end_time }}
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Slot Duration (Mins)</label>
+              {{ bulk_form.slot_duration }}
+            </div>
+            <button type="submit" class="w-full mt-2 inline-flex justify-center items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
+              Generate Slots
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Column: List of Slots (Upcoming vs Past) -->
+    <div class="lg:col-span-2">
+      <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+        
+        <!-- Header Controls: View Switcher (Upcoming / Past) + Filter -->
+        <div class="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
+          
+          <!-- Upcoming vs Past Toggle -->
+          <div class="inline-flex rounded-lg bg-gray-200/70 p-1">
+            <button 
+              @click="scheduleView = 'upcoming'" 
+              :class="{ 'bg-white text-gray-900 shadow-sm font-semibold': scheduleView === 'upcoming', 'text-gray-600 hover:text-gray-900': scheduleView !== 'upcoming' }"
+              class="px-3 py-1.5 text-xs rounded-md transition-all">
+              Upcoming Slots ({{ upcoming_slots.count }})
+            </button>
+            <button 
+              @click="scheduleView = 'past'" 
+              :class="{ 'bg-white text-gray-900 shadow-sm font-semibold': scheduleView === 'past', 'text-gray-600 hover:text-gray-900': scheduleView !== 'past' }"
+              class="px-3 py-1.5 text-xs rounded-md transition-all">
+              Past Slots ({{ past_slots.count }})
+            </button>
+          </div>
+
+          <!-- Availability Filter -->
+          <div class="flex items-center space-x-2 self-end sm:self-center">
+            <span class="text-xs text-gray-500">Filter:</span>
+            <select x-model="filterBooked" class="text-xs rounded-lg border-gray-300 bg-white text-gray-700 py-1.5 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="all">All Slots</option>
+              <option value="available">Available Only</option>
+              <option value="booked">Booked Only</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- UPCOMING SLOTS SECTION -->
+        <div x-show="scheduleView === 'upcoming'" class="divide-y divide-gray-100">
+          {% if upcoming_slots %}
+            {% for slot in upcoming_slots %}
+              <div 
+                x-show="filterBooked === 'all' || (filterBooked === 'available' && !{{ slot.is_booked|yesno:'true,false' }}) || (filterBooked === 'booked' && {{ slot.is_booked|yesno:'true,false' }})"
+                class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/80 transition-colors">
+                
+                <div class="flex items-start space-x-4">
+                  <!-- Date Badge -->
+                  <div class="p-2.5 rounded-lg bg-gray-100 text-gray-700 text-center min-w-[70px] border border-gray-200 flex-shrink-0">
+                    <span class="block text-[10px] uppercase font-bold text-indigo-600 tracking-wider mb-0.5">{{ slot.date|date:"D" }}</span>
+                    <span class="block text-xs font-bold uppercase">{{ slot.date|date:"M" }}</span>
+                    <span class="block text-lg font-black leading-none text-gray-900">{{ slot.date|date:"d" }}</span>
+                    <span class="block text-[10px] text-gray-500 mt-0.5">{{ slot.date|date:"Y" }}</span>
+                  </div>
+
+                  <!-- Time & Client Information -->
+                  <div>
+                    <div class="text-sm font-bold text-gray-900">
+                      {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                    </div>
+
+                    {% if slot.is_booked and slot.appointment %}
+                      <div class="mt-1">
+                        <span class="text-xs font-bold text-indigo-900">
+                          Client: {{ slot.appointment.client.business_name|default:slot.appointment.client.get_full_name|default:slot.appointment.client.first_name }}
+                        </span>
+                        <p class="text-xs text-gray-500 line-clamp-1">Topic: {{ slot.appointment.title }}</p>
+                      </div>
+                    {% else %}
+                      <div class="text-xs text-gray-400 italic mt-0.5">Unbooked Slot</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Status & Action Link -->
+                <div class="flex items-center space-x-3 self-end sm:self-center">
+                  {% if slot.is_booked and slot.appointment %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                      Booked
+                    </span>
+                    <a href="{% url 'bookings:associate-two-appointment-detail' slot.appointment.id %}" class="inline-flex items-center px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-lg transition-colors">
+                      Manage &rarr;
+                    </a>
+                  {% else %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Available
+                    </span>
+                    <form action="{% url 'bookings:associate-two-delete-slot' slot.id %}" method="POST" onsubmit="return confirm('Delete this slot?');">
+                      {% csrf_token %}
+                      <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium ml-2">
+                        Delete
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="p-8 text-center text-xs text-gray-500">
+              No upcoming slots created. Use the form on the left to set availability.
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- PAST SLOTS SECTION -->
+        <div x-show="scheduleView === 'past'" x-cloak class="divide-y divide-gray-100">
+          {% if past_slots %}
+            {% for slot in past_slots %}
+              <div 
+                x-show="filterBooked === 'all' || (filterBooked === 'available' && !{{ slot.is_booked|yesno:'true,false' }}) || (filterBooked === 'booked' && {{ slot.is_booked|yesno:'true,false' }})"
+                class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/40 hover:bg-gray-50 transition-colors opacity-90">
+                
+                <div class="flex items-start space-x-4">
+                  <!-- Date Badge -->
+                  <div class="p-2.5 rounded-lg bg-gray-200/60 text-gray-600 text-center min-w-[70px] border border-gray-200 flex-shrink-0">
+                    <span class="block text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">{{ slot.date|date:"D" }}</span>
+                    <span class="block text-xs font-bold uppercase">{{ slot.date|date:"M" }}</span>
+                    <span class="block text-lg font-black leading-none text-gray-800">{{ slot.date|date:"d" }}</span>
+                    <span class="block text-[10px] text-gray-500 mt-0.5">{{ slot.date|date:"Y" }}</span>
+                  </div>
+
+                  <!-- Time & Client Information -->
+                  <div>
+                    <div class="text-sm font-semibold text-gray-700">
+                      {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                    </div>
+
+                    {% if slot.is_booked and slot.appointment %}
+                      <div class="mt-1">
+                        <span class="text-xs font-bold text-gray-800">
+                          Client: {{ slot.appointment.client.business_name|default:slot.appointment.client.get_full_name|default:slot.appointment.client.first_name }}
+                        </span>
+                        <p class="text-xs text-gray-500 line-clamp-1">Topic: {{ slot.appointment.title }}</p>
+                      </div>
+                    {% else %}
+                      <div class="text-xs text-gray-400 italic mt-0.5">Expired Unbooked Slot</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Status & Details Link -->
+                <div class="flex items-center space-x-3 self-end sm:self-center">
+                  {% if slot.is_booked and slot.appointment %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                      Completed / Past
+                    </span>
+                    <a href="{% url 'bookings:associate-two-appointment-detail' slot.appointment.id %}" class="inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-xs rounded-lg transition-colors">
+                      View Details &rarr;
+                    </a>
+                  {% else %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                      Expired
+                    </span>
+                  {% endif %}
+                </div>
+
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="p-8 text-center text-xs text-gray-500">
+              No past slot history found.
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

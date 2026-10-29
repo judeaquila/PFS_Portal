@@ -1,0 +1,17 @@
+<!-- Financial Badge & Payment Status Component -->
+<div class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-2xs">
+    <div class="text-left">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span>{{ project.client_package.name }}</span>
+            <span class="text-indigo-600 font-mono font-semibold">GHS {{ project.package_price_ghs|floatformat:2 }}</span>
+        </div>
+        <div class="text-xs font-medium text-slate-700 mt-0.5 flex items-center gap-2">
+            <span>Paid: <strong class="text-emerald-700 font-mono">GHS {{ project.amount_paid_ghs|floatformat:2 }}</strong></span>
+            {% if project.balance_due_ghs > 0 %}
+                <span class="text-rose-600 font-mono text-[11px]">(Bal: GHS {{ project.balance_due_ghs|floatformat:2 }})</span>
+            {% else %}
+                <span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.2 rounded">Fully Paid</span>
+            {% endif %}
+        </div>
+    </div>
+</div>

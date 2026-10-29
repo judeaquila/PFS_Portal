@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db.models import Q, Count, F
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from common.decorators import role_required
 from accounts.models import UserRole
@@ -16,6 +17,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import json
 from django.db import transaction
 from dashboard.signals import get_activities_for_package
+from bookings.models import AvailabilitySlot, Appointment, InAppNotification
 
 User = get_user_model()
 
@@ -50,6 +52,68 @@ def associate_one_dashboard(request):
 @login_required
 def associate_two_dashboard(request):
     return get_role_dashboard(request, 'ASSOCIATE_2', 'fda/associate_2.html')
+
+
+@login_required
+@role_required([UserRole.ASSOCIATE_2])
+def associate_two_dashboard(request):
+    """
+    FBV for overall Admin Dashboard with high-level KPIs, urgent alerts,
+    today's schedule, and recent activity.
+    """
+    today = timezone.now().date()
+    now = timezone.now()
+
+    # KPI Statistics
+    total_appointments = Appointment.objects.count()
+    upcoming_appointments_count = Appointment.objects.filter(
+        status=Appointment.StatusChoices.SCHEDULED,
+        slot__date__gte=today
+    ).count()
+    
+    # Urgent: Scheduled meetings missing links
+    missing_links_count = Appointment.objects.filter(
+        status=Appointment.StatusChoices.SCHEDULED,
+        slot__date__gte=today
+    ).filter(
+        Q(meeting_link__isnull=True) | Q(meeting_link__exact='')
+    ).count()
+
+    total_clients_count = Appointment.objects.values('client').distinct().count()
+
+    # Urgent Meetings (Next 24 hours missing links)
+    urgent_missing_links = Appointment.objects.filter(
+        status=Appointment.StatusChoices.SCHEDULED,
+        slot__date=today,
+        meeting_link__isnull=True
+    ).select_related('slot', 'client')
+
+    # Today's Scheduled Meetings
+    todays_meetings = Appointment.objects.filter(
+        slot__date=today
+    ).select_related('slot', 'client').order_by('slot__start_time')
+
+    # Recent Activity (Latest 6 Notifications)
+    recent_activities = InAppNotification.objects.select_related('recipient', 'appointment')[:6]
+
+    # Slot Stats
+    available_slots_count = AvailabilitySlot.objects.filter(
+        date__gte=today,
+        is_booked=False
+    ).count()
+
+    context = {
+        'total_appointments': total_appointments,
+        'upcoming_appointments_count': upcoming_appointments_count,
+        'missing_links_count': missing_links_count,
+        'total_clients_count': total_clients_count,
+        'available_slots_count': available_slots_count,
+        'urgent_missing_links': urgent_missing_links,
+        'todays_meetings': todays_meetings,
+        'recent_activities': recent_activities,
+        'today': today,
+    }
+    return render(request, 'fda/associate_2.html', context)
 
 @login_required
 def associate_four_dashboard(request):

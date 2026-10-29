@@ -4,7 +4,6 @@ from . import views
 app_name = 'fda'
 
 urlpatterns = [
-    # Dashboard Routes per Associate Tier
     path('dashboard/associate-1/', views.associate_one_dashboard, name='associate-one-dashboard'),
     path('dashboard/associate-2/', views.associate_two_dashboard, name='associate-two-dashboard'),
     path('dashboard/associate-3/', views.associate_three_dashboard, name='associate-three-dashboard'),
@@ -18,7 +17,6 @@ urlpatterns = [
     path("dashboard/associate-3/client/project_board/<int:project_id>/", views.associate_three_project_board, name="associate-three-project-board"),
     path("dashboard/associate-3/client/global-projects-board/", views.associate_three_global_projects_board, name="associate-three-global-projects-board"),
 
-    # FDA Core Workspace Sheets
     path('matrix/', views.tracker_list_view, name='tracker_list'),
     path('tasks/', views.team_tasks_view, name='team_tasks'),
     path('payments/', views.payment_register_view, name='payment_register'),

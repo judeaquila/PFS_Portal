@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Associate Dashboard | PFS Connect Portal{% endblock %}</title>
+    <title>{% block title %}{% endblock %} | Associate Dashboard | PFS Connect Portal</title>
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'core/img/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/img/favicon-32x32.png' %}">
@@ -29,7 +29,7 @@
         <nav class="flex-1 px-4 space-y-1 mt-6 overflow-y-auto">
             {% with request.resolver_match.url_name as url_name %}
             <a href="{% url 'fda:associate-three-dashboard' %}" 
-            class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'associate-three-dashboard' or url_name == 'consultant-dashboard' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
+            class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition {% if url_name == 'associate-three-dashboard' %}bg-indigo-700 text-white shadow-sm{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-100{% endif %}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 Overview
             </a>
@@ -64,7 +64,7 @@
                 <button @click="mobileSidebarOpen = true" class="text-slate-600 hover:text-indigo-600 md:hidden focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
-                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider hidden sm:block">Associate 3 Workspace</h2>
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider hidden sm:block">Document Review & Applications Assistant Workspace</h2>
             </div>
             
             <div class="flex items-center gap-3">
@@ -83,7 +83,7 @@
                 </div>
 
                 <span class="bg-indigo-50 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100">
-                    Associate 3: {{ user.first_name }}
+                    Logged in as: {{ user.first_name }}
                 </span>
             </div>
         </header>
