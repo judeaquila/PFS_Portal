@@ -390,13 +390,13 @@ PFS | Packages & Service Matrix
                                 <th rowspan="2" class="p-4 border-b border-r border-slate-800 min-w-[220px] align-bottom">Activity / Scope</th>
                                 
                                 <!-- BASIC -->
-                                <th x-show="matrixFilter === 'all' || matrixFilter === 'basic'" colspan="3" class="p-3 border-b border-r border-slate-800 bg-slate-800 text-center font-bold">BASIC</th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'basic'" colspan="4" class="p-3 border-b border-r border-slate-800 bg-slate-800 text-center font-bold">BASIC</th>
                                 
                                 <!-- STANDARD -->
-                                <th x-show="matrixFilter === 'all' || matrixFilter === 'standard'" colspan="3" class="p-3 border-b border-r border-slate-800 bg-pink-950 text-center font-bold">STANDARD</th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'standard'" colspan="4" class="p-3 border-b border-r border-slate-800 bg-pink-950 text-center font-bold">STANDARD</th>
                                 
                                 <!-- ADVANCED -->
-                                <th x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" colspan="3" class="p-3 border-b border-slate-800 bg-indigo-950 text-center font-bold">ADVANCED</th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" colspan="4" class="p-3 border-b border-slate-800 bg-indigo-950 text-center font-bold">ADVANCED</th>
                             </tr>
                             <tr class="bg-slate-900 text-white text-[10px]">
                                 <!-- BASIC SUBHEADERS -->
@@ -404,10 +404,13 @@ PFS | Packages & Service Matrix
                                     BASIC (ALL)<br>
                                 </th>
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 border-b border-r border-slate-800 bg-slate-800/90 text-center min-w-[120px]">
-                                    BASIC PLUS (FOOD)<br>
+                                    BASIC PLUS (FOOD/PHARMA)<br>
                                 </th>
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 border-b border-r border-slate-800 bg-slate-800/90 text-center min-w-[120px]">
                                     BASIC PLUS (COSMETICS)<br>
+                                </th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 border-b border-r border-slate-800 bg-slate-800/90 text-center min-w-[120px]">
+                                    BASIC PLUS (FOOD SERVICE)<br>
                                 </th>
 
                                 <!-- STANDARD SUBHEADERS -->
@@ -415,40 +418,91 @@ PFS | Packages & Service Matrix
                                     STANDARD (ALL)<br>
                                 </th>
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 border-b border-r border-slate-800 bg-pink-950/90 text-center min-w-[130px]">
-                                    STANDARD PLUS (FOOD)<br>
+                                    STANDARD PLUS (FOOD/PHARMA)<br>
                                 </th>
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 border-b border-r border-slate-800 bg-pink-950/90 text-center min-w-[130px]">
                                     STANDARD PLUS (COSMETICS)<br>
                                 </th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 border-b border-r border-slate-800 bg-pink-950/90 text-center min-w-[130px]">
+                                    STANDARD PLUS (FOOD SERVICE)<br>
+                                </th>
 
                                 <!-- ADVANCED SUBHEADERS -->
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 border-b border-r border-slate-800 bg-indigo-950/90 text-center min-w-[140px]">
-                                    ADVANCED<br>
+                                    ADVANCED (ALL)<br>
                                 </th>
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 border-b border-r border-slate-800 bg-indigo-950/90 text-center min-w-[140px]">
-                                    ADVANCED PLUS (FOOD)<br>
+                                    ADVANCED PLUS (FOOD/PHARMA)<br>
+                                </th>
+                                <th x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 border-b border-r border-slate-800 bg-indigo-950/90 text-center min-w-[140px]">
+                                    ADVANCED PLUS (COSMETICS)<br>
                                 </th>
                                 <th x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 border-b border-slate-800 bg-indigo-950/90 text-center min-w-[140px]">
-                                    ADVANCED PLUS (COSMETICS)<br>
+                                    ADVANCED PLUS (FOOD SERVICE)<br>
                                 </th>
                             </tr>
                             <tr class="bg-slate-100 font-extrabold text-slate-900 border-b border-slate-200">
                                 <td class="p-3 text-slate-700 border-r border-slate-200">PRICE (GHS)</td>
                                 
                                 <!-- Basic Prices -->
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,080.00</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,800.00</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,440.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 2,504.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 3,308.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 2,912.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 2,504.00</td>
                                 
                                 <!-- Standard Prices -->
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,320.00</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 2,040.00</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,680.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 2,900.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 3,704.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 3,308.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 2,504.00</td>
                                 
                                 <!-- Advanced Prices -->
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 3,480.00</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 4,200.00</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center">GHS 3,840.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 2,900.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 5,708.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 5,312.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center">GHS 4,508.00</td>
+                            </tr>
+                            <tr class="bg-slate-50 font-semibold text-slate-800 border-b border-slate-200">
+                                <td class="p-3 text-slate-700 border-r border-slate-200">ADDITIONAL PRICE (GHS) – EXTRA PRODUCT (SIMILAR)</td>
+                                
+                                <!-- Basic Extra Similar -->
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 804.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,008.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,008.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200 text-slate-400">N/A</td>
+                                
+                                <!-- Standard Extra Similar -->
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 804.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,008.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,008.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200 text-slate-400">N/A</td>
+                                
+                                <!-- Advanced Extra Similar -->
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 804.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 1,008.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 1,008.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center text-slate-400">N/A</td>
+                            </tr>
+                            <tr class="bg-slate-50 font-semibold text-slate-800 border-b border-slate-200">
+                                <td class="p-3 text-slate-700 border-r border-slate-200">ADDITIONAL PRICE (GHS) – EXTRA PRODUCT (DIFFERENT)</td>
+                                
+                                <!-- Basic Extra Different -->
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,608.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,812.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200">GHS 1,812.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="p-3 text-center border-r border-slate-200 text-slate-400">N/A</td>
+                                
+                                <!-- Standard Extra Different -->
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,608.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,812.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200">GHS 1,812.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="p-3 text-center border-r border-slate-200 text-slate-400">N/A</td>
+                                
+                                <!-- Advanced Extra Different -->
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 1,608.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 1,812.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center border-r border-slate-200">GHS 1,812.00</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="p-3 text-center text-slate-400">N/A</td>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -459,9 +513,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -473,9 +530,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -487,9 +547,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -501,9 +564,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -515,11 +581,14 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
                             </tr>
 
@@ -529,11 +598,14 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
                             </tr>
 
@@ -543,9 +615,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -557,9 +632,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -571,12 +649,15 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
                             </tr>
 
                             <!-- ROW 10 -->
@@ -585,12 +666,15 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
                             </tr>
 
                             <!-- ROW 11 -->
@@ -599,12 +683,15 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
-                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
                             </tr>
 
                             <!-- ROW 12 -->
@@ -613,9 +700,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -627,9 +717,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -641,9 +734,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -655,9 +751,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-emerald-600 font-bold">✓</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-emerald-600 font-bold">✓</td>
@@ -669,9 +768,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
@@ -683,9 +785,12 @@ PFS | Packages & Service Matrix
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'basic'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'standard'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
+                                <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 border-r border-slate-100 text-slate-300 font-bold">✕</td>
                                 <td x-show="matrixFilter === 'all' || matrixFilter === 'advanced'" class="text-center p-3 text-slate-300 font-bold">✕</td>
