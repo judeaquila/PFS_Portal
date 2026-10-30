@@ -122,10 +122,13 @@
                             onchange="if (this.value) window.location.href = this.value;"
                             class="bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-xs">
                             <option value="{% url 'dashboard:supervisor-dashboard' %}" {% if request.resolver_match.url_name == 'supervisor-dashboard' %}selected{% endif %}>
-                                View Supervisor Dashboard
+                                Supervisor Dashboard
                             </option>
                             <option value="{% url 'fda:associate-three-dashboard' %}" {% if request.resolver_match.app_name == 'fda' and 'associate-three' in request.resolver_match.url_name %}selected{% endif %}>
-                                View Associate Dashboard
+                                Document Review &amp; Applications Dashboard
+                            </option>
+                            <option value="{% url 'fda:associate-two-dashboard' %}" {% if request.resolver_match.app_name == 'fda' and 'associate-two' in request.resolver_match.url_name %}selected{% endif %}>
+                                Project Assessment Dashboard
                             </option>
                         </select>
                     </div>

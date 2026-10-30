@@ -20,7 +20,12 @@
            :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'">
         
         <div class="p-6 border-b border-slate-900 bg-slate-900/40 flex justify-between items-center">
-            <a href="{% url 'fda:associate-three-dashboard' %}" class="text-xl font-black tracking-wider text-indigo-400">PFS ASSOCIATE</a>
+            <div>
+                <a href="{% url 'fda:associate-three-dashboard' %}" class="text-xl font-black tracking-wider text-indigo-400">
+                    PFS AMBASSADOR
+                </a>
+                <span class="block text-[10px] font-medium text-slate-400 tracking-wide mt-0.5">Document Review &amp; Applications Assistant</span>
+            </div>
             <button @click="mobileSidebarOpen = false" class="text-slate-400 hover:text-white md:hidden">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -74,10 +79,10 @@
                         onchange="if (this.value) window.location.href = this.value;"
                         class="bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-xs">
                         <option value="{% url 'fda:associate-three-dashboard' %}" {% if request.resolver_match.app_name == 'fda' and 'associate-three' in request.resolver_match.url_name %}selected{% endif %}>
-                            View Associate Dashboard
+                            Document Review &amp; Applications Dashboard
                         </option>
                         <option value="{% url 'dashboard:supervisor-dashboard' %}" {% if request.resolver_match.url_name == 'supervisor-dashboard' %}selected{% endif %}>
-                            View Supervisor Dashboard
+                            Supervisor Dashboard
                         </option>
                     </select>
                 </div>

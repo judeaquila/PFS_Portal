@@ -1004,7 +1004,7 @@ def admin_review_client_portfolio(request, client_id):
 # ****************************************************************************************************************************** #
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_dashboard(request):
     """
     Supervisor operational dashboard.
@@ -1085,7 +1085,7 @@ def supervisor_dashboard(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_associates(request):
     """Renders directory table managing associates with per-exam performance modal data."""
     
@@ -1135,7 +1135,7 @@ def supervisor_associates(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_process_verification(request, profile_id, action):
     """Processes verification assets against explicit design parameters."""
     if request.method == 'POST':
@@ -1164,7 +1164,7 @@ def supervisor_process_verification(request, profile_id, action):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_client_payments(request):
     """
     Allows supervisors to view client transaction records and filter payments.
@@ -1204,7 +1204,7 @@ def supervisor_client_payments(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_staff_schedules(request):
     """
     Displays weekly availability schedules for Consultants and Associates.
@@ -1233,7 +1233,7 @@ def supervisor_staff_schedules(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_verifications_list(request):
     """
     Lists pending, approved, and declined verifications for Associates and Consultants.
@@ -1249,7 +1249,7 @@ def supervisor_verifications_list(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_process_ambassador_verification(request, profile_id, action):
     """
     Approves or declines verification assets submitted by an Associate.
@@ -1277,7 +1277,7 @@ def supervisor_process_ambassador_verification(request, profile_id, action):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_process_consultant_verification(request, profile_id, action):
     """
     Approves or declines verification assets submitted by a Consultant.
@@ -1306,7 +1306,7 @@ def supervisor_process_consultant_verification(request, profile_id, action):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_reassign_associate(request, assignment_id):
     """
     Override and reassign an active or cancelled field associate assignment to another agent.
@@ -1341,7 +1341,7 @@ def supervisor_reassign_associate(request, assignment_id):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_project_oversight(request):
     """
     Read-only global operational overview monitoring all active client project boards
@@ -1376,7 +1376,7 @@ def supervisor_project_oversight(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_payout_audit_queue(request):
     """
     Review and audit field assignment completion sign-offs before marking payouts 
@@ -1427,7 +1427,7 @@ def supervisor_payout_audit_queue(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_staff_activity_logs(request):
     """
     Filtered activity log audit view displaying actions performed by Consultants and Associates.
@@ -1471,7 +1471,7 @@ def supervisor_staff_activity_logs(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_create_client_view(request):
     """Allows Supervisor to manually onboard a client and generate verified payment records."""
     
@@ -1534,7 +1534,7 @@ def supervisor_create_client_view(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_add_historical_payment_view(request, user_id):
     """Log past/historical payments for an existing user account."""
     target_user = get_object_or_404(User, id=user_id)
@@ -1560,7 +1560,7 @@ def supervisor_add_historical_payment_view(request, user_id):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_client_created_success_view(request):
     """Displays temporary account credentials immediately after manual client creation."""
     client_info = request.session.pop('created_client_info', None)
@@ -1577,7 +1577,7 @@ def supervisor_client_created_success_view(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_user_list(request):
     """Lists all clients with search by name/email/phone and filter by role."""
     query = request.GET.get('q', '').strip()
@@ -1605,7 +1605,7 @@ def supervisor_user_list(request):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_user_detail(request, pk):
     """Shows full account profile including attached profiles, exam history, and payment history."""
     target_user = get_object_or_404(User, pk=pk)
@@ -1636,7 +1636,7 @@ def supervisor_user_detail(request, pk):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 def supervisor_user_update(request, pk):
     """
     Handles updating base User details for regular users.
@@ -1664,7 +1664,7 @@ def supervisor_user_update(request, pk):
 
 
 @login_required
-@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3])
+@role_required([UserRole.SUPERVISOR, UserRole.ASSOCIATE_3, UserRole.ASSOCIATE_2])
 @require_POST
 def supervisor_user_toggle_active(request, pk):
     """Safely toggles active status to enable/disable user accounts without deleting records."""
