@@ -110,22 +110,60 @@
                                 {{ doc_key|choice_label }}
                             </h4>
                             <p class="text-xs text-slate-500 mt-0.5">
-                                Upload clean files for {{ doc_key|choice_label }}.
+                                Upload clear files for {{ doc_key|choice_label }}.
                             </p>
                             
                             <!-- List all uploaded files for this category -->
                             {% if doc_list %}
-                                <div class="mt-2 space-y-2">
+                                <div class="mt-2 space-y-3">
                                     {% for doc in doc_list %}
-                                        <div class="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-200 p-2 rounded-lg">
-                                            <span class="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                                {{ doc.get_status_display }}
-                                            </span>
-                                            <span class="text-xs text-slate-600 truncate max-w-[200px]">{{ doc.file.name|default:"Uploaded File" }}</span>
-                                            <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline flex items-center gap-1 ml-auto">
-                                                <span>View File</span>
-                                                <span>↗</span>
-                                            </a>
+                                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-3">
+                                            
+                                            <!-- File Item Header Row -->
+                                            <div class="flex flex-wrap items-center gap-3">
+                                                <!-- Dynamic Status Badge -->
+                                                <span class="inline-flex items-center text-[10px] font-semibold border px-2.5 py-0.5 rounded-full
+                                                    {% if doc.status == 'APPROVED' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                                    {% elif doc.is_rejected %}bg-red-50 text-red-700 border-red-200
+                                                    {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                                    {{ doc.get_status_display }}
+                                                </span>
+
+                                                <span class="text-xs text-slate-600 truncate max-w-[200px]" title="{{ doc.file.name }}">
+                                                    {{ doc.file.name|default:"Uploaded File" }}
+                                                </span>
+
+                                                <a href="{{ doc.file.url }}" target="_blank" class="text-xs font-bold text-pink-600 hover:underline flex items-center gap-1 ml-auto">
+                                                    <span>View File</span>
+                                                    <span>↗</span>
+                                                </a>
+                                            </div>
+
+                                            <!-- Rejection Notes & Feedback File Section -->
+                                            {% if doc.is_rejected and doc.rejection_reason %}
+                                                <div class="text-xs bg-red-50/80 border border-red-100 rounded-lg p-3 text-red-800 space-y-2">
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                        </svg>
+                                                        <div>
+                                                            <strong class="font-bold">Rejection Reason / Required Fix:</strong>
+                                                            <p class="mt-1 text-red-700 font-normal leading-relaxed">{{ doc.rejection_reason }}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {% if doc.rejection_file %}
+                                                        <div class="pt-2 border-t border-red-200/60 flex items-center justify-between">
+                                                            <span class="font-medium text-red-800">Attached Feedback Report:</span>
+                                                            <a href="{{ doc.rejection_file.url }}" target="_blank" class="font-bold text-red-700 hover:underline flex items-center gap-1 bg-white px-2.5 py-1 rounded border border-red-200 shadow-xs">
+                                                                <span>Download Report</span>
+                                                                <span>↗</span>
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+
                                         </div>
                                     {% endfor %}
                                 </div>

@@ -806,32 +806,282 @@ def admin_user_list(request):
 @login_required
 @role_required([UserRole.SUPER_ADMIN])
 def admin_user_detail(request, pk):
-    """Shows full account profile including attached profiles, exam history, and payment history."""
+    """
+    Shows full account profile including attached profiles, exam history, 
+    payment history, and complete client document review/audit workspace.
+    """
     target_user = get_object_or_404(User, pk=pk)
     
-    # Fetch Exam History
+    # ==========================================
+    # EXAM & PAYMENT ANALYTICS
+    # ==========================================
     exam_attempts = ExamAttempt.objects.filter(user=target_user).order_by('-attempt_date')
     latest_exam_attempt = exam_attempts.first()
     has_passed_exam = exam_attempts.filter(passed=True).exists()
     
-    # Check related manager dynamically and optimize related package lookups
     payments_manager = getattr(target_user, 'payments', None) or getattr(target_user, 'payment_set', None)
     onboarding_payments = payments_manager.select_related('package').all() if payments_manager else []
-    
     custom_payments = PaymentRequest.objects.filter(user=target_user).order_by('-created_at')
-    
+
+    # ==========================================
+    # CLIENT DOCUMENT AUDIT WORKSPACE DATA
+    # ==========================================
+    documents_data = []
+    supplementary_documents = []
+    active_projects = []
+
+    if target_user.role == UserRole.USER or not target_user.role:
+        client_docs = target_user.documents.all()
+        active_projects = target_user.projects.all().order_by("-id")
+        
+        # Map uploaded documents into a dictionary mapping document types to lists of documents
+        uploaded_dict = {}
+        for doc in client_docs:
+            if str(doc.document_type).upper() != str(DocumentType.SUPPLEMENTARY):
+                key_clean = str(doc.document_type.value if hasattr(doc.document_type, 'value') else doc.document_type).upper()
+                uploaded_dict.setdefault(key_clean, []).append(doc)
+        
+        # Dynamically resolve mandatory document keys for this specific client
+        req_types = get_required_document_types(target_user)
+        required_keys = [dt.value for dt in req_types] if req_types and hasattr(req_types[0], 'value') else req_types
+        doc_choices_dict = dict(DocumentType.choices) if hasattr(DocumentType, 'choices') else {}
+
+        def get_label_for_key(raw_key):
+            if raw_key in doc_choices_dict:
+                return doc_choices_dict[raw_key]
+            return str(raw_key).replace('_', ' ').title()
+
+        for type_key in required_keys:
+            type_key_clean = str(type_key).upper()
+            documents_data.append({
+                'type_key': type_key_clean,
+                'type_label': get_label_for_key(type_key_clean),
+                'docs': uploaded_dict.get(type_key_clean, [])
+            })
+
+        # Fetch supplementary documents separately
+        supplementary_documents = client_docs.filter(document_type=DocumentType.SUPPLEMENTARY).order_by('id')
+
     context = {
         'target_user': target_user,
         'ambassador_profile': getattr(target_user, 'ambassador_profile', None),
         'consultant_profile': getattr(target_user, 'consultantprofile', None),
         'onboarding_payments': onboarding_payments,
         'custom_payments': custom_payments,
+        
         # Exam Analytics
         'exam_attempts': exam_attempts,
         'latest_exam_attempt': latest_exam_attempt,
         'has_passed_exam': has_passed_exam,
+        
+        # Client Document Audit Workspace Data
+        'documents_data': documents_data,
+        'supplementary_documents': supplementary_documents,
+        'active_projects': active_projects,
     }
     return render(request, 'dashboards/superadmin_user_detail.html', context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_process_document_action(request, doc_id):
+    """
+    POST route handling immediate validation switches targeting a ClientDocument row by Superadmin,
+    allowing unlocking and changing status of previously approved documents.
+    """
+    if request.method == 'POST':
+        document = get_object_or_404(ClientDocument, id=doc_id)
+        action_type = request.POST.get('action_type')
+
+        display_name = document.custom_title if document.document_type == DocumentType.SUPPLEMENTARY else document.get_document_type_display()
+
+        if action_type == 'APPROVE':
+            document.status = DocumentStatus.APPROVED
+            document.rejection_reason = ""
+            document.rejection_file = None
+            document.save()
+            
+            ActivityLog.objects.create(
+                user=document.client,
+                category=LogCategory.SYSTEM,
+                description=f"Superadmin verified and approved document '{display_name}'."
+            )
+            messages.success(request, f"Approved document: '{display_name}'.")
+
+        elif action_type == 'REJECT':
+            reason = request.POST.get('rejection_reason', '').strip()
+            rejection_file = request.FILES.get('rejection_file')
+            
+            if not reason:
+                messages.error(request, f"You must provide a rejection reason to flag '{display_name}' as rejected.")
+                return redirect('dashboard:admin-user-detail', pk=document.client.id)
+                
+            document.status = DocumentStatus.REJECTED
+            document.rejection_reason = reason
+            if rejection_file:
+                document.rejection_file = rejection_file
+            document.save()
+            
+            ActivityLog.objects.create(
+                user=document.client,
+                category=LogCategory.SYSTEM,
+                description=f"Superadmin flagged error on '{display_name}'. Revision requested."
+            )
+            messages.warning(request, f"Uploaded document for '{display_name}' flagged as rejected.")
+
+        elif action_type == 'UNLOCK':
+            document.status = DocumentStatus.PENDING
+            document.rejection_reason = ""
+            document.save()
+
+            ActivityLog.objects.create(
+                user=document.client,
+                category=LogCategory.SYSTEM,
+                description=f"Superadmin unlocked approved document '{display_name}' back to pending review."
+            )
+            messages.info(request, f"Document '{display_name}' has been unlocked and moved back to pending status.")
+
+        return redirect('dashboard:admin-user-detail', pk=document.client.id)
+        
+    return redirect('dashboard:admin-user-list')
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_initiate_client_project(request, client_id):
+    """
+    Audits and validates target account mandatory asset statuses, establishes the master 
+    workspace model instance, and delegates task creation safely to the database layer for Superadmins.
+    """
+    client_user = get_object_or_404(User, id=client_id, role=UserRole.USER)
+
+    # Confirm mandatory onboarding compliance assets are approved
+    required_types = get_required_document_types(client_user)
+    approved_core_count = client_user.documents.filter(
+        document_type__in=required_types,
+        status=DocumentStatus.APPROVED
+    ).count()
+    
+    if approved_core_count < len(required_types):
+        messages.error(
+            request, 
+            f"Cannot initialize project. This client has only {approved_core_count}/{len(required_types)} approved mandatory documents."
+        )
+        return redirect("dashboard:admin-user-detail", pk=client_user.id)
+    
+    # Prevent duplicate active projects on a single user profile
+    if hasattr(client_user, 'project_file'):
+        messages.warning(request, "An active project already exists for this client.")
+        return redirect("dashboard:admin-project-board", project_id=client_user.project_file.id)
+
+    # FORM OPERATIONS HANDLER
+    if request.method == "POST":
+        group = request.POST.get("group")
+        client_package = request.POST.get("client_package")
+        category = request.POST.get("category")
+        region = request.POST.get("region")
+        project_start_date = request.POST.get("project_start_date")
+        product_names = request.POST.get("product_names", "")
+        overall_project_notes = request.POST.get("overall_project_notes", "")
+        
+        try:
+            with transaction.atomic():
+                # Writing the project to the database triggers the post_save receiver cleanly
+                project = ClientProject.objects.create(
+                    client=client_user,
+                    group=group,
+                    client_package=client_package,
+                    category=category,
+                    region=region,
+                    project_start_date=project_start_date,
+                    product_names=product_names,
+                    overall_project_notes=overall_project_notes,
+                    assigned_consultant=request.user  # Or leave unassigned / assign as needed
+                )
+
+            messages.success(request, f"Project board activated successfully for {client_user.business_name or client_user.email}!")
+            return redirect("dashboard:admin-project-board", project_id=project.id)
+
+        except Exception as e:
+            messages.error(request, f"Project initiation failure: {str(e)}")
+            return redirect("dashboard:admin-initiate-project", client_id=client_user.id)
+
+    # DATA PRESENTATION PROCESSING
+    frontend_blueprints = {
+        choice_key: get_activities_for_package(choice_key)
+        for choice_key, _ in PackageChoices.choices
+    }
+
+    context = {
+        "target_client": client_user,
+        "groups": ProjectGroup.choices,
+        "packages": PackageChoices.choices,
+        "categories": ProductCategory.choices,
+        "regions": ClientRegion.choices,
+        "blueprints_json": json.dumps(frontend_blueprints),
+    }
+    return render(request, "dashboards/superadmin_initiate_project.html", context)
+
+
+@login_required
+@role_required([UserRole.SUPER_ADMIN])
+def admin_project_service_board(request, project_id):
+    """
+    Renders the dedicated superadmin macro-level workflow control engine for a single client project file.
+    """
+    project = get_object_or_404(
+        ClientProject.objects.select_related('client', 'assigned_consultant').prefetch_related('activities'),
+        id=project_id
+    )
+
+    if request.method == "POST":
+        action = request.POST.get('action')
+
+        # Add new subitem
+        if action == "add_subitem":
+            name = request.POST.get('activity_name')
+            if name:
+                ProjectActivity.objects.create(
+                    project=project,
+                    activity_name=name
+                )
+        
+        # Add a note
+        elif action == "add_note":
+            activity_id = request.POST.get('activity_id')
+            text = request.POST.get('note_text')
+            if activity_id and text:
+                activity = ProjectActivity.objects.get(id=activity_id, project=project)
+                ActivityNote.objects.create(activity=activity, note_text=text)
+
+        # Update Payment Status
+        elif action == "update_payment":
+            activity_id = request.POST.get('activity_id')
+            val = request.POST.get('status_value')
+            if activity_id and val:
+                act = ProjectActivity.objects.get(id=activity_id, project=project)
+                act.payment_status = val
+                act.save()
+
+        # Update Activity Status
+        elif action == "update_activity_status":
+            activity_id = request.POST.get('activity_id')
+            val = request.POST.get('status_value')
+            if activity_id and val:
+                act = ProjectActivity.objects.get(id=activity_id, project=project)
+                act.activity_status = val
+                act.save()
+
+        return redirect('dashboard:admin-project-board', project_id=project.id)
+    
+    context = {
+        'project': project,
+        'payment_choices': PaymentStatus.choices,
+        'activity_choices': ActivityStatus.choices,
+    }
+    
+    return render(request, 'dashboards/superadmin_project_board.html', context)
+
 
 
 @login_required
@@ -996,6 +1246,9 @@ def admin_review_client_portfolio(request, client_id):
         'total_queue_count': len(master_queue_ids),
     }
     return render(request, "dashboards/superadmin_audit_client.html", context)
+
+
+
 
 
 
@@ -2783,11 +3036,11 @@ def user_dashboard(request):
     # --- EVALUATE & RENDER CURRENT VIEW STATE ---
     client_docs = request.user.documents.all()
     
-    # Since a category can now have multiple files, map a list of documents or the latest set if needed, 
-    # or keep a dictionary mapping document_type to its collection of uploads.
     uploaded_dict = {}
     for doc in client_docs:
-        uploaded_dict.setdefault(doc.document_type, []).append(doc)
+        # Normalize the enum or choice value to an uppercase string key
+        key_clean = str(doc.document_type.value if hasattr(doc.document_type, 'value') else doc.document_type).upper()
+        uploaded_dict.setdefault(key_clean, []).append(doc)
     
     total_required = len(required_types)
     # Count how many required categories have at least one valid uploaded document

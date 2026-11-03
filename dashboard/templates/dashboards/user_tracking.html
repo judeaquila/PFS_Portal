@@ -77,14 +77,22 @@
                 <h3 class="font-bold text-slate-800 text-base">Document Archives</h3>
                 <p class="text-xs text-slate-500 mt-0.5 mb-4">Uploaded documents in your profile.</p>
                 
-                <div class="space-y-2">
-                    {% for type, doc in uploaded_dict.items %}
-                        {% if doc.file %}
-                        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
-                            <span class="font-medium text-slate-700 text-xs truncate mr-2">{{ doc.get_document_type_display }}</span>
-                            <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-xs shrink-0">View File</a>
+                <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {% for doc_type, docs in uploaded_dict.items %}
+                        {% for doc in docs %}
+                            {% if doc.file %}
+                            <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
+                                <span class="font-medium text-slate-700 text-xs truncate mr-2">
+                                    {{ doc.get_document_type_display|default:doc_type }}
+                                </span>
+                                <a href="{{ doc.file.url }}" target="_blank" class="text-pink-700 font-bold hover:underline text-xs shrink-0">View File</a>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% empty %}
+                        <div class="text-xs text-slate-400 font-medium italic border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50/40 text-center">
+                            No documents uploaded yet.
                         </div>
-                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
