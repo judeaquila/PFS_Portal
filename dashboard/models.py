@@ -86,7 +86,7 @@ class DocumentType(models.TextChoices):
     PRODUCT_PICS = "PRODUCT_PICS", "Pictures of Product (With Label)"
     LAB_RESULTS = "LAB_RESULTS", "Laboratory Results"
 
-    HEALTH_CARD = "HEALTH_CARD", "Medical Fitness Certificate"
+    HEALTH_CARD = "HEALTH_CARD", "Medical Fitness Certificate (Health Card)"
     WATER_ANALYSIS = "WATER_ANALYSIS", "Water Analysis Report"
     MENU = "MENU", "Menu"
     RECIPE_STEPS = "RECIPE_STEPS", "Recipe Steps"

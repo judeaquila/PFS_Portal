@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 import environ
+from django.urls import reverse_lazy
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,6 +51,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'impersonate',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -80,6 +82,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'impersonate.middleware.ImpersonateMiddleware',
     'maintenance_mode.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -187,3 +190,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 MAINTENANCE_MODE_TEMPLATE = 'maintenance.html'
 
 MAINTENANCE_MODE_IGNORE_SUPERUSER = True
+
+IMPERSONATE = {
+    'REDIRECT_URL': reverse_lazy('dashboard:redirect-dashboard'),  # Where to send the admin once impersonation starts (matches your dashboard:redirect-dashboard)
+    'REQUIRE_SUPERUSER': True,
+}

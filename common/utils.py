@@ -1,5 +1,24 @@
 from dashboard.models import DocumentType, ProductCategory
 
+DOCUMENT_HELP_TEXTS = {
+    DocumentType.BUSINESS_CERT: "Upload a clear, scanned copy of your business certificate.",
+    DocumentType.COMPANY_LOGO: "Provide a high-resolution PNG or JPEG image of your company logo.",
+    DocumentType.BRAND_LOGO: "Provide a high-resolution PNG or JPEG image of your brand logo.",
+    DocumentType.PRODUCT_LABEL: "Provide a high-resolution PNG or JPEG image of your product label.",
+    DocumentType.PRODUCT_PICS: "Provide photos of your product(s) with the label on it.",
+    DocumentType.FACILITY_SKETCH: "A simple layout drawn with a pen on paper or an actual architectural floor plan.",
+    DocumentType.HEALTH_CARD: "You can get this from your district assembly.",
+    DocumentType.LAB_RESULTS: "Upload copies of laboratory results for your product(s).",
+}
+
+def get_document_help_text(doc_key):
+    """Returns the custom help text for a given document type key, or a default message."""
+    # Convert key to string/enum safe lookup
+    return DOCUMENT_HELP_TEXTS.get(
+        doc_key, 
+        f"Please upload clear, legible files for this requirement."
+    )
+
 def get_required_document_types(user, is_initial=False):
     """
     Returns a list of DocumentType choices mandatory for the given user 

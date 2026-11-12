@@ -22,6 +22,16 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
+            {% if request.user.is_superuser and not target_user.is_superuser and request.user.pk != target_user.pk %}
+                <a href="{% url 'impersonate-start' target_user.pk %}"
+                class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-950/50 hover:bg-indigo-900/70 text-indigo-300 border border-indigo-800/60 text-xs font-semibold rounded-xl transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    <span>Impersonate</span>
+                </a>
+            {% endif %}
             <form method="POST" action="{% url 'dashboard:admin-user-toggle-active' target_user.pk %}">
                 {% csrf_token %}
                 {% if target_user.is_active %}

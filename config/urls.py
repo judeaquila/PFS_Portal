@@ -29,6 +29,7 @@ urlpatterns = [
     path('payments/', include('payments.urls')),
     path('examinations/', include('examinations.urls')),
     path('admin/', admin.site.urls),
+    path('impersonate/', include('impersonate.urls')),
 ]
 
 if settings.DEBUG:

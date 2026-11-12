@@ -1,5 +1,6 @@
 from django import template
 from dashboard.models import DocumentType
+from common.utils import get_document_help_text
 
 register = template.Library()
 
@@ -16,3 +17,8 @@ def choice_label(doc_key):
         return DocumentType[doc_key].label
     except (KeyError, AttributeError):
         return doc_key.replace('_', ' ').title()
+
+
+@register.filter
+def document_help(doc_key):
+    return get_document_help_text(doc_key)
